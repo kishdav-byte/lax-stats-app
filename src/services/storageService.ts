@@ -6,9 +6,6 @@ import {
     getDocs,
     setDoc,
     deleteDoc,
-    updateDoc,
-    query,
-    where
 } from "firebase/firestore";
 
 export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile';

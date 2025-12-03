@@ -45,7 +45,7 @@ const App: React.FC = () => {
     const [viewingPlayer, setViewingPlayer] = useState<{ player: Player; team: Team } | null>(null);
 
     // New loading state for initial data fetch
-    const [isLoadingData, setIsLoadingData] = useState(true);
+    const [, setIsLoadingData] = useState(true);
 
     const [loginError, setLoginError] = useState('');
 
@@ -396,18 +396,6 @@ const App: React.FC = () => {
         }
     }, [activeGameId, currentView, gameForReport]);
 
-    // Effect to save game when it updates (since handleUpdateGame is wrapped in useCallback and might be called frequently)
-    // Actually, handleUpdateGame is called by GameTracker. We should save there.
-    // But since we update state here, we can save here.
-    const saveGameToStorage = (game: Game) => {
-        storageService.saveGame(game);
-    };
-
-    // We need to inject this save into the setGames updater or call it after.
-    // Since setGames uses a callback, we can't easily side-effect inside it.
-    // Let's modify handleUpdateGame to call save.
-
-    // RE-IMPLEMENT handleUpdateGame to include save
     /*
     const handleUpdateGame = useCallback((updatedGame: Game) => {
         setGames(prevGames => {
