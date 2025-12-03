@@ -106,6 +106,7 @@ const App: React.FC = () => {
                         username: firebaseUser.displayName || 'User',
                         role: Role.COACH, // Default to Coach for now so they can see things
                         status: 'active',
+                        password: '', // Not stored in Firestore, but required by type
                     };
 
                     try {
