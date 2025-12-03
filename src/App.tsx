@@ -95,8 +95,11 @@ const App: React.FC = () => {
                     const getPromise = getDoc(userDocRef);
                     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
                     userSnap = await Promise.race([getPromise, timeoutPromise]);
-                } catch (e) {
-                    console.warn("Firestore getDoc timed out or failed. Proceeding as if new user.");
+                } catch (e: any) {
+                    console.warn("Firestore getDoc failed:", e);
+                    if (e.code === 'permission-denied') {
+                        alert("Database permission denied. Please check your Firestore rules.");
+                    }
                     userSnap = { exists: () => false }; // Fake a missing doc to trigger fallback
                 }
 
