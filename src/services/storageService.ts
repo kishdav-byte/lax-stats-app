@@ -80,6 +80,7 @@ export const subscribeToGames = (callback: (games: Game[]) => void) => {
     const q = collection(db, 'games');
     return onSnapshot(q, (snapshot) => {
         const games = snapshot.docs.map(d => convertDoc<Game>(d));
+        console.log("🔥 Firestore Update: Received games:", games);
         callback(games);
     });
 };

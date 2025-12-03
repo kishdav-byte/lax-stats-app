@@ -388,7 +388,13 @@ const App: React.FC = () => {
                 periodLength: 720,
                 totalPeriods: 4,
             };
-            await storageService.saveGame(newGame);
+            try {
+                await storageService.saveGame(newGame);
+                alert("Game saved successfully!");
+            } catch (error) {
+                console.error("Error saving game:", error);
+                alert(`Failed to save game: ${error}`);
+            }
         }
     };
 
