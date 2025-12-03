@@ -6,6 +6,7 @@ import {
     getDocs,
     setDoc,
     deleteDoc,
+    onSnapshot,
 } from "firebase/firestore";
 
 export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile';
@@ -65,6 +66,22 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
         console.error("Error fetching initial data:", error);
         return {};
     }
+};
+
+export const subscribeToTeams = (callback: (teams: Team[]) => void) => {
+    const q = collection(db, 'teams');
+    return onSnapshot(q, (snapshot) => {
+        const teams = snapshot.docs.map(d => convertDoc<Team>(d));
+        callback(teams);
+    });
+};
+
+export const subscribeToGames = (callback: (games: Game[]) => void) => {
+    const q = collection(db, 'games');
+    return onSnapshot(q, (snapshot) => {
+        const games = snapshot.docs.map(d => convertDoc<Game>(d));
+        callback(games);
+    });
 };
 
 // --- Save Functions ---

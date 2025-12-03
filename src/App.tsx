@@ -48,19 +48,33 @@ const App: React.FC = () => {
     // Load initial data from Firestore
     useEffect(() => {
         const loadData = async () => {
-            const data = await storageService.fetchInitialData();
-            if (data.teams) setTeams(data.teams);
-            if (data.games) setGames(data.games);
-            if (data.users) setUsers(data.users);
-            if (data.accessRequests) setAccessRequests(data.accessRequests);
-            if (data.drillAssignments) setDrillAssignments(data.drillAssignments);
-            if (data.feedback) setFeedback(data.feedback);
+            // Fetch static data (users, requests, etc.)
+            // We keep these as one-time fetches for now, or could upgrade them too.
+            // For now, let's just fix the critical sync items: Teams and Games.
+            const initialData = await storageService.fetchInitialData();
+            if (initialData.users) setUsers(initialData.users);
+            if (initialData.accessRequests) setAccessRequests(initialData.accessRequests);
+            if (initialData.drillAssignments) setDrillAssignments(initialData.drillAssignments);
+            if (initialData.feedback) setFeedback(initialData.feedback);
 
-            // Sound effects are separate
             const effects = await storageService.fetchSoundEffects();
             setSoundEffects(effects);
         };
         loadData();
+
+        // Real-time subscriptions for critical data
+        const unsubscribeTeams = storageService.subscribeToTeams((updatedTeams) => {
+            setTeams(updatedTeams);
+        });
+
+        const unsubscribeGames = storageService.subscribeToGames((updatedGames) => {
+            setGames(updatedGames);
+        });
+
+        return () => {
+            unsubscribeTeams();
+            unsubscribeGames();
+        };
     }, []);
 
     // Auth Listener
