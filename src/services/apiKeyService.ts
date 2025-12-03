@@ -4,6 +4,13 @@ const STORAGE_KEY = 'gemini_api_key';
 let apiKey: string | null = null;
 
 export function initializeApiKey(): boolean {
+    // 1. Check for Environment Variable (Hardcoded/Configured)
+    if (import.meta.env.VITE_GEMINI_API_KEY) {
+        apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        return true;
+    }
+
+    // 2. Check Local Storage (User Entered)
     try {
         const key = localStorage.getItem(STORAGE_KEY);
         if (key && key.trim() !== '') {
