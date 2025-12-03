@@ -206,8 +206,20 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         if (!context) return;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+
+        // Calculate Region of Interest (ROI) based on overlay
+        // The overlay coordinates are relative to the displayed video size (clientWidth/clientHeight)
+        // We need to scale them to the actual video resolution (videoWidth/videoHeight)
+        const scaleX = video.videoWidth / video.clientWidth;
+        const scaleY = video.videoHeight / video.clientHeight;
+
+        const roiX = Math.floor(overlay.x * scaleX);
+        const roiY = Math.floor(overlay.y * scaleY);
+        const roiW = Math.floor(overlay.width * scaleX);
+        const roiH = Math.floor(overlay.height * scaleY);
+
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const referenceFrameData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const referenceFrameData = context.getImageData(roiX, roiY, roiW, roiH).data;
         const startTime = performance.now();
 
         const toGrayscale = (data: Uint8ClampedArray) => {
@@ -222,7 +234,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         const detect = () => {
             if (!videoRef.current || !context) return;
             context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-            const currentFrameData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            const currentFrameData = context.getImageData(roiX, roiY, roiW, roiH).data;
             const currentGrayscale = toGrayscale(currentFrameData);
             let diff = 0;
             for (let i = 0; i < referenceGrayscale.length; i++) {
