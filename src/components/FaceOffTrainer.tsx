@@ -34,6 +34,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     const [countdown, setCountdown] = useState(0);
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [motionLevel, setMotionLevel] = useState(0); // For debugging sensitivity
 
     const timeRemainingRef = useRef(timeRemaining);
     timeRemainingRef.current = timeRemaining;
@@ -229,6 +230,8 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                 diff += Math.abs(referenceGrayscale[i] - currentGrayscale[i]);
             }
             const averageDiff = diff / referenceGrayscale.length;
+            setMotionLevel(Math.round(averageDiff)); // Update debug display
+
             if (averageDiff > SENSITIVITY_THRESHOLD) {
                 const endTime = performance.now();
                 const finalTime = Math.round(endTime - startTime);
@@ -467,6 +470,11 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                         <p className="text-3xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-md">{getStatusMessage()}</p>
                     </div>
                 </div>
+                {drillState === 'measuring' && (
+                    <div className="text-gray-400 text-sm">
+                        Motion Level: <span className={motionLevel > SENSITIVITY_THRESHOLD ? "text-green-400 font-bold" : "text-yellow-400"}>{motionLevel}</span> / {SENSITIVITY_THRESHOLD}
+                    </div>
+                )}
             </div>
         </div>
     );
