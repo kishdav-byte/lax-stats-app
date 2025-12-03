@@ -39,10 +39,11 @@ const App: React.FC = () => {
     const [feedback, setFeedback] = useState<Feedback[]>([]);
     const [activeDrillAssignment, setActiveDrillAssignment] = useState<DrillAssignment | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isApiKeySet, setIsApiKeySet] = useState(false);
-    const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
+    const [isApiKeySet, setIsApiKeySet] = useState(apiKeyService.initializeApiKey());
+    // const [isLoadingApiKey, setIsLoadingApiKey] = useState(true); // No longer needed
     const [gameForReport, setGameForReport] = useState<Game | null>(null);
     const [viewingPlayer, setViewingPlayer] = useState<{ player: Player; team: Team } | null>(null);
+    const [loginError, setLoginError] = useState('');
 
     // Load initial data from Firestore
     useEffect(() => {
@@ -550,10 +551,8 @@ const App: React.FC = () => {
     };
 
     const handleResetApiKey = async () => {
-        setIsLoadingApiKey(true);
         await apiKeyService.clearApiKey();
         setIsApiKeySet(false);
-        setIsLoadingApiKey(false);
     };
 
     const handleViewReport = (game: Game) => {
@@ -568,9 +567,7 @@ const App: React.FC = () => {
 
     const activeGame = games.find(g => g.id === activeGameId);
 
-    if (isLoadingApiKey) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Loading...</div>;
-    }
+
 
     if (!isApiKeySet) {
         return <ApiKeyManager onApiKeySet={() => {
