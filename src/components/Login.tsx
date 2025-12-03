@@ -70,10 +70,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
     const renderLogin = () => (
         <form onSubmit={handleLoginSubmit} className="space-y-6">
             <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-300">Username</label>
+                <label htmlFor="login-email" className="block text-sm font-medium text-gray-300">Email Address</label>
                 <input
-                    id="username"
-                    type="text"
+                    id="login-email"
+                    type="email"
                     value={loginUsername}
                     onChange={(e) => setLoginUsername(e.target.value)}
                     required

@@ -24,6 +24,13 @@ export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => 
 };
 
 export const resetPassword = async (email: string) => {
+    console.log(`Attempting to send password reset email to: ${email}`);
     const { sendPasswordResetEmail } = await import("firebase/auth");
-    return await sendPasswordResetEmail(auth, email);
+    try {
+        await sendPasswordResetEmail(auth, email);
+        console.log("Password reset email sent successfully (from client side).");
+    } catch (error) {
+        console.error("Error sending password reset email:", error);
+        throw error;
+    }
 };
