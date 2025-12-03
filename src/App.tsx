@@ -302,7 +302,7 @@ const App: React.FC = () => {
         storageService.saveUser(updatedUser);
     };
 
-    const handleAddTeam = (teamName: string) => {
+    const handleAddTeam = async (teamName: string) => {
         const newTeam: Team = { id: `team_${Date.now()}`, name: teamName, roster: [] };
 
         let currentTeams = [...teams];
