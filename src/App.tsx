@@ -309,8 +309,6 @@ const App: React.FC = () => {
         const sampleTeam = currentTeams.find(t => t.id === 'sample_team_id');
         const isFirstRealTeam = sampleTeam && currentTeams.length === 1;
 
-        let finalTeams = [...currentTeams, newTeam];
-
         // If this is the first "real" team being added, we need to clean up all sample team associations.
         if (isFirstRealTeam && sampleTeam) {
             const sampleTeamPlayerIds = sampleTeam.roster.map(p => p.id);
@@ -341,35 +339,26 @@ const App: React.FC = () => {
             setUsers(updatedUsers);
 
             // Clear the sample team's roster
-            finalTeams = finalTeams.map(team =>
-                team.id === 'sample_team_id' ? { ...team, roster: [] } : team
-            );
+            // We need to update this in storage too if we want it to persist
+            // For now, we rely on the subscription to update the local 'teams' state
         }
 
-        setTeams(finalTeams);
-        storageService.saveTeam(newTeam);
-        // Also save updated users and sample team if we did cleanup
-        if (isFirstRealTeam && sampleTeam) {
-            // We would need to save all updated users and the sample team here.
-            // For simplicity, we'll just save the new team. 
-            // In a full implementation, we'd batch write.
-        }
+        await storageService.saveTeam(newTeam);
     };
 
 
-    const handleUpdateTeam = (updatedTeam: Team) => {
-        setTeams(teams.map(t => t.id === updatedTeam.id ? updatedTeam : t));
-        storageService.saveTeam(updatedTeam);
+    const handleUpdateTeam = async (updatedTeam: Team) => {
+        await storageService.saveTeam(updatedTeam);
     };
 
-    const handleDeleteTeam = (teamId: string) => {
-        setTeams(teams.filter(t => t.id !== teamId));
-        setGames(games.filter(g => g.homeTeam.id !== teamId && g.awayTeam.id !== teamId));
-        storageService.deleteTeam(teamId);
-        // Also need to delete associated games from storage, but skipping for brevity
+    const handleDeleteTeam = async (teamId: string) => {
+        // Also need to delete associated games from storage
+        const gamesToDelete = games.filter(g => g.homeTeam.id === teamId || g.awayTeam.id === teamId);
+        gamesToDelete.forEach(g => storageService.deleteGame(g.id));
+        await storageService.deleteTeam(teamId);
     };
 
-    const handleAddGame = (homeTeamId: string, awayTeamInfo: { id?: string; name?: string }, scheduledTime: string) => {
+    const handleAddGame = async (homeTeamId: string, awayTeamInfo: { id?: string; name?: string }, scheduledTime: string) => {
         const homeTeam = teams.find(t => t.id === homeTeamId);
         let awayTeam: Team | undefined;
 
@@ -377,7 +366,7 @@ const App: React.FC = () => {
             awayTeam = teams.find(t => t.id === awayTeamInfo.id);
         } else if (awayTeamInfo.name) {
             const newOpponentTeam: Team = { id: `team_${Date.now()}`, name: awayTeamInfo.name, roster: [] };
-            setTeams(prevTeams => [...prevTeams, newOpponentTeam]);
+            await storageService.saveTeam(newOpponentTeam);
             awayTeam = newOpponentTeam;
         }
 
@@ -399,25 +388,15 @@ const App: React.FC = () => {
                 periodLength: 720,
                 totalPeriods: 4,
             };
-            setGames([...games, newGame]);
-            storageService.saveGame(newGame);
-            if (awayTeamInfo.name) {
-                storageService.saveTeam(awayTeam); // Save new opponent
-            }
+            await storageService.saveGame(newGame);
         }
     };
 
-    const handleUpdateGame = useCallback((updatedGame: Game) => {
-        setGames(prevGames => {
-            const newGames = prevGames.map(g => g.id === updatedGame.id ? updatedGame : g);
-            if (gameForReport?.id === updatedGame.id) {
-                setGameForReport(updatedGame);
-            }
-            return newGames;
-        });
-
-        // Save to Firestore
-        storageService.saveGame(updatedGame);
+    const handleUpdateGame = useCallback(async (updatedGame: Game) => {
+        await storageService.saveGame(updatedGame);
+        if (gameForReport?.id === updatedGame.id) {
+            setGameForReport(updatedGame);
+        }
 
         // If the game being updated is the active one and it's now finished,
         // clear the activeGameId. This will trigger the useEffect to navigate away.
