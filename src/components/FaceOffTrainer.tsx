@@ -419,7 +419,8 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                     <h2 className="text-2xl font-semibold mb-4">Your Results ({reactionTimes.length} drills)</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-6">
                         <div>
-                            <p className="text-lg text-gray-400">Best Time</p>\n                    <p className="text-4xl font-bold text-green-400">{stats.best}ms</p>
+                            <p className="text-lg text-gray-400">Best Time</p>
+                            <p className="text-4xl font-bold text-green-400">{stats.best}ms</p>
                         </div>
                         <div>
                             <p className="text-lg text-gray-400">Average Time</p>
