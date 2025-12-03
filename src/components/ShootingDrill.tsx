@@ -402,6 +402,13 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         }
     }, [sessionState, setupCamera]);
 
+    // Re-attach the stream to the new video element when switching to 'running' state
+    useEffect(() => {
+        if (sessionState === 'running' && videoRef.current && mediaStreamRef.current) {
+            videoRef.current.srcObject = mediaStreamRef.current;
+        }
+    }, [sessionState]);
+
     const getStatusMessage = () => {
         switch (drillState) {
             case 'idle': return 'Session ended.';
