@@ -97,10 +97,26 @@ const App: React.FC = () => {
                         setCurrentView('dashboard');
                     }
                 } else {
-                    // User exists in Auth but not in Firestore (e.g. first login after reg?)
-                    // This shouldn't happen if registration handles it, but good to handle.
-                    console.error("User profile not found in Firestore");
-                    // Optionally create a default profile or log them out
+                    // User exists in Auth but not in Firestore. Create a default profile.
+                    console.warn("User profile not found in Firestore. Creating default profile...");
+                    const defaultUser: User = {
+                        id: firebaseUser.uid,
+                        email: firebaseUser.email || '',
+                        username: firebaseUser.displayName || 'User',
+                        role: Role.COACH, // Default to Coach for now so they can see things
+                        status: 'active',
+                        createdAt: Date.now()
+                    };
+
+                    try {
+                        await storageService.saveUser(defaultUser);
+                        setCurrentUser(defaultUser);
+                        setCurrentView('dashboard');
+                        console.log("Default profile created and logged in.");
+                    } catch (err) {
+                        console.error("Failed to create default profile:", err);
+                        // If this fails, we might want to log them out or show an error
+                    }
                 }
             } else {
                 // User is signed out
