@@ -5,8 +5,10 @@ let apiKey: string | null = null;
 
 export function initializeApiKey(): boolean {
     // 1. Check for Environment Variable (Hardcoded/Configured)
-    if (import.meta.env.VITE_GEMINI_API_KEY) {
-        apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    // @ts-ignore - Vercel build environment workaround
+    const env = (import.meta as any).env;
+    if (env && env.VITE_GEMINI_API_KEY) {
+        apiKey = env.VITE_GEMINI_API_KEY;
         return true;
     }
 
