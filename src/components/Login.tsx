@@ -4,7 +4,7 @@ import { Role } from '../types';
 interface LoginProps {
     onLogin: (username: string, password: string) => Promise<void>;
     onRegister: (username: string, email: string, password: string, role: Role) => Promise<{ success: boolean, error?: string }>;
-    onPasswordResetRequest: (email: string) => void;
+    onPasswordResetRequest: (email: string) => Promise<void>;
     error: string;
     onResetApiKey: () => void;
 }
@@ -61,9 +61,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
         }
     };
 
-    const handleResetSubmit = (e: React.FormEvent) => {
+    const handleResetSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onPasswordResetRequest(resetEmail);
+        await onPasswordResetRequest(resetEmail);
         setResetMessage("If an account with that email exists, password reset instructions have been sent.");
     };
 

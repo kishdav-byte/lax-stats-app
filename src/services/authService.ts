@@ -22,3 +22,8 @@ export const logout = async () => {
 export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => void) => {
     return onAuthStateChanged(auth, callback);
 };
+
+export const resetPassword = async (email: string) => {
+    const { sendPasswordResetEmail } = await import("firebase/auth");
+    return await sendPasswordResetEmail(auth, email);
+};

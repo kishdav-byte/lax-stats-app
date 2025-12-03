@@ -223,10 +223,15 @@ const App: React.FC = () => {
         }
     };
 
-    const handlePasswordResetRequest = (email: string): void => {
-        // Firebase has sendPasswordResetEmail, but we haven't exposed it in authService yet.
-        // For now, just alert.
-        alert(`Password reset functionality will be sent to ${email} (Requires Firebase Email Trigger)`);
+    const handlePasswordResetRequest = async (email: string): Promise<void> => {
+        try {
+            await authService.resetPassword(email);
+            // Success is handled by the UI showing the message
+        } catch (error: any) {
+            console.error("Password reset failed", error);
+            // We generally don't want to reveal if an email exists or not for security,
+            // but for this app, we can log it. The UI shows a generic success message.
+        }
     };
 
     const handleLogout = async () => {
