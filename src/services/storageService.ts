@@ -1,14 +1,17 @@
 import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback } from '../types';
-
-// This service abstracts the data storage. Currently, it uses a single
-// database object in localStorage to simulate a real-time, shared backend.
-// To move to Firebase, you would replace the logic in these functions
-// with calls to Firestore.
-
-const DB_KEY = 'lacrosse_app_db';
+import { db } from '../firebaseConfig';
+import {
+    collection,
+    doc,
+    getDocs,
+    setDoc,
+    deleteDoc,
+    updateDoc,
+    query,
+    where
+} from "firebase/firestore";
 
 export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile';
-
 
 export interface AppDatabase {
     teams: Team[];
@@ -23,7 +26,7 @@ export interface AppDatabase {
     activeGameId: string | null;
 }
 
-const defaultState: AppDatabase = {
+export const defaultState: AppDatabase = {
     teams: [],
     games: [],
     users: [],
@@ -36,71 +39,89 @@ const defaultState: AppDatabase = {
     activeGameId: null,
 };
 
-// --- Core DB Functions ---
+// --- Firestore Helpers ---
 
-/**
- * Loads the entire database state from localStorage. This version includes
- * robust data sanitization to prevent crashes from malformed or outdated
- * data structures in storage.
- * @returns {AppDatabase} The complete, sanitized application database state.
- */
-export function loadDatabase(): AppDatabase {
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+
+// --- Fetch Functions ---
+
+export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
     try {
-        const savedDataString = localStorage.getItem(DB_KEY);
-        if (!savedDataString) {
-            return defaultState;
-        }
+        const [teamsSnap, gamesSnap, usersSnap, requestsSnap, drillsSnap, feedbackSnap] = await Promise.all([
+            getDocs(collection(db, 'teams')),
+            getDocs(collection(db, 'games')),
+            getDocs(collection(db, 'users')),
+            getDocs(collection(db, 'accessRequests')),
+            getDocs(collection(db, 'drillAssignments')),
+            getDocs(collection(db, 'feedback')),
+        ]);
 
-        const savedData = JSON.parse(savedDataString);
-
-        // Handle cases where saved data is not an object (e.g., JSON.parse('null'))
-        if (typeof savedData !== 'object' || savedData === null) {
-            throw new Error("Saved data is not a valid object.");
-        }
-
-        // Helper for deep sanitization: filters out invalid entries from arrays
-        const sanitizeArray = <T>(arr: any[] | undefined, defaultArr: T[]): T[] => {
-            if (!Array.isArray(arr)) {
-                return defaultArr;
-            }
-            // Filter out any entries that are not truthy objects. This handles null, undefined, strings, numbers, etc.
-            return arr.filter(item => typeof item === 'object' && item !== null) as T[];
+        return {
+            teams: teamsSnap.docs.map(d => convertDoc<Team>(d)),
+            games: gamesSnap.docs.map(d => convertDoc<Game>(d)),
+            users: usersSnap.docs.map(d => convertDoc<User>(d)),
+            accessRequests: requestsSnap.docs.map(d => convertDoc<AccessRequest>(d)),
+            drillAssignments: drillsSnap.docs.map(d => convertDoc<DrillAssignment>(d)),
+            feedback: feedbackSnap.docs.map(d => convertDoc<Feedback>(d)),
         };
-
-        const sanitizedDb: AppDatabase = {
-            teams: sanitizeArray(savedData.teams, defaultState.teams),
-            games: sanitizeArray(savedData.games, defaultState.games),
-            users: sanitizeArray(savedData.users, defaultState.users),
-            currentUser: savedData.currentUser !== undefined ? savedData.currentUser : defaultState.currentUser,
-            accessRequests: sanitizeArray(savedData.accessRequests, defaultState.accessRequests),
-            drillAssignments: sanitizeArray(savedData.drillAssignments, defaultState.drillAssignments),
-            soundEffects: typeof savedData.soundEffects === 'object' && savedData.soundEffects !== null ? savedData.soundEffects : defaultState.soundEffects,
-            feedback: sanitizeArray(savedData.feedback, defaultState.feedback),
-            currentView: typeof savedData.currentView === 'string' ? savedData.currentView : defaultState.currentView,
-            activeGameId: savedData.activeGameId !== undefined ? savedData.activeGameId : defaultState.activeGameId,
-        };
-
-        return sanitizedDb;
-
-    } catch (e) {
-        console.error(`Failed to parse database from localStorage. Resetting to default.`, e);
-        localStorage.removeItem(DB_KEY); // Clear corrupted data
-        return defaultState;
+    } catch (error) {
+        console.error("Error fetching initial data:", error);
+        return {};
     }
-}
+};
 
-/**
- * Saves the entire database state to localStorage in a single atomic operation.
- * This is now the ONLY function that writes to storage, preventing race
- * conditions and improving performance.
- * @param {AppDatabase} db The complete application database state.
- */
-export function saveDatabase(db: AppDatabase): void {
-    try {
-        const stringifiedData = JSON.stringify(db);
-        localStorage.setItem(DB_KEY, stringifiedData);
-    } catch (e) {
-        console.error(`Failed to save database to localStorage`, e);
-        // Optionally, you could add user-facing error handling here.
-    }
-}
+// --- Save Functions ---
+
+export const saveTeam = async (team: Team) => {
+    await setDoc(doc(db, 'teams', team.id), team);
+};
+
+export const deleteTeam = async (teamId: string) => {
+    await deleteDoc(doc(db, 'teams', teamId));
+};
+
+export const saveGame = async (game: Game) => {
+    await setDoc(doc(db, 'games', game.id), game);
+};
+
+export const deleteGame = async (gameId: string) => {
+    await deleteDoc(doc(db, 'games', gameId));
+};
+
+export const saveUser = async (user: User) => {
+    // We don't save the password in Firestore for security (handled by Auth), 
+    // but we might keep the user document for role/profile info.
+    // Ensure we don't overwrite critical auth fields if we were syncing back from Auth.
+    // For this app's logic, we'll store the user profile.
+    const { password, ...userProfile } = user;
+    await setDoc(doc(db, 'users', user.id), userProfile);
+};
+
+export const deleteUser = async (userId: string) => {
+    await deleteDoc(doc(db, 'users', userId));
+};
+
+export const saveAccessRequest = async (request: AccessRequest) => {
+    await setDoc(doc(db, 'accessRequests', request.id), request);
+};
+
+export const saveDrillAssignment = async (assignment: DrillAssignment) => {
+    await setDoc(doc(db, 'drillAssignments', assignment.id), assignment);
+};
+
+export const saveFeedback = async (feedback: Feedback) => {
+    await setDoc(doc(db, 'feedback', feedback.id), feedback);
+};
+
+// Sound effects are a bit different, usually a single document configuration
+export const saveSoundEffects = async (effects: SoundEffects) => {
+    // We'll store this in a 'settings' collection
+    await setDoc(doc(db, 'settings', 'soundEffects'), { effects });
+};
+
+export const fetchSoundEffects = async (): Promise<SoundEffects> => {
+    const snap = await getDocs(collection(db, 'settings'));
+    const doc = snap.docs.find(d => d.id === 'soundEffects');
+    return doc ? doc.data().effects : {};
+};
+

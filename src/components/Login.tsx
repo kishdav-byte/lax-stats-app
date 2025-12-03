@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Role } from '../types';
 
 interface LoginProps {
-    onLogin: (username: string, password: string) => void;
-    onRegister: (username: string, email: string, password: string, role: Role) => { success: boolean, error?: string };
+    onLogin: (username: string, password: string) => Promise<void>;
+    onRegister: (username: string, email: string, password: string, role: Role) => Promise<{ success: boolean, error?: string }>;
     onPasswordResetRequest: (email: string) => void;
     error: string;
     onResetApiKey: () => void;
@@ -28,12 +28,18 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
     const [resetEmail, setResetEmail] = useState('');
     const [resetMessage, setResetMessage] = useState('');
 
-    const handleLoginSubmit = (e: React.FormEvent) => {
+    const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onLogin(loginUsername, loginPassword);
+        try {
+            await onLogin(loginUsername, loginPassword);
+        } catch (err: any) {
+            // Error handling is done in parent or via error prop, 
+            // but we can also catch here if we change the prop signature.
+            // For now, we rely on the parent setting the 'error' prop.
+        }
     };
 
-    const handleRegisterSubmit = (e: React.FormEvent) => {
+    const handleRegisterSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setRegisterError('');
         if (regPassword !== regConfirmPassword) {
@@ -44,9 +50,14 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
             setRegisterError("Please select a role.");
             return;
         }
-        const result = onRegister(regUsername, regEmail, regPassword, regRole);
-        if (!result.success && result.error) {
-            setRegisterError(result.error);
+
+        try {
+            const result = await onRegister(regUsername, regEmail, regPassword, regRole);
+            if (!result.success && result.error) {
+                setRegisterError(result.error);
+            }
+        } catch (err: any) {
+            setRegisterError(err.message || "Registration failed.");
         }
     };
 
