@@ -74,7 +74,17 @@ const App: React.FC = () => {
                 // BUT 'users' state might not be ready yet if this fires first.
                 // So we fetch the user doc directly to be safe.
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
-                const userSnap = await getDoc(userDocRef);
+
+                // Race getDoc against a timeout
+                let userSnap: any;
+                try {
+                    const getPromise = getDoc(userDocRef);
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
+                    userSnap = await Promise.race([getPromise, timeoutPromise]);
+                } catch (e) {
+                    console.warn("Firestore getDoc timed out or failed. Proceeding as if new user.");
+                    userSnap = { exists: () => false }; // Fake a missing doc to trigger fallback
+                }
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
