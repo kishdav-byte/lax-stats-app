@@ -28,12 +28,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
     const [resetEmail, setResetEmail] = useState('');
     const [resetMessage, setResetMessage] = useState('');
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             await onLogin(loginUsername, loginPassword);
         } catch (err: any) {
             console.error("onLogin failed in Login.tsx", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -93,9 +98,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
             <div>
                 <button
                     type="submit"
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                    disabled={isLoading}
+                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isLoading ? 'bg-cyan-800 cursor-not-allowed' : 'bg-cyan-600 hover:bg-cyan-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500`}
                 >
-                    Sign In
+                    {isLoading ? 'Signing In...' : 'Sign In'}
                 </button>
             </div>
             <div className="text-center text-sm text-gray-400 space-y-2">
