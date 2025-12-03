@@ -33,9 +33,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
         try {
             await onLogin(loginUsername, loginPassword);
         } catch (err: any) {
-            // Error handling is done in parent or via error prop, 
-            // but we can also catch here if we change the prop signature.
-            // For now, we rely on the parent setting the 'error' prop.
+            console.error("onLogin failed in Login.tsx", err);
         }
     };
 
@@ -224,6 +222,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
             <div className="max-w-md w-full bg-gray-800 p-8 rounded-lg shadow-2xl">
                 <h1 className="text-4xl font-bold text-center text-cyan-400 mb-2">LAX Keeper AI</h1>
                 <p className="text-center text-gray-400 mb-8">{title}</p>
+                {error && (
+                    <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded relative mb-4" role="alert">
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                )}
                 {content}
             </div>
         </div>

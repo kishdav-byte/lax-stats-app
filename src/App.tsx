@@ -172,19 +172,12 @@ const App: React.FC = () => {
     }, [currentView, currentUser]);
 
     const handleLogin = async (username: string, password: string): Promise<void> => {
+        setLoginError(''); // Clear previous error
         try {
-            // We assume username is email for Firebase Auth, or we need a mapping.
-            // For simplicity in this migration, let's assume the user enters their email.
-            // If the UI says "Username", we might need to change it to "Email" or look up the email.
-            // Given the Login component asks for "Username", we have a mismatch.
-            // FIX: We will try to find the email from the loaded users list if possible, 
-            // OR just tell the user to use Email. 
-            // Better: Let's assume the input is the email for now to make it work with Firebase.
             await authService.login(username, password);
-            setLoginError('');
         } catch (error: any) {
             console.error("Login failed", error);
-            setLoginError('Invalid email or password.');
+            setLoginError(error.message || "Invalid email or password.");
         }
     };
 

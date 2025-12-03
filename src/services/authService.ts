@@ -8,7 +8,12 @@ import {
 import { auth } from "../firebaseConfig";
 
 export const login = async (email: string, password: string) => {
-    return await signInWithEmailAndPassword(auth, email, password);
+    try {
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        return result;
+    } catch (e) {
+        throw e;
+    }
 };
 
 export const register = async (email: string, password: string) => {
