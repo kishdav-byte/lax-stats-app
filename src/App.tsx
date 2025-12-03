@@ -44,15 +44,9 @@ const App: React.FC = () => {
     const [gameForReport, setGameForReport] = useState<Game | null>(null);
     const [viewingPlayer, setViewingPlayer] = useState<{ player: Player; team: Team } | null>(null);
 
-    // New loading state for initial data fetch
-    const [, setIsLoadingData] = useState(true);
-
-    const [loginError, setLoginError] = useState('');
-
     // Load initial data from Firestore
     useEffect(() => {
         const loadData = async () => {
-            setIsLoadingData(true);
             const data = await storageService.fetchInitialData();
             if (data.teams) setTeams(data.teams);
             if (data.games) setGames(data.games);
@@ -64,8 +58,6 @@ const App: React.FC = () => {
             // Sound effects are separate
             const effects = await storageService.fetchSoundEffects();
             setSoundEffects(effects);
-
-            setIsLoadingData(false);
         };
         loadData();
     }, []);
