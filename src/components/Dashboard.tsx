@@ -1,5 +1,5 @@
 import React from 'react';
-import { Game } from '../types';
+import { Game, Role } from '../types';
 import { View } from '../services/storageService';
 
 interface DashboardProps {
@@ -8,9 +8,10 @@ interface DashboardProps {
     onViewChange: (view: View) => void;
     activeGameId: string | null;
     onViewReport: (game: Game) => void;
+    userRole?: Role;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange, activeGameId, onViewReport }) => {
+const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange, activeGameId, onViewReport, userRole }) => {
     const upcomingGames = games.filter(g => g.status === 'scheduled').sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
     const finishedGames = games.filter(g => g.status === 'finished').sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
     const activeGame = games.find(g => g.id === activeGameId);
@@ -44,6 +45,12 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     <h2 className="text-2xl font-semibold">Schedule Season</h2>
                     <p className="text-gray-400 mt-2">Set up your game schedule for the entire season.</p>
                 </div>
+                {userRole === Role.ADMIN && (
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-xl hover:shadow-cyan-500/20 transition-shadow duration-300 cursor-pointer" onClick={() => onViewChange('soundEffects')}>
+                        <h2 className="text-2xl font-semibold">Sound FX</h2>
+                        <p className="text-gray-400 mt-2">Manage custom audio for training drills.</p>
+                    </div>
+                )}
             </div>
 
             <div>

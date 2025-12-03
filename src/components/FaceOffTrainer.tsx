@@ -10,6 +10,7 @@ interface FaceOffTrainerProps {
     onReturnToDashboard: () => void;
     activeAssignment: DrillAssignment | null;
     onCompleteAssignment: (assignmentId: string, status: DrillStatus, results: any) => void;
+    onSaveSession: (results: any) => void;
     soundEffects: SoundEffects;
 }
 
@@ -19,7 +20,7 @@ const formatTime = (seconds: number) => {
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
 };
 
-const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, activeAssignment, onCompleteAssignment, soundEffects }) => {
+const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, activeAssignment, onCompleteAssignment, onSaveSession, soundEffects }) => {
     type DrillState = 'idle' | 'starting' | 'countdown' | 'set' | 'measuring' | 'result' | 'error';
     type SessionState = 'setup' | 'running' | 'finished';
 
@@ -85,8 +86,14 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             // This is a self-started session. Show the summary screen.
             setDrillState('idle');
             setSessionState('finished');
+            // Save the session
+            onSaveSession({
+                reactionTimes,
+                sessionType: sessionConfig?.type,
+                sessionValue: sessionConfig?.value
+            });
         }
-    }, [stopCamera, activeAssignment, onCompleteAssignment, reactionTimes]);
+    }, [stopCamera, activeAssignment, onCompleteAssignment, reactionTimes, sessionConfig, onSaveSession]);
 
     useEffect(() => {
         if (sessionState === 'running' && sessionConfig?.type === 'timed') {

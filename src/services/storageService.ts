@@ -1,4 +1,4 @@
-import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback } from '../types';
+import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback, TrainingSession } from '../types';
 import { db } from '../firebaseConfig';
 import {
     collection,
@@ -7,6 +7,8 @@ import {
     setDoc,
     deleteDoc,
     onSnapshot,
+    query,
+    where,
 } from "firebase/firestore";
 
 export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile';
@@ -20,6 +22,7 @@ export interface AppDatabase {
     drillAssignments: DrillAssignment[];
     soundEffects: SoundEffects;
     feedback: Feedback[];
+    trainingSessions: TrainingSession[];
     currentView: View;
     activeGameId: string | null;
 }
@@ -33,6 +36,7 @@ export const defaultState: AppDatabase = {
     drillAssignments: [],
     soundEffects: {},
     feedback: [],
+    trainingSessions: [],
     currentView: 'dashboard',
     activeGameId: null,
 };
@@ -138,5 +142,22 @@ export const fetchSoundEffects = async (): Promise<SoundEffects> => {
     const snap = await getDocs(collection(db, 'settings'));
     const doc = snap.docs.find(d => d.id === 'soundEffects');
     return doc ? doc.data().effects : {};
+};
+
+export const saveTrainingSession = async (session: TrainingSession) => {
+    await setDoc(doc(db, 'trainingSessions', session.id), session);
+};
+
+export const deleteTrainingSession = async (sessionId: string) => {
+    await deleteDoc(doc(db, 'trainingSessions', sessionId));
+};
+
+export const subscribeToTrainingSessions = (userId: string, callback: (sessions: TrainingSession[]) => void) => {
+    // Only subscribe to the user's own sessions
+    const q = query(collection(db, 'trainingSessions'), where("userId", "==", userId));
+    return onSnapshot(q, (snapshot) => {
+        const sessions = snapshot.docs.map(d => convertDoc<TrainingSession>(d));
+        callback(sessions);
+    });
 };
 

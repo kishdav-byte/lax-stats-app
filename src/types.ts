@@ -172,3 +172,18 @@ export interface Feedback {
     timestamp: string; // ISO string
     status: FeedbackStatus;
 }
+
+export interface TrainingSession {
+    id: string;
+    userId: string;
+    drillType: DrillType;
+    date: string; // ISO string
+    results: {
+        reactionTimes?: number[]; // For face-off
+        shotHistory?: number[];   // For shooting
+        totalShots?: number;      // For shooting
+        drillMode?: 'release' | 'placement'; // For shooting
+        sessionType?: 'count' | 'timed'; // For face-off
+        sessionValue?: number; // For face-off
+    };
+}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Team, Game, Player, User, Role, AccessRequest, RequestStatus, DrillAssignment, DrillType, DrillStatus, SoundEffects, SoundEffectName, Feedback, FeedbackType, FeedbackStatus } from './types';
+import { Team, Game, Player, User, Role, AccessRequest, RequestStatus, DrillAssignment, DrillType, DrillStatus, SoundEffects, SoundEffectName, Feedback, FeedbackType, FeedbackStatus, TrainingSession } from './types';
 import TeamManagement from './components/TeamManagement';
 import Schedule from './components/Schedule';
 import GameTracker from './components/GameTracker';
@@ -35,6 +35,7 @@ const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
     const [drillAssignments, setDrillAssignments] = useState<DrillAssignment[]>([]);
+    const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
     const [soundEffects, setSoundEffects] = useState<SoundEffects>({});
     const [feedback, setFeedback] = useState<Feedback[]>([]);
     const [activeDrillAssignment, setActiveDrillAssignment] = useState<DrillAssignment | null>(null);
@@ -114,6 +115,14 @@ const App: React.FC = () => {
                         status: userData.status || 'active',
                         ...userData
                     } as User;
+
+                    // Auto-upgrade to Admin for specific email (case-insensitive)
+                    if (appUser.email.toLowerCase() === 'kishdav@yahoo.com' && appUser.role !== Role.ADMIN) {
+                        console.log("Auto-upgrading user to Admin:", appUser.email);
+                        appUser.role = Role.ADMIN;
+                        storageService.saveUser(appUser);
+                    }
+
                     setCurrentUser(appUser);
 
                     // Set view based on role
@@ -153,10 +162,21 @@ const App: React.FC = () => {
                 // User is signed out
                 setCurrentUser(null);
                 setCurrentView('dashboard');
+                setTrainingSessions([]);
             }
         });
         return () => unsubscribe();
     }, []);
+
+    // Separate effect for user-specific subscriptions
+    useEffect(() => {
+        if (currentUser) {
+            const unsubscribeTraining = storageService.subscribeToTrainingSessions(currentUser.id, (sessions) => {
+                setTrainingSessions(sessions);
+            });
+            return () => unsubscribeTraining();
+        }
+    }, [currentUser?.id]);
 
     // Seed default admin if empty (Logic moved to registration or manual setup for Firebase)
     // We can remove the auto-seeding useEffect for now as we rely on real registration.
@@ -240,7 +260,7 @@ const App: React.FC = () => {
                 username,
                 email,
                 password: '', // Don't store password
-                role: role,
+                role: email === 'kishdav@yahoo.com' ? Role.ADMIN : role,
                 status: 'active',
             };
 
@@ -282,7 +302,7 @@ const App: React.FC = () => {
     };
 
     const handleInviteUser = (newUser: Omit<User, 'id' | 'email'>) => {
-        const userWithId = { ...newUser, id: `user_${Date.now()}`, email: `${newUser.username.toLowerCase()}@example.com`, status: 'active' as const };
+        const userWithId = { ...newUser, id: `user_${Date.now()} `, email: `${newUser.username.toLowerCase()} @example.com`, status: 'active' as const };
         const fullUser = userWithId as User;
         setUsers([...users, fullUser]);
         storageService.saveUser(fullUser);
@@ -306,7 +326,7 @@ const App: React.FC = () => {
     };
 
     const handleAddTeam = async (teamName: string) => {
-        const newTeam: Team = { id: `team_${Date.now()}`, name: teamName, roster: [] };
+        const newTeam: Team = { id: `team_${Date.now()} `, name: teamName, roster: [] };
 
         let currentTeams = [...teams];
         const sampleTeam = currentTeams.find(t => t.id === 'sample_team_id');
@@ -368,14 +388,14 @@ const App: React.FC = () => {
         if (awayTeamInfo.id) {
             awayTeam = teams.find(t => t.id === awayTeamInfo.id);
         } else if (awayTeamInfo.name) {
-            const newOpponentTeam: Team = { id: `team_${Date.now()}`, name: awayTeamInfo.name, roster: [] };
+            const newOpponentTeam: Team = { id: `team_${Date.now()} `, name: awayTeamInfo.name, roster: [] };
             await storageService.saveTeam(newOpponentTeam);
             awayTeam = newOpponentTeam;
         }
 
         if (homeTeam && awayTeam) {
             const newGame: Game = {
-                id: `game_${Date.now()}`,
+                id: `game_${Date.now()} `,
                 homeTeam,
                 awayTeam,
                 scheduledTime,
@@ -396,7 +416,7 @@ const App: React.FC = () => {
                 alert("Game saved successfully!");
             } catch (error) {
                 console.error("Error saving game:", error);
-                alert(`Failed to save game: ${error}`);
+                alert(`Failed to save game: ${error} `);
             }
         }
     };
@@ -455,7 +475,7 @@ const App: React.FC = () => {
     const handlePlayerJoinRequest = (teamId: string, playerJersey: string, playerPosition: string) => {
         if (!currentUser || currentUser.role !== Role.PLAYER) return;
         const newRequest: AccessRequest = {
-            id: `req_${Date.now()}`,
+            id: `req_${Date.now()} `,
             requestingUserId: currentUser.id,
             teamId,
             playerName: currentUser.username,
@@ -486,7 +506,7 @@ const App: React.FC = () => {
                     const teamToUpdate = teams.find(t => t.id === request.teamId);
                     if (teamToUpdate) {
                         const newPlayer: Player = {
-                            id: `player_${Date.now()}_${requestingUser.id}`,
+                            id: `player_${Date.now()}_${requestingUser.id} `,
                             name: requestingUser.username,
                             jerseyNumber: request.playerJersey,
                             position: request.playerPosition || 'N/A',
@@ -509,7 +529,7 @@ const App: React.FC = () => {
     const handleAddDrillAssignment = (playerId: string, drillType: DrillType, notes: string) => {
         if (!currentUser) return;
         const newAssignment: DrillAssignment = {
-            id: `drill_${Date.now()}`,
+            id: `drill_${Date.now()} `,
             assigningCoachId: currentUser.id,
             playerId,
             drillType,
@@ -558,7 +578,7 @@ const App: React.FC = () => {
     const handleAddFeedback = (type: FeedbackType, message: string) => {
         if (!currentUser) return;
         const newFeedback: Feedback = {
-            id: `feedback_${Date.now()}`,
+            id: `feedback_${Date.now()} `,
             userId: currentUser.id,
             username: currentUser.username,
             userRole: currentUser.role,
@@ -574,7 +594,53 @@ const App: React.FC = () => {
         let returnView: storageService.View = 'dashboard';
         if (currentUser.role === Role.PLAYER) returnView = 'playerDashboard';
         if (currentUser.role === Role.PARENT) returnView = 'parentDashboard';
+        if (currentUser.role === Role.PARENT) returnView = 'parentDashboard';
         setCurrentView(returnView);
+    };
+
+    const handleSaveTrainingSession = async (results: any) => {
+        if (!currentUser) return;
+
+        // Determine drill type based on results
+        let drillType = DrillType.FACE_OFF;
+        if (results.shotHistory) {
+            drillType = DrillType.SHOOTING;
+        }
+
+        const newSession: TrainingSession = {
+            id: `session_${Date.now()} `,
+            userId: currentUser.id,
+            drillType,
+            date: new Date().toISOString(),
+            results: results
+        };
+
+        // Optimistic update
+        setTrainingSessions(prev => [...prev, newSession]);
+
+        try {
+            await storageService.saveTrainingSession(newSession);
+        } catch (error) {
+            console.error("Failed to save training session:", error);
+            alert("Failed to save training session. Please check your connection.");
+            // Revert optimistic update
+            setTrainingSessions(prev => prev.filter(s => s.id !== newSession.id));
+        }
+    };
+
+    const handleDeleteTrainingSession = async (sessionId: string) => {
+        if (!confirm("Are you sure you want to delete this session?")) return;
+
+        // Optimistic update
+        setTrainingSessions(prev => prev.filter(s => s.id !== sessionId));
+
+        try {
+            await storageService.deleteTrainingSession(sessionId);
+        } catch (error) {
+            console.error("Failed to delete training session:", error);
+            alert("Failed to delete training session.");
+            // Revert (fetch again or just warn)
+        }
     };
 
     const handleUpdateFeedbackStatus = (feedbackId: string, status: FeedbackStatus) => {
@@ -671,7 +737,7 @@ const App: React.FC = () => {
                     />
                 ) : null;
             case 'trainingMenu':
-                return <TrainingMenu onViewChange={setCurrentView} />;
+                return <TrainingMenu onViewChange={setCurrentView} sessions={trainingSessions} onDeleteSession={handleDeleteTrainingSession} />;
             case 'faceOffTrainer':
                 return <FaceOffTrainer
                     onReturnToDashboard={() => {
@@ -680,6 +746,7 @@ const App: React.FC = () => {
                     }}
                     activeAssignment={activeDrillAssignment}
                     onCompleteAssignment={handleUpdateDrillAssignment}
+                    onSaveSession={handleSaveTrainingSession}
                     soundEffects={soundEffects}
                 />;
             case 'shootingDrill':
@@ -690,6 +757,7 @@ const App: React.FC = () => {
                     }}
                     activeAssignment={activeDrillAssignment}
                     onCompleteAssignment={handleUpdateDrillAssignment}
+                    onSaveSession={handleSaveTrainingSession}
                     soundEffects={soundEffects}
                 />;
             case 'users':
@@ -698,7 +766,7 @@ const App: React.FC = () => {
                 }
                 return null; // Fallback for non-admins, handled by useEffect
             case 'soundEffects':
-                if (currentUser.role === Role.ADMIN || currentUser.role === Role.COACH) {
+                if (currentUser.role === Role.ADMIN) {
                     return <SoundEffectsManager
                         soundEffects={soundEffects}
                         onUpdateSoundEffect={handleUpdateSoundEffect}
@@ -746,11 +814,15 @@ const App: React.FC = () => {
                 return null;
             case 'dashboard':
             default:
-                return <Dashboard games={games} onStartGame={startGame} onViewChange={setCurrentView} activeGameId={activeGameId} onViewReport={handleViewReport} />;
+                return <Dashboard games={games} onStartGame={startGame} onViewChange={setCurrentView} activeGameId={activeGameId} onViewReport={handleViewReport} userRole={currentUser?.role} />;
         }
     };
 
     const isTrainingView = ['trainingMenu', 'faceOffTrainer', 'shootingDrill'].includes(currentView);
+
+    if (currentUser) {
+        console.log("Rendering Nav. User:", currentUser.email, "Role:", currentUser.role);
+    }
 
     let allNavItems: { view: storageService.View; label: string }[] = [];
 
@@ -804,7 +876,7 @@ const App: React.FC = () => {
                         <div className="hidden md:flex items-center space-x-4">
                             {allNavItems.map(item => {
                                 const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
-                                let className = `px-3 py-2 rounded-md text-sm font-medium `;
+                                let className = `px-3 py-2 rounded-md text-sm font-medium`;
                                 if (item.view === 'devSupport') {
                                     className += isActive ? 'bg-yellow-600 text-white' : 'text-yellow-400 hover:bg-gray-700 hover:text-white';
                                 } else {
@@ -849,7 +921,7 @@ const App: React.FC = () => {
                         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                             {allNavItems.map(item => {
                                 const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
-                                let className = `block w-full text-left px-3 py-2 rounded-md text-base font-medium `;
+                                let className = `block w-full text-left px-3 py-2 rounded-md text-base font-medium`;
                                 if (item.view === 'devSupport') {
                                     className += isActive ? 'bg-yellow-600 text-white' : 'text-yellow-400 hover:bg-gray-700 hover:text-white';
                                 } else {

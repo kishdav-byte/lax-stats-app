@@ -112,10 +112,11 @@ interface ShootingDrillProps {
     onReturnToDashboard: () => void;
     activeAssignment: DrillAssignment | null;
     onCompleteAssignment: (assignmentId: string, status: DrillStatus, results: any) => void;
+    onSaveSession: (results: any) => void;
     soundEffects: SoundEffects;
 }
 
-const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, activeAssignment, onCompleteAssignment, soundEffects }) => {
+const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, activeAssignment, onCompleteAssignment, onSaveSession, soundEffects }) => {
     type DrillMode = 'release' | 'placement';
     type SessionState = 'setup' | 'calibration' | 'running' | 'finished';
     type DrillState = 'idle' | 'starting' | 'countdown' | 'set' | 'measuring' | 'result' | 'error' | 'log_shot';
@@ -167,8 +168,13 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             onCompleteAssignment(activeAssignment.id, DrillStatus.COMPLETED, { shotHistory });
         } else {
             setSessionState('finished');
+            onSaveSession({
+                shotHistory,
+                totalShots,
+                drillMode
+            });
         }
-    }, [stopCamera, activeAssignment, onCompleteAssignment, shotHistory]);
+    }, [stopCamera, activeAssignment, onCompleteAssignment, shotHistory, totalShots, drillMode, onSaveSession]);
 
     // Functions involved in a dependency cycle are declared as regular hoisted functions
     // to prevent initialization errors that occur with `useCallback`.

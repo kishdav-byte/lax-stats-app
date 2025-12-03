@@ -1,11 +1,15 @@
 import React from 'react';
 import { View } from '../services/storageService';
+import { TrainingSession } from '../types';
+import TrainingHistory from './TrainingHistory';
 
 interface TrainingMenuProps {
     onViewChange: (view: View) => void;
+    sessions: TrainingSession[];
+    onDeleteSession: (sessionId: string) => void;
 }
 
-const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange }) => {
+const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange, sessions, onDeleteSession }) => {
     return (
         <div className="space-y-8">
             <div>
@@ -29,6 +33,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange }) => {
                     <p className="text-gray-400 mt-2">Measure your shot release speed or track your shot placement to build an accuracy heatmap.</p>
                 </div>
             </div>
+
+            <TrainingHistory sessions={sessions} onDeleteSession={onDeleteSession} />
+
             <div className="text-center pt-4">
                 <button onClick={() => onViewChange('dashboard')} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
                     Return to Main Menu
