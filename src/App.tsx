@@ -66,6 +66,7 @@ const App: React.FC = () => {
     // Auth Listener
     useEffect(() => {
         const unsubscribe = authService.subscribeToAuthChanges(async (firebaseUser) => {
+            console.log("Auth state changed. User:", firebaseUser?.uid);
             if (firebaseUser) {
                 // User is signed in. Find their profile in our 'users' collection.
                 // Note: In a real app, we would fetch the specific user doc here.
@@ -105,14 +106,16 @@ const App: React.FC = () => {
                         username: firebaseUser.displayName || 'User',
                         role: Role.COACH, // Default to Coach for now so they can see things
                         status: 'active',
-                        createdAt: Date.now()
                     };
 
                     try {
-                        await storageService.saveUser(defaultUser);
+                        const savePromise = storageService.saveUser(defaultUser);
+                        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 2000));
+                        await Promise.race([savePromise, timeoutPromise]);
+
                         setCurrentUser(defaultUser);
                         setCurrentView('dashboard');
-                        console.log("Default profile created and logged in.");
+                        console.log("Default profile created (or timed out) and logged in.");
                     } catch (err) {
                         console.error("Failed to create default profile:", err);
                         // If this fails, we might want to log them out or show an error
@@ -198,9 +201,11 @@ const App: React.FC = () => {
     };
 
     const handleRegister = async (username: string, email: string, password: string, role: Role): Promise<{ success: boolean, error?: string }> => {
+        console.log("handleRegister called");
         try {
             const userCred = await authService.register(email, password);
             const firebaseUser = userCred.user;
+            console.log("Auth user created:", firebaseUser.uid);
 
             const newUser: User = {
                 id: firebaseUser.uid,
@@ -211,8 +216,14 @@ const App: React.FC = () => {
                 status: 'active',
             };
 
-            // Save profile to Firestore
-            await storageService.saveUser(newUser);
+            // Save profile to Firestore with timeout
+            console.log("Saving user profile to Firestore...");
+            // We race the save against a 2-second timeout so we don't hang the UI if Firestore is slow/offline
+            const savePromise = storageService.saveUser(newUser);
+            const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 2000));
+
+            await Promise.race([savePromise, timeoutPromise]);
+            console.log("User profile save attempted. Proceeding...");
 
             // Update local state
             setUsers([...users, newUser]);
@@ -577,6 +588,8 @@ const App: React.FC = () => {
     const activeGame = games.find(g => g.id === activeGameId);
 
 
+
+    console.log("App render. currentUser:", currentUser?.email, "currentView:", currentView, "isApiKeySet:", isApiKeySet);
 
     if (!isApiKeySet) {
         return <ApiKeyManager onApiKeySet={() => {
