@@ -80,6 +80,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         }
 
         const timesToSave = finalReactionTimes || reactionTimes;
+        console.log("Finishing session. Final Times:", finalReactionTimes, "State Times:", reactionTimes, "Times to Save:", timesToSave);
 
         if (activeAssignment) {
             // This is an assigned drill. We're done here. Let App.tsx handle the rest.
@@ -194,7 +195,9 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }, [soundEffects]);
 
     const handleDrillComplete = useCallback((time: number) => {
+        console.log("Drill Complete. Time:", time);
         const newTimes = [...reactionTimes, time];
+        console.log("New Times Array:", newTimes);
         setReactionTimes(newTimes);
         setCompletedDrills(prevCount => {
             const newCount = prevCount + 1;
@@ -421,6 +424,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }
 
     if (sessionState === 'finished') {
+        console.log("Rendering Finished State. Reaction Times:", reactionTimes);
         const stats = getSessionStats();
         return (
             <div className="space-y-6 text-center">
