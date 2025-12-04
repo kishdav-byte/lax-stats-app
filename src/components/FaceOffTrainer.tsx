@@ -26,6 +26,12 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
     const [sessionState, setSessionState] = useState<SessionState>(activeAssignment ? 'running' : 'setup');
     const [sessionConfig, setSessionConfig] = useState<{ type: 'count' | 'timed'; value: number } | null>(null);
+    const sessionConfigRef = useRef<{ type: 'count' | 'timed', value: number } | null>(null);
+
+    useEffect(() => {
+        sessionConfigRef.current = sessionConfig;
+    }, [sessionConfig]);
+
     const [timedDuration, setTimedDuration] = useState(5); // Default 5 minutes
 
     const [drillState, setDrillState] = useState<DrillState>('idle');
@@ -201,12 +207,13 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         setReactionTimes(newTimes);
         setCompletedDrills(prevCount => {
             const newCount = prevCount + 1;
-            if ((sessionConfig?.type === 'count' || activeAssignment) && newCount >= (sessionConfig?.value ?? 1)) {
+            const config = sessionConfigRef.current;
+            if ((config?.type === 'count' || activeAssignment) && newCount >= (config?.value ?? 1)) {
                 handleFinishSession(newTimes);
             }
             return newCount;
         });
-    }, [reactionTimes, sessionConfig, handleFinishSession, activeAssignment]);
+    }, [reactionTimes, handleFinishSession, activeAssignment]);
 
     const startMotionDetection = useCallback(() => {
         const video = videoRef.current;
