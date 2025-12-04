@@ -71,7 +71,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         };
     }, [stopCamera]);
 
-    const handleFinishSession = useCallback(() => {
+    const handleFinishSession = useCallback((finalReactionTimes?: number[]) => {
         stopCamera();
         clearTimeouts();
         if (animationFrameIdRef.current) {
@@ -79,16 +79,18 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             animationFrameIdRef.current = null;
         }
 
+        const timesToSave = finalReactionTimes || reactionTimes;
+
         if (activeAssignment) {
             // This is an assigned drill. We're done here. Let App.tsx handle the rest.
-            onCompleteAssignment(activeAssignment.id, DrillStatus.COMPLETED, { reactionTimes });
+            onCompleteAssignment(activeAssignment.id, DrillStatus.COMPLETED, { reactionTimes: timesToSave });
         } else {
             // This is a self-started session. Show the summary screen.
             setDrillState('idle');
             setSessionState('finished');
             // Save the session
             onSaveSession({
-                reactionTimes,
+                reactionTimes: timesToSave,
                 sessionType: sessionConfig?.type,
                 sessionValue: sessionConfig?.value
             });
@@ -192,15 +194,16 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }, [soundEffects]);
 
     const handleDrillComplete = useCallback((time: number) => {
-        setReactionTimes(prevTimes => [...prevTimes, time]);
+        const newTimes = [...reactionTimes, time];
+        setReactionTimes(newTimes);
         setCompletedDrills(prevCount => {
             const newCount = prevCount + 1;
             if ((sessionConfig?.type === 'count' || activeAssignment) && newCount >= (sessionConfig?.value ?? 1)) {
-                handleFinishSession();
+                handleFinishSession(newTimes);
             }
             return newCount;
         });
-    }, [sessionConfig, handleFinishSession, activeAssignment]);
+    }, [reactionTimes, sessionConfig, handleFinishSession, activeAssignment]);
 
     const startMotionDetection = useCallback(() => {
         const video = videoRef.current;
