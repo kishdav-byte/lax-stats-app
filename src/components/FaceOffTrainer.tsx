@@ -394,7 +394,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[1, 3, 5, 20].map(count => (
                                     <button key={count} onClick={() => handleSelectSession('count', count)} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-md transition-colors">{count} Drill{count > 1 ? 's' : ''}</button>
-                                ))}\n                        </div>
+                                ))}                        </div>
                         </div>
                         <div className="border-t border-gray-700 my-4"></div>
                         <div>
