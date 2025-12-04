@@ -1,10 +1,12 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { Game, StatType, Team } from '../types';
+import { Game, StatType, Team, TrainingSession, DrillType } from '../types';
 import { analyzePlayerPerformance, PlayerAnalysisData } from '../services/geminiService';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface AnalyticsProps {
     teams: Team[];
     games: Game[];
+    trainingSessions?: TrainingSession[];
     onReturnToDashboard: () => void;
 }
 
@@ -76,9 +78,23 @@ const AnalysisModal: React.FC<{
 };
 
 
-const Analytics: React.FC<AnalyticsProps> = ({ teams, games, onReturnToDashboard }) => {
+const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = [], onReturnToDashboard }) => {
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
     const [analyzingPlayer, setAnalyzingPlayer] = useState<AggregatedStats | null>(null);
+
+    const faceOffData = useMemo(() => {
+        return trainingSessions
+            .filter(s => s.drillType === DrillType.FACE_OFF && s.results.reactionTimes && s.results.reactionTimes.length > 0)
+            .map(s => {
+                const avg = Math.round(s.results.reactionTimes!.reduce((a, b) => a + b, 0) / s.results.reactionTimes!.length);
+                return {
+                    date: new Date(s.date).toLocaleDateString(),
+                    fullDate: new Date(s.date), // For sorting if needed
+                    averageTime: avg,
+                };
+            })
+            .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime());
+    }, [trainingSessions]);
 
     const aggregatedStats: AggregatedStats[] = useMemo(() => {
         const playerStatsMap: { [playerId: string]: AggregatedStats } = {};
@@ -166,13 +182,43 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, onReturnToDashboard
             {analyzingPlayer && <AnalysisModal player={analyzingPlayer} onClose={() => setAnalyzingPlayer(null)} />}
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-cyan-400">Player Analytics</h1>
+                    <h1 className="text-3xl font-bold text-cyan-400">Analytics Center</h1>
                     <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
                         Return to Dashboard
                     </button>
                 </div>
 
+                {/* Training Progress Section */}
+                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h2 className="text-2xl font-bold mb-4 text-cyan-400">Training Progress</h2>
+                    <div className="grid md:grid-cols-1 gap-6">
+                        <div className="bg-gray-900 p-4 rounded-lg">
+                            <h3 className="text-lg font-semibold mb-2 text-center">Face-Off Clamp Speed (Lower is Better)</h3>
+                            {faceOffData.length > 0 ? (
+                                <div className="h-64 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={faceOffData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                            <XAxis dataKey="date" stroke="#9CA3AF" />
+                                            <YAxis stroke="#9CA3AF" label={{ value: 'ms', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', color: '#F3F4F6' }}
+                                                itemStyle={{ color: '#22D3EE' }}
+                                            />
+                                            <Legend />
+                                            <Line type="monotone" dataKey="averageTime" name="Avg Reaction Time" stroke="#22D3EE" strokeWidth={2} activeDot={{ r: 8 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <p className="text-center text-gray-500 py-10">No face-off training data available yet.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+                    <h2 className="text-2xl font-bold mb-4 text-cyan-400">Team & Player Stats</h2>
                     <p className="text-gray-400 mb-4 text-sm">
                         This table aggregates player statistics across all completed games. Click on any column header to sort. Use the AI analysis to get coaching insights on a player's performance.
                     </p>
