@@ -83,6 +83,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
     const [analyzingPlayer, setAnalyzingPlayer] = useState<AggregatedStats | null>(null);
 
     const faceOffData = useMemo(() => {
+        console.log("Analytics received trainingSessions:", trainingSessions);
         const sessionsByDate: { [date: string]: number[] } = {};
 
         trainingSessions.forEach(s => {
@@ -95,7 +96,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
             }
         });
 
-        return Object.entries(sessionsByDate)
+        const aggregated = Object.entries(sessionsByDate)
             .map(([date, times]) => {
                 const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
                 return {
@@ -105,6 +106,9 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                 };
             })
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        console.log("Aggregated Face-Off Data:", aggregated);
+        return aggregated;
     }, [trainingSessions]);
 
     const aggregatedStats: AggregatedStats[] = useMemo(() => {
