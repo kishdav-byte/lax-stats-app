@@ -615,6 +615,8 @@ const App: React.FC = () => {
             results: results
         };
 
+        console.log("Saving new training session:", newSession);
+
         // Optimistic update
         setTrainingSessions(prev => [...prev, newSession]);
 

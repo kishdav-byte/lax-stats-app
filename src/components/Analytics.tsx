@@ -83,17 +83,28 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
     const [analyzingPlayer, setAnalyzingPlayer] = useState<AggregatedStats | null>(null);
 
     const faceOffData = useMemo(() => {
-        return trainingSessions
-            .filter(s => s.drillType === DrillType.FACE_OFF && s.results.reactionTimes && s.results.reactionTimes.length > 0)
-            .map(s => {
-                const avg = Math.round(s.results.reactionTimes!.reduce((a, b) => a + b, 0) / s.results.reactionTimes!.length);
+        const sessionsByDate: { [date: string]: number[] } = {};
+
+        trainingSessions.forEach(s => {
+            if (s.drillType === DrillType.FACE_OFF && s.results.reactionTimes && s.results.reactionTimes.length > 0) {
+                const dateKey = new Date(s.date).toLocaleDateString();
+                if (!sessionsByDate[dateKey]) {
+                    sessionsByDate[dateKey] = [];
+                }
+                sessionsByDate[dateKey].push(...s.results.reactionTimes);
+            }
+        });
+
+        return Object.entries(sessionsByDate)
+            .map(([date, times]) => {
+                const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
                 return {
-                    date: new Date(s.date).toLocaleDateString(),
-                    fullDate: new Date(s.date), // For sorting if needed
+                    date,
+                    fullDate: new Date(date), // This might be approximate depending on locale, but good enough for sorting
                     averageTime: avg,
                 };
             })
-            .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime());
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [trainingSessions]);
 
     const aggregatedStats: AggregatedStats[] = useMemo(() => {
