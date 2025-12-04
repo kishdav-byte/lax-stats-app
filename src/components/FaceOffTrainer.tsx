@@ -96,13 +96,14 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             setDrillState('idle');
             setSessionState('finished');
             // Save the session
+            const config = sessionConfigRef.current;
             onSaveSession({
                 reactionTimes: timesToSave,
-                sessionType: sessionConfig?.type,
-                sessionValue: sessionConfig?.value
+                sessionType: config?.type,
+                sessionValue: config?.value
             });
         }
-    }, [stopCamera, activeAssignment, onCompleteAssignment, reactionTimes, sessionConfig, onSaveSession]);
+    }, [stopCamera, activeAssignment, onCompleteAssignment, reactionTimes, onSaveSession]);
 
     useEffect(() => {
         if (sessionState === 'running' && sessionConfig?.type === 'timed') {
