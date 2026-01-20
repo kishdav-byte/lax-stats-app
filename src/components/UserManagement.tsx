@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Role, Team } from '../types';
-import { UserPlus, Shield, Binary, Trash2, Edit3, Lock, Unlock, ChevronRight } from 'lucide-react';
+import { UserPlus, Shield, Trash2, Edit3, Lock, Unlock } from 'lucide-react';
 
 interface EditUserModalProps {
     user: User;
@@ -201,6 +201,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
     const handleOpenEditModal = (user: User) => {
         setEditingUser(user);
         setIsEditModalOpen(true);
+    };
+
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setEditingUser(null);
+    };
+
+    const handleSaveUser = (user: User) => {
+        onUpdateUser(user);
+        handleCloseEditModal();
     };
 
     return (

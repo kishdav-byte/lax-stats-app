@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DrillAssignment, DrillStatus, SoundEffects, SoundEffectName } from '../types';
-import { Zap, Timer, Activity, ChevronRight, Binary, ShieldAlert, Cpu, Box, RefreshCcw, Home } from 'lucide-react';
+import { Timer, Binary, ShieldAlert, RefreshCcw, Home } from 'lucide-react';
 
 // A constant to tune motion sensitivity. Higher means less sensitive.
 const SENSITIVITY_THRESHOLD = 4;

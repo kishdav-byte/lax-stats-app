@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType, User, Role } from '../types';
+import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType } from '../types';
 import { generateGameSummary } from '../services/geminiService';
-import { Timer, Trophy, ShieldAlert, Binary, RefreshCcw, Home, Plus, Info, Activity, Clock, Cpu, BarChart3, ChevronRight, Zap } from 'lucide-react';
+import { Timer, Trophy, ShieldAlert, Binary, Plus, Activity, Cpu, ChevronRight, Zap } from 'lucide-react';
 
 interface GameTrackerProps {
     game: Game;
     onUpdateGame: (game: Game) => void;
     onReturnToDashboard: () => void;
-    currentUser: User;
     onViewReport: (game: Game) => void;
 }
 
@@ -360,7 +359,7 @@ const LiveStatsSummary: React.FC<{
     );
 };
 
-const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnToDashboard, currentUser, onViewReport }) => {
+const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnToDashboard, onViewReport }) => {
     const [clock, setClock] = useState(game.gameClock);
     const [isClockRunning, setIsClockRunning] = useState(false);
     const [assistModal, setAssistModal] = useState<{ show: boolean, scoringPlayer: Player | null, scoringTeamId: string | null }>({ show: false, scoringPlayer: null, scoringTeamId: null });
@@ -461,7 +460,10 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
         return statsByPlayer;
     }, [game.stats, allPlayers]);
 
-    const isCoachOrAdmin = currentUser.role === Role.ADMIN || currentUser.role === Role.COACH;
+    const handleReturnToDashboard = () => {
+        setIsClockRunning(false); // Pause the clock before leaving
+        onReturnToDashboard();
+    };
 
     if (game.status === 'scheduled') {
         return <GameSetup game={game} onStartGame={(config) => {

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DrillAssignment, DrillStatus, SoundEffects, SoundEffectName } from '../types';
-import { Target, Zap, Timer, Activity, ChevronRight, Binary, ShieldAlert, Cpu, Box, RefreshCcw, Home, Move, Maximize2 } from 'lucide-react';
+import { Target, Zap, Activity, Binary, ShieldAlert, RefreshCcw, Home, Move, Maximize2 } from 'lucide-react';
 
 // --- Constants ---
 const SENSITIVITY_THRESHOLD = 10;

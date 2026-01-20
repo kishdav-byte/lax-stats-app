@@ -710,7 +710,7 @@ const App: React.FC = () => {
             case 'schedule':
                 return <Schedule teams={teams} games={games} onAddGame={handleAddGame} onStartGame={startGame} onDeleteGame={handleDeleteGame} onReturnToDashboard={() => setCurrentView('dashboard')} onViewReport={handleViewReport} />;
             case 'game':
-                if (activeGame) return <GameTracker game={activeGame} onUpdateGame={handleUpdateGame} onReturnToDashboard={handleReturnToDashboardFromGame} currentUser={currentUser} onViewReport={handleViewReport} />;
+                if (activeGame) return <GameTracker game={activeGame} onUpdateGame={handleUpdateGame} onReturnToDashboard={handleReturnToDashboardFromGame} onViewReport={handleViewReport} />;
                 return null;
             case 'gameReport':
                 return gameForReport ? (

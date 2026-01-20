@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Game, Team } from '../types';
-import { Calendar, ChevronRight, Binary, Trash2, Play, TableProperties } from 'lucide-react';
+import { Calendar, Binary, Trash2, Play, TableProperties } from 'lucide-react';
 
 interface ScheduleProps {
     teams: Team[];

@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from '../services/storageService';
 import { TrainingSession } from '../types';
 import TrainingHistory from './TrainingHistory';
-import { Target, Zap, Activity } from 'lucide-react';
+import { Target, Zap } from 'lucide-react';
 
 interface TrainingMenuProps {
     onViewChange: (view: View) => void;

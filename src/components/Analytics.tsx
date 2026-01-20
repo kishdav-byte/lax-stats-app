@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { Game, StatType, Team, TrainingSession, DrillType } from '../types';
 import { analyzePlayerPerformance, PlayerAnalysisData } from '../services/geminiService';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { BarChart3, Binary, Activity, ChevronRight, Shield, Cpu, Box } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Activity, Shield, Cpu, Binary, Box } from 'lucide-react';
 
 interface AnalyticsProps {
     teams: Team[];
