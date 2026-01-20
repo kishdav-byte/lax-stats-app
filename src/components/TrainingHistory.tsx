@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrainingSession, DrillType } from '../types';
+import { Trash2, Binary, Clock, BarChart3 } from 'lucide-react';
 
 interface TrainingHistoryProps {
     sessions: TrainingSession[];
@@ -11,54 +12,79 @@ const TrainingHistory: React.FC<TrainingHistoryProps> = ({ sessions, onDeleteSes
     const sortedSessions = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const formatDate = (isoString: string) => {
-        return new Date(isoString).toLocaleString();
+        return new Date(isoString).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     const getSummary = (session: TrainingSession) => {
         if (session.drillType === DrillType.FACE_OFF) {
             const times = session.results.reactionTimes || [];
-            if (times.length === 0) return "No data";
+            if (times.length === 0) return "DATA_UNAVAILABLE";
             const best = Math.min(...times);
             const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
-            return `${times.length} Reps | Best: ${best}ms | Avg: ${avg}ms`;
+            return `${times.length} REPS // BEST: ${best}ms // AVG: ${avg}ms`;
         } else if (session.drillType === DrillType.SHOOTING) {
             const shots = session.results.shotHistory || [];
             if (session.results.drillMode === 'release') {
                 const avg = Math.round(shots.reduce((a, b) => a + b, 0) / shots.length);
-                return `${shots.length} Shots | Avg Release: ${avg}ms`;
+                return `${shots.length} SHOTS // AVG_REL: ${avg}ms`;
             } else {
-                return `${shots.length} Shots | Placement Drill`;
+                return `${shots.length} SHOTS // PLACEMENT_DRILL`;
             }
         }
-        return "Unknown Drill";
+        return "UNKNOWN_PROTOCOL";
     };
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg mt-8">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400">Training History</h2>
+        <div className="space-y-8 animate-in fade-in duration-700">
+            <div className="flex items-center gap-4">
+                <BarChart3 className="w-5 h-5 text-brand" />
+                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">
+                    TRAINING <span className="text-brand">HISTORY</span>
+                </h2>
+                <div className="h-px bg-surface-border flex-grow"></div>
+            </div>
+
             {sortedSessions.length === 0 ? (
-                <p className="text-gray-400">No training history yet. Start a drill to save your stats!</p>
+                <div className="cyber-card p-12 text-center opacity-50 border-dashed">
+                    <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Historical Performance Data Detected</p>
+                </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid gap-3">
                     {sortedSessions.map(session => (
-                        <div key={session.id} className="bg-gray-700 p-4 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-bold text-lg text-white">{session.drillType}</span>
-                                    <span className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded-full">{formatDate(session.date)}</span>
+                        <div key={session.id} className="cyber-card p-1 bg-surface-card/30">
+                            <div className="bg-black p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-surface-border/50">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-1 h-3 bg-brand"></div>
+                                        <span className="font-display font-bold text-white uppercase italic tracking-tight text-lg">
+                                            {session.drillType.replace('_', ' ')}
+                                        </span>
+                                        <div className="flex items-center gap-2 px-2 py-0.5 bg-surface-card border border-surface-border">
+                                            <Clock className="w-3 h-3 text-gray-500" />
+                                            <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">{formatDate(session.date)}</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest ml-4 font-bold">
+                                        {getSummary(session)}
+                                    </p>
                                 </div>
-                                <p className="text-gray-300 mt-1">{getSummary(session)}</p>
+                                <button
+                                    onClick={() => {
+                                        if (window.confirm("CONFIRM DATA PURGE?")) {
+                                            onDeleteSession(session.id);
+                                        }
+                                    }}
+                                    className="text-gray-600 hover:text-red-500 transition-colors self-end sm:self-auto p-2"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => {
-                                    if (window.confirm("Are you sure you want to delete this session?")) {
-                                        onDeleteSession(session.id);
-                                    }
-                                }}
-                                className="mt-2 sm:mt-0 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded-md transition-colors"
-                            >
-                                Delete
-                            </button>
                         </div>
                     ))}
                 </div>

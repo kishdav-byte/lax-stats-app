@@ -1,5 +1,6 @@
 import React from 'react';
 import { AccessRequest, Role, Team, User, RequestStatus } from '../types';
+import { ShieldAlert, Check, X, Bell } from 'lucide-react';
 
 interface NotificationsProps {
     currentUser: User;
@@ -14,57 +15,56 @@ const Notifications: React.FC<NotificationsProps> = ({ currentUser, requests, te
 
     const relevantRequests = requests.filter(req => {
         if (req.status !== RequestStatus.PENDING) return false;
-
-        // Admins see all pending requests.
         if (role === Role.ADMIN) return true;
-        // Coaches see requests for their teams.
         if (role === Role.COACH && teamIds?.includes(req.teamId)) return true;
-
         return false;
     });
 
-    if (relevantRequests.length === 0) {
-        return null;
-    }
+    if (relevantRequests.length === 0) return null;
 
     const canTakeAction = role === Role.ADMIN || role === Role.COACH;
 
     return (
-        <div className="bg-gray-800 border-l-4 border-cyan-400 p-4 rounded-r-lg shadow-lg mb-6">
-            <h3 className="text-xl font-bold mb-2 text-cyan-400">Pending Requests</h3>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
+        <div className="cyber-card p-6 border-brand bg-brand/5 relative overflow-hidden group">
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Bell className="w-24 h-24 rotate-12" />
+            </div>
+
+            <div className="flex items-center gap-4 mb-6">
+                <ShieldAlert className="w-5 h-5 text-brand animate-pulse" />
+                <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter">System <span className="text-brand">Alerts</span></h3>
+                <div className="flex-grow h-[1px] bg-brand/30"></div>
+                <p className="text-[10px] font-mono text-brand uppercase tracking-widest">{relevantRequests.length} Pending Actions</p>
+            </div>
+
+            <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar pr-2">
                 {relevantRequests.map(req => {
                     const requestingUser = users.find(u => u.id === req.requestingUserId);
                     const team = teams.find(t => t.id === req.teamId);
 
                     if (!requestingUser || !team) return null;
 
-                    const notificationText = (
-                        <>
-                            Player <span className="font-bold">{requestingUser.username}</span> is requesting to join team <span className="font-bold">{team.name}</span> as #{req.playerJersey} ({req.playerPosition}).
-                        </>
-                    );
-
                     return (
-                        <div key={req.id} className="bg-gray-700 p-3 rounded-md flex flex-col sm:flex-row justify-between sm:items-center">
+                        <div key={req.id} className="bg-black/40 border border-surface-border p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:border-brand/50">
                             <div>
-                                <p>
-                                    {notificationText}
+                                <p className="text-[11px] font-mono text-gray-300 uppercase tracking-wider leading-relaxed">
+                                    Entity <span className="text-brand font-bold">{requestingUser.username}</span> requests node assignment to unit <span className="text-white font-bold italic">{team.name.toUpperCase()}</span> as <span className="text-brand">#{req.playerJersey}</span> ({req.playerPosition || 'RSTR_NODE'}).
                                 </p>
                             </div>
                             {canTakeAction && (
-                                <div className="flex space-x-2 mt-2 sm:mt-0 flex-shrink-0">
+                                <div className="flex items-center gap-3 self-end md:self-auto flex-shrink-0">
                                     <button
                                         onClick={() => onUpdateRequestStatus(req.id, RequestStatus.APPROVED)}
-                                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-md text-sm transition-colors"
+                                        className="text-green-500 hover:text-green-400 text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center gap-2 px-3 py-1 border border-green-500/20 hover:bg-green-500/10 transition-all"
                                     >
-                                        Approve
+                                        AUTHORIZE <Check className="w-3 h-3" />
                                     </button>
                                     <button
                                         onClick={() => onUpdateRequestStatus(req.id, RequestStatus.DENIED)}
-                                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md text-sm transition-colors"
+                                        className="text-red-500 hover:text-red-400 text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center gap-2 px-3 py-1 border border-red-500/20 hover:bg-red-500/10 transition-all"
                                     >
-                                        Deny
+                                        REJECT <X className="w-3 h-3" />
                                     </button>
                                 </div>
                             )}

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Game, Team, StatType, User, Role } from '../types';
+import { Printer, X, Edit3, Save, Check, Shield, FileText, BarChart3, Binary, Cpu } from 'lucide-react';
 
 interface GameReportProps {
     game: Game;
@@ -21,7 +22,6 @@ const STAT_DEFINITIONS: { key: StatType, label: string }[] = [
 ];
 
 const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]: { [key in StatType]?: number } } }> = ({ team, playerStats }) => {
-
     const teamTotals = STAT_DEFINITIONS.reduce((acc, statDef) => {
         acc[statDef.key] = team.roster.reduce((sum, player) => sum + (playerStats[player.id]?.[statDef.key] || 0), 0);
         return acc;
@@ -31,52 +31,56 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
     const totalAssists = teamTotals[StatType.ASSIST] || 0;
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-            <h3 className="text-xl font-bold mb-2 text-cyan-600">{team.name} - Final Stats</h3>
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-sm text-left text-gray-800">
-                    <thead className="bg-gray-100 text-xs uppercase tracking-wider">
+        <div className="bg-black border border-surface-border overflow-hidden">
+            <div className="bg-surface-card p-4 border-b border-surface-border">
+                <h3 className="text-sm font-mono font-black text-brand uppercase tracking-[0.3em] flex items-center gap-2">
+                    <Shield className="w-4 h-4" /> UNIT_METRICS // {team.name}
+                </h3>
+            </div>
+            <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full min-w-[700px] text-left border-collapse">
+                    <thead className="bg-black/40 text-[9px] font-mono text-gray-500 uppercase tracking-widest">
                         <tr>
-                            <th className="p-2">#</th>
-                            <th className="p-2">Player</th>
-                            <th className="p-2">Pos</th>
-                            <th className="p-2 text-center">G</th>
-                            <th className="p-2 text-center">A</th>
-                            <th className="p-2 text-center">P</th>
+                            <th className="p-4 border-b border-surface-border">#</th>
+                            <th className="p-4 border-b border-surface-border">ENTITY</th>
+                            <th className="p-4 border-b border-surface-border">POS</th>
+                            <th className="p-4 text-center border-b border-surface-border text-white">G</th>
+                            <th className="p-4 text-center border-b border-surface-border text-white">A</th>
+                            <th className="p-4 text-center border-b border-surface-border text-white">P</th>
                             {STAT_DEFINITIONS.filter(s => s.key !== StatType.GOAL && s.key !== StatType.ASSIST).map(s => (
-                                <th key={s.key} className="p-2 text-center">{s.label}</th>
+                                <th key={s.key} className="p-4 text-center border-b border-surface-border">{s.label}</th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-surface-border/30">
                         {team.roster.map(player => {
                             const stats = playerStats[player.id] || {};
                             const goals = stats[StatType.GOAL] || 0;
                             const assists = stats[StatType.ASSIST] || 0;
                             const points = goals + assists;
                             return (
-                                <tr key={player.id}>
-                                    <td className="p-2 font-bold text-cyan-700">{player.jerseyNumber}</td>
-                                    <td className="p-2">{player.name}</td>
-                                    <td className="p-2 text-gray-500">{player.position}</td>
-                                    <td className="p-2 text-center">{goals}</td>
-                                    <td className="p-2 text-center">{assists}</td>
-                                    <td className="p-2 text-center font-bold">{points}</td>
+                                <tr key={player.id} className="hover:bg-white/5 transition-colors">
+                                    <td className="p-4 font-mono text-xs text-brand">#{player.jerseyNumber}</td>
+                                    <td className="p-4 font-display font-bold text-white uppercase italic text-sm">{player.name}</td>
+                                    <td className="p-4 font-mono text-[10px] text-gray-600 uppercase tracking-tighter">{player.position}</td>
+                                    <td className="p-4 text-center font-bold text-white">{goals}</td>
+                                    <td className="p-4 text-center font-bold text-white">{assists}</td>
+                                    <td className="p-4 text-center font-black text-brand italic">{points}</td>
                                     {STAT_DEFINITIONS.filter(s => s.key !== StatType.GOAL && s.key !== StatType.ASSIST).map(s => (
-                                        <td key={s.key} className="p-2 text-center">{(stats[s.key] || 0)}</td>
+                                        <td key={s.key} className="p-4 text-center font-mono text-[10px] text-gray-500">{(stats[s.key] || 0)}</td>
                                     ))}
                                 </tr>
                             );
                         })}
                     </tbody>
-                    <tfoot className="bg-gray-100 font-bold">
+                    <tfoot className="bg-surface-card/20 font-display italic font-black text-white uppercase text-xs">
                         <tr>
-                            <td colSpan={3} className="p-2 text-right">Team Totals</td>
-                            <td className="p-2 text-center">{totalGoals}</td>
-                            <td className="p-2 text-center">{totalAssists}</td>
-                            <td className="p-2 text-center">{totalGoals + totalAssists}</td>
+                            <td colSpan={3} className="p-4 text-right text-gray-600 tracking-widest font-mono">AGGREGATE_FIELD_TOTALS</td>
+                            <td className="p-4 text-center text-brand underline">{totalGoals}</td>
+                            <td className="p-4 text-center text-brand underline">{totalAssists}</td>
+                            <td className="p-4 text-center text-brand underline underline-offset-4 decoration-2">{totalGoals + totalAssists}</td>
                             {STAT_DEFINITIONS.filter(s => s.key !== StatType.GOAL && s.key !== StatType.ASSIST).map(s => (
-                                <td key={s.key} className="p-2 text-center">{teamTotals[s.key] || 0}</td>
+                                <td key={s.key} className="p-4 text-center font-mono text-gray-600">{teamTotals[s.key] || 0}</td>
                             ))}
                         </tr>
                     </tfoot>
@@ -90,22 +94,14 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
     const [isEditing, setIsEditing] = useState(false);
     const [editedGame, setEditedGame] = useState<Game>(game);
 
-    useEffect(() => {
-        setEditedGame(game);
-    }, [game]);
+    useEffect(() => { setEditedGame(game); }, [game]);
 
     const playerStats = useMemo(() => {
         const statsByPlayer: { [playerId: string]: { [key in StatType]?: number } } = {};
-
-        [...game.homeTeam.roster, ...game.awayTeam.roster].forEach(p => {
-            statsByPlayer[p.id] = {};
-        });
-
+        [...game.homeTeam.roster, ...game.awayTeam.roster].forEach(p => { statsByPlayer[p.id] = {}; });
         game.stats.forEach(stat => {
             if (!statsByPlayer[stat.playerId]) statsByPlayer[stat.playerId] = {};
-
             statsByPlayer[stat.playerId][stat.type] = (statsByPlayer[stat.playerId][stat.type] || 0) + 1;
-
             if (stat.type === StatType.GOAL && stat.assistingPlayerId) {
                 if (!statsByPlayer[stat.assistingPlayerId]) statsByPlayer[stat.assistingPlayerId] = {};
                 statsByPlayer[stat.assistingPlayerId][StatType.ASSIST] = (statsByPlayer[stat.assistingPlayerId][StatType.ASSIST] || 0) + 1;
@@ -114,147 +110,182 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
         return statsByPlayer;
     }, [game.stats, game.homeTeam.roster, game.awayTeam.roster]);
 
-    const handleSave = () => {
-        onUpdateGame(editedGame);
-        setIsEditing(false);
-    };
-
-    const handleCancel = () => {
-        setEditedGame(game);
-        setIsEditing(false);
-    };
-
+    const handleSave = () => { onUpdateGame(editedGame); setIsEditing(false); };
+    const handleCancel = () => { setEditedGame(game); setIsEditing(false); };
     const handleScoreChange = (team: 'home' | 'away', delta: number) => {
-        setEditedGame(prev => ({
-            ...prev,
-            score: {
-                ...prev.score,
-                [team]: Math.max(0, prev.score[team] + delta)
-            }
-        }));
+        setEditedGame(prev => ({ ...prev, score: { ...prev.score, [team]: Math.max(0, prev.score[team] + delta) } }));
     };
 
     const canEdit = currentUser.role === Role.ADMIN || currentUser.role === Role.COACH;
 
     return (
-        <div>
+        <div className="bg-black min-h-screen">
             <style>
                 {`
                 @media print {
-                    body {
-                        background-color: #fff;
-                    }
-                    .no-print {
-                        display: none;
-                    }
-                    .print-area {
-                        box-shadow: none !important;
-                        border: none !important;
-                        color: #000 !important;
-                    }
-                    .print-area h1, .print-area h2, .print-area h3, .print-area p, .print-area td, .print-area th {
-                        color: #000 !important;
-                    }
-                    .print-area .bg-white {
-                        background-color: #fff !important;
-                    }
-                     .print-area .bg-gray-50 {
-                        background-color: #f9fafb !important;
-                    }
+                    body { background-color: #fff !important; color: #000 !important; }
+                    .no-print { display: none !important; }
+                    .print-area { box-shadow: none !important; border: none !important; color: #000 !important; max-width: 100% !important; padding: 0 !important; }
+                    .print-area h1, .print-area h2, .print-area h3, .print-area p, .print-area td, .print-area th { color: #000 !important; border-color: #ccc !important; }
+                    .print-area .bg-black { background-color: #fff !important; }
+                    .print-area .bg-surface-card { background-color: #f5f5f5 !important; }
+                    .print-area span.text-brand { color: #ff5722 !important; font-weight: bold; }
+                    .cyber-card { border: 1px solid #ccc !important; }
                 }
                 `}
             </style>
-            <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
-                {isEditing ? (
-                    <>
-                        <button onClick={handleSave} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg">Save Changes</button>
-                        <button onClick={handleCancel} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">Cancel</button>
-                    </>
-                ) : (
-                    <>
-                        {canEdit && <button onClick={() => setIsEditing(true)} className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg shadow-lg">Edit Game</button>}
-                        <button onClick={() => window.print()} className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg">Print Report</button>
-                        <button onClick={onClose} className="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg">Close</button>
-                    </>
-                )}
-            </div>
 
-            <div className="print-area max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-2xl text-gray-900">
-                {isEditing && (
-                    <div className="no-print bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-r-lg">
-                        <p className="font-bold">Editing Mode</p>
-                        <p>You are currently editing this game report. Changes are not saved until you click "Save Changes".</p>
+            {/* Header / Actions */}
+            <div className="no-print bg-black/80 backdrop-blur-md sticky top-0 z-[100] border-b border-surface-border">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-4">
+                        <FileText className="w-5 h-5 text-brand" />
+                        <h1 className="text-sm font-mono font-black text-white uppercase tracking-[0.4em]">SYNTHESIS_REPORT // {game.id.substring(0, 8).toUpperCase()}</h1>
                     </div>
-                )}
-                <header className="text-center mb-8 border-b-2 border-gray-200 pb-4">
-                    <h1 className="text-4xl font-bold text-gray-800">Official Game Report</h1>
-                    <p className="text-lg text-gray-600 mt-2">{new Date(game.scheduledTime).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                </header>
 
-                <div className="flex justify-around items-center text-center mb-8">
-                    <div className="w-2/5">
-                        <h2 className="text-3xl font-bold truncate">{game.homeTeam.name}</h2>
-                    </div>
-                    <div className="w-1/5">
+                    <div className="flex items-center gap-3">
                         {isEditing ? (
-                            <div className="flex items-center justify-center gap-2">
-                                <button onClick={() => handleScoreChange('home', -1)} className="bg-gray-200 p-1 rounded-full">-</button>
-                                <span className="text-5xl font-mono font-bold text-cyan-600">{editedGame.score.home}</span>
-                                <button onClick={() => handleScoreChange('home', 1)} className="bg-gray-200 p-1 rounded-full">+</button>
-                                <span className="text-5xl font-mono font-bold text-cyan-600">-</span>
-                                <button onClick={() => handleScoreChange('away', -1)} className="bg-gray-200 p-1 rounded-full">-</button>
-                                <span className="text-5xl font-mono font-bold text-cyan-600">{editedGame.score.away}</span>
-                                <button onClick={() => handleScoreChange('away', 1)} className="bg-gray-200 p-1 rounded-full">+</button>
-                            </div>
+                            <>
+                                <button onClick={handleSave} className="cyber-button py-2 px-6 text-[10px] flex items-center gap-2">COMMIT_SAVE <Save className="w-4 h-4" /></button>
+                                <button onClick={handleCancel} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white px-4">Abort</button>
+                            </>
                         ) : (
-                            <p className="text-5xl font-mono font-bold text-cyan-600">{game.score.home} - {game.score.away}</p>
+                            <>
+                                {canEdit && (
+                                    <button onClick={() => setIsEditing(true)} className="cyber-button-outline py-2 px-6 text-[10px] flex items-center gap-2">
+                                        MODIFY_RECORD <Edit3 className="w-4 h-4" />
+                                    </button>
+                                )}
+                                <button onClick={() => window.print()} className="bg-white text-black px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all flex items-center gap-2">
+                                    PRINT <Printer className="w-4 h-4" />
+                                </button>
+                                <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-2">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </>
                         )}
                     </div>
-                    <div className="w-2/5">
-                        <h2 className="text-3xl font-bold truncate">{game.awayTeam.name}</h2>
+                </div>
+            </div>
+
+            <div className="print-area max-w-5xl mx-auto p-8 sm:p-12 space-y-12">
+                {isEditing && (
+                    <div className="no-print p-4 bg-brand/5 border-l-2 border-brand mb-12 flex items-center gap-4">
+                        <Binary className="w-5 h-5 text-brand animate-pulse" />
+                        <p className="text-[10px] font-mono text-brand uppercase tracking-widest">RECORD_OVERWRITE_ACTIVE: Manual data adjustment authorized.</p>
+                    </div>
+                )}
+
+                <header className="text-center relative py-12">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-12 bg-gradient-to-b from-brand to-transparent"></div>
+                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.4em] mb-4">Official Athletic Combat Record</p>
+                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter mb-4">POST-MATCH <span className="text-brand">SYNTHESIS</span></h1>
+                    <p className="text-sm font-mono text-white/50 uppercase tracking-widest">
+                        {new Date(game.scheduledTime).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                </header>
+
+                <div className="grid md:grid-cols-[1fr_auto_1fr] items-center gap-12 border-y border-surface-border py-12">
+                    <div className="text-right">
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4">{game.homeTeam.name}</h2>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Home_Unit</p>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-6">
+                            {isEditing ? (
+                                <div className="flex items-center gap-4 bg-surface-card p-4 border border-surface-border">
+                                    <button onClick={() => handleScoreChange('home', -1)} className="text-brand hover:text-white"><X className="w-4 h-4 rotate-45" /></button>
+                                    <span className="text-7xl font-mono font-black text-white">{editedGame.score.home}</span>
+                                    <button onClick={() => handleScoreChange('home', 1)} className="text-brand hover:text-white"><Check className="w-4 h-4" /></button>
+                                    <span className="text-4xl font-mono font-black text-gray-700">/</span>
+                                    <button onClick={() => handleScoreChange('away', -1)} className="text-brand hover:text-white"><X className="w-4 h-4 rotate-45" /></button>
+                                    <span className="text-7xl font-mono font-black text-white">{editedGame.score.away}</span>
+                                    <button onClick={() => handleScoreChange('away', 1)} className="text-brand hover:text-white"><Check className="w-4 h-4" /></button>
+                                </div>
+                            ) : (
+                                <>
+                                    <span className="text-8xl font-display font-black text-white italic tracking-tighter shadow-brand/20 drop-shadow-2xl">{game.score.home}</span>
+                                    <span className="text-4xl font-mono font-black text-brand opacity-30">V</span>
+                                    <span className="text-8xl font-display font-black text-white italic tracking-tighter shadow-brand/20 drop-shadow-2xl">{game.score.away}</span>
+                                </>
+                            )}
+                        </div>
+                        <div className="h-px bg-brand w-20 mt-6 blur-[1px]"></div>
+                    </div>
+
+                    <div className="text-left">
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4">{game.awayTeam.name}</h2>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Away_Unit</p>
                     </div>
                 </div>
 
-                {isEditing ? (
-                    <div className="no-print mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Edit AI Game Summary</h2>
-                        <textarea
-                            value={editedGame.aiSummary || ''}
-                            onChange={(e) => setEditedGame(prev => ({ ...prev, aiSummary: e.target.value }))}
-                            rows={8}
-                            className="w-full bg-white text-gray-800 p-2 border border-gray-300 rounded-md"
-                        />
-                    </div>
-                ) : game.aiSummary && (
-                    <div className="mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">AI Game Summary</h2>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{game.aiSummary}</p>
-                    </div>
-                )}
+                <div className="grid md:grid-cols-2 gap-12">
+                    <div className="cyber-card p-1">
+                        <div className="bg-black p-8 border border-surface-border h-full">
+                            <div className="flex items-center gap-3 mb-6">
+                                <Cpu className="w-5 h-5 text-brand" />
+                                <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">AI_SYNOPSIS</h3>
+                            </div>
 
-                {isEditing ? (
-                    <div className="no-print mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Correction Notes</h2>
-                        <textarea
-                            value={editedGame.correctionNotes || ''}
-                            onChange={(e) => setEditedGame(prev => ({ ...prev, correctionNotes: e.target.value }))}
-                            placeholder="e.g., Corrected final score due to a missed goal entry in the 3rd period."
-                            rows={3}
-                            className="w-full bg-white text-gray-800 p-2 border border-gray-300 rounded-md"
-                        />
+                            {isEditing ? (
+                                <textarea
+                                    value={editedGame.aiSummary || ''}
+                                    onChange={(e) => setEditedGame(prev => ({ ...prev, aiSummary: e.target.value }))}
+                                    className="w-full bg-surface-card border border-surface-border p-4 font-mono text-[11px] text-gray-300 custom-scrollbar uppercase tracking-wider"
+                                    rows={10}
+                                />
+                            ) : (
+                                <div className="font-mono text-[11px] text-gray-400 leading-relaxed uppercase tracking-wider whitespace-pre-wrap">
+                                    {game.aiSummary || 'NO_SYNOPSIS_RESOLVED_FOR_THIS_SESSION'}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                ) : game.correctionNotes && (
-                    <div className="mb-8 bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-                        <h2 className="text-2xl font-bold text-yellow-800 mb-2">Correction Notes</h2>
-                        <p className="text-yellow-700 whitespace-pre-wrap leading-relaxed">{game.correctionNotes}</p>
+
+                    <div className="space-y-6">
+                        <div className="cyber-card p-1 border-brand/20">
+                            <div className="bg-black p-8 border border-surface-border">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <Binary className="w-5 h-5 text-brand" />
+                                    <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">DATA_CORRECTIONS</h3>
+                                </div>
+                                {isEditing ? (
+                                    <textarea
+                                        value={editedGame.correctionNotes || ''}
+                                        onChange={(e) => setEditedGame(prev => ({ ...prev, correctionNotes: e.target.value }))}
+                                        placeholder="INPUT_CORRECTION_STRING_HERE"
+                                        className="w-full bg-surface-card border border-surface-border p-4 font-mono text-[11px] text-gray-300 custom-scrollbar uppercase tracking-wider"
+                                        rows={4}
+                                    />
+                                ) : (
+                                    <div className={`p-4 font-mono text-[11px] leading-relaxed uppercase tracking-wider ${game.correctionNotes ? 'text-brand italic bg-brand/5 border-l border-brand' : 'text-gray-600 italic'}`}>
+                                        {game.correctionNotes || 'NO_CORRECTION_DATA_LOGGED'}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-surface-card border border-surface-border p-8 text-center flex flex-col items-center justify-center min-h-[160px]">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase mb-2 tracking-[0.2em]">Data_Integrity_Checksum</p>
+                            <p className="text-[9px] font-mono text-brand font-black break-all uppercase opacity-40">MD5: {game.id.replace(/-/g, '')}_SECURE_RSTR_NODE</p>
+                        </div>
                     </div>
-                )}
+                </div>
 
-
-                <div className="space-y-8">
+                <div className="space-y-12 pt-12">
+                    <div className="flex items-center gap-4">
+                        <BarChart3 className="w-5 h-5 text-brand" />
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Unit <span className="text-brand">Performance Matrix</span></h2>
+                        <div className="h-px bg-surface-border flex-grow"></div>
+                    </div>
                     <ReportStatsTable team={game.homeTeam} playerStats={playerStats} />
                     <ReportStatsTable team={game.awayTeam} playerStats={playerStats} />
                 </div>
+
+                <footer className="text-center pt-24 pb-12 opacity-30">
+                    <p className="text-[8px] font-mono uppercase tracking-[0.5em] text-gray-500">End of Record // Lax Stats AI Operational Intelligence // Confidential</p>
+                </footer>
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DrillAssignment, DrillStatus, SoundEffects, SoundEffectName } from '../types';
+import { Target, Zap, Timer, Activity, ChevronRight, Binary, ShieldAlert, Cpu, Box, RefreshCcw, Home, Move, Maximize2 } from 'lucide-react';
 
 // --- Constants ---
 const SENSITIVITY_THRESHOLD = 10;
@@ -57,29 +58,39 @@ const DraggableResizableOverlay: React.FC<{
     return (
         <div
             ref={overlayRef}
-            className="absolute border-4 border-cyan-400 border-dashed cursor-move grid grid-cols-3 grid-rows-3"
+            className="absolute border-2 border-brand cursor-move grid grid-cols-3 grid-rows-3 bg-brand/5 backdrop-blur-[1px]"
             style={{ left: overlay.x, top: overlay.y, width: overlay.width, height: overlay.height }}
             onMouseDown={(e) => handleMouseDown(e, 'drag')}
         >
+            {/* HUD Corner Decorations */}
+            <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-brand"></div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-brand"></div>
+            <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-brand"></div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-brand"></div>
+
             {[...Array(9)].map((_, i) => (
-                <div key={i} className="w-full h-full border border-cyan-400 border-opacity-50"></div>
+                <div key={i} className="w-full h-full border border-brand/20"></div>
             ))}
+
             <div
-                className="absolute -bottom-2 -right-2 w-4 h-4 bg-cyan-400 cursor-se-resize rounded-full"
+                className="absolute -bottom-2 -right-2 w-5 h-5 bg-brand cursor-se-resize flex items-center justify-center shadow-[0_0_10px_rgba(255,87,34,0.5)]"
                 onMouseDown={(e) => handleMouseDown(e, 'resize')}
-            ></div>
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded">
-                Drag or Resize
+            >
+                <Maximize2 className="w-3 h-3 text-black" />
+            </div>
+
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-brand text-black px-3 py-1 text-[8px] font-mono font-black uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.3)]">
+                CALIBRATE_LOCK_TARGET
+            </div>
+
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20">
+                <Move className="w-8 h-8 text-brand" />
             </div>
         </div>
     );
 };
 
 const ShotChart: React.FC<{ history: number[] }> = ({ history }) => {
-    // FIX: The initial value for `reduce` was an untyped object (`{}`), which caused TypeScript
-    // to infer `counts` incorrectly. This resulted in `Object.values(counts)` returning `unknown[]`,
-    // which is not compatible with `Math.max`. By providing a type for the initial value,
-    // `counts` is correctly typed, and the error is resolved.
     const counts = history.reduce((acc, zone) => {
         acc[zone] = (acc[zone] || 0) + 1;
         return acc;
@@ -87,19 +98,30 @@ const ShotChart: React.FC<{ history: number[] }> = ({ history }) => {
 
     const maxCount = Math.max(0, ...Object.values(counts));
 
-    const getColor = (count: number) => {
-        if (count === 0 || maxCount === 0) return 'bg-gray-700 bg-opacity-50';
-        return `bg-cyan-400`
-    };
-
     return (
-        <div className="grid grid-cols-3 grid-rows-3 gap-1 w-64 h-64 mx-auto bg-gray-900 p-1 rounded-md">
+        <div className="grid grid-cols-3 grid-rows-3 gap-2 w-80 h-80 mx-auto bg-black p-4 border border-surface-border relative group">
+            <div className="absolute -inset-0.5 bg-brand/10 opacity-20 pointer-events-none"></div>
             {[...Array(9)].map((_, i) => {
                 const count = counts[i] || 0;
-                const opacity = count > 0 ? 0.2 + (count / maxCount) * 0.8 : 0.1;
+                const weight = count > 0 ? (count / maxCount) : 0;
                 return (
-                    <div key={i} className={`flex items-center justify-center rounded-sm ${getColor(count)}`} style={{ opacity }}>
-                        <span className="text-4xl font-bold text-white">{count > 0 ? count : ''}</span>
+                    <div
+                        key={i}
+                        className={`relative flex items-center justify-center transition-all duration-700 overflow-hidden border border-surface-border/30`}
+                        style={{
+                            backgroundColor: weight > 0 ? `rgba(255, 87, 34, ${0.1 + weight * 0.4})` : 'transparent'
+                        }}
+                    >
+                        {weight > 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                                <Activity className="w-full h-full text-brand scale-150" />
+                            </div>
+                        )}
+                        <span className={`font-display font-black italic text-4xl transition-colors ${weight > 0 ? 'text-white' : 'text-gray-900'}`}>
+                            {count > 0 ? count : '0'}
+                        </span>
+                        {/* Zone Marker */}
+                        <span className="absolute top-1 left-1 text-[6px] font-mono text-gray-700 tracking-tighter">Z_{i + 1 < 10 ? '0' : ''}{i + 1}</span>
                     </div>
                 )
             })}
@@ -121,19 +143,16 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     type SessionState = 'setup' | 'calibration' | 'running' | 'finished';
     type DrillState = 'idle' | 'starting' | 'countdown' | 'set' | 'measuring' | 'result' | 'error' | 'log_shot';
 
-    // Session State
     const [sessionState, setSessionState] = useState<SessionState>('setup');
     const [drillMode, setDrillMode] = useState<DrillMode>('release');
     const [totalShots, setTotalShots] = useState(10);
 
-    // Drill State
     const [drillState, setDrillState] = useState<DrillState>('idle');
     const [shotTime, setShotTime] = useState<number | null>(null);
-    const [shotHistory, setShotHistory] = useState<number[]>([]); // For placement zones or release times
+    const [shotHistory, setShotHistory] = useState<number[]>([]);
     const [countdown, setCountdown] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
-    // UI/Hardware State
     const [overlay, setOverlay] = useState({ x: 50, y: 50, width: 200, height: 150 });
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -176,9 +195,6 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         }
     }, [stopCamera, activeAssignment, onCompleteAssignment, shotHistory, totalShots, drillMode, onSaveSession]);
 
-    // Functions involved in a dependency cycle are declared as regular hoisted functions
-    // to prevent initialization errors that occur with `useCallback`.
-
     function handleMotionDetected(time: number) {
         if (animationFrameIdRef.current) {
             cancelAnimationFrame(animationFrameIdRef.current);
@@ -195,7 +211,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             } else {
                 sequenceTimeoutRef.current.push(window.setTimeout(startDrill, 3000));
             }
-        } else { // placement mode
+        } else {
             setDrillState('log_shot');
         }
     }
@@ -204,7 +220,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas || video.readyState < video.HAVE_METADATA) {
-            setError("Video feed not ready.");
+            setError("OPTICAL_FEED_DISCONNECTED");
             setDrillState('error');
             return;
         }
@@ -213,9 +229,6 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        // Calculate Region of Interest (ROI) based on overlay
-        // The overlay coordinates are relative to the displayed video size (clientWidth/clientHeight)
-        // We need to scale them to the actual video resolution (videoWidth/videoHeight)
         const scaleX = video.videoWidth / video.clientWidth;
         const scaleY = video.videoHeight / video.clientHeight;
 
@@ -279,7 +292,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             playSound('set');
         }, delay));
 
-        const randomDelay = Math.random() * 1500 + 500; // Wait 0.5-2 seconds after "set"
+        const randomDelay = Math.random() * 1500 + 500;
         delay += randomDelay;
 
         timeouts.push(window.setTimeout(() => {
@@ -296,7 +309,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             try {
                 audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             } catch (e) {
-                setError("Your browser does not support required audio features.");
+                setError("AUDIO_SUBSYSTEM_FAILURE.");
                 setDrillState('error');
                 return;
             }
@@ -324,7 +337,6 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         }
     }
 
-    // Non-cyclic functions can remain as `useCallback` for optimization
     const setupCamera = useCallback(async () => {
         try {
             if (mediaStreamRef.current) {
@@ -337,7 +349,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             }
         } catch (err) {
             console.error("Error accessing camera:", err);
-            setError("Could not access camera. Please check permissions and try again.");
+            setError("OPTICAL_CAPTURE_UNAVAILABLE. CHECK PERMISSIONS.");
             setDrillState('error');
         }
     }, [stopCamera]);
@@ -397,7 +409,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
     useEffect(() => {
         if (activeAssignment) {
-            setDrillMode('placement'); // Assuming assignments are for placement
+            setDrillMode('placement');
             const match = activeAssignment.notes.match(/(\d+)\s*(shots|reps)/i);
             if (match && match[1]) {
                 setTotalShots(parseInt(match[1], 10));
@@ -407,7 +419,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     }, [activeAssignment]);
 
     useEffect(() => {
-        return () => { // Cleanup on unmount
+        return () => {
             stopCamera();
             clearTimeouts();
             if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
@@ -420,7 +432,6 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         }
     }, [sessionState, setupCamera]);
 
-    // Re-attach the stream to the new video element when switching to 'running' state
     useEffect(() => {
         if (sessionState === 'running' && videoRef.current && mediaStreamRef.current) {
             videoRef.current.srcObject = mediaStreamRef.current;
@@ -429,17 +440,17 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
     const getStatusMessage = () => {
         switch (drillState) {
-            case 'idle': return 'Session ended.';
-            case 'starting': return 'Starting camera...';
-            case 'countdown': return `Get Ready... ${countdown}`;
-            case 'set': return 'Listen for the whistle...';
-            case 'measuring': return 'GO!';
-            case 'log_shot': return 'Tap where your shot went.';
+            case 'idle': return 'SEQUENCE_TERMINATED';
+            case 'starting': return 'INITIALIZING_STREAM...';
+            case 'countdown': return `T-MINUS ${countdown}`;
+            case 'set': return 'AWAIT WHISTLE TRIGGER';
+            case 'measuring': return 'REACT!';
+            case 'log_shot': return 'MARK SHOT IMPACT ZONE';
             case 'result': {
                 if (drillMode === 'release') {
-                    return `Release Time: ${shotTime}ms | Next shot soon...`;
+                    return `LATENCY: ${shotTime}ms`;
                 }
-                return `Shot logged! | Next shot soon...`;
+                return `IMPACT_LOGGED`;
             }
             case 'error': return error;
             default: return '';
@@ -448,38 +459,68 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
     if (sessionState === 'setup') {
         return (
-            <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-cyan-400">AI Shooting Drills</h1>
-                    <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Return to Training Menu</button>
-                </div>
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-2xl mx-auto text-center">
-                    <h2 className="text-2xl font-semibold mb-4">Choose Your Drill</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div onClick={() => setDrillMode('release')} className={`p-4 rounded-lg border-2 cursor-pointer ${drillMode === 'release' ? 'border-cyan-400 bg-gray-700' : 'border-gray-600'}`}>
-                            <h3 className="text-xl font-bold">Quick Release</h3>
-                            <p className="text-sm text-gray-400">Measure how fast you can get your shot off after the whistle.</p>
+            <div className="space-y-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="h-px bg-brand w-12"></div>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Optical Training Array</p>
                         </div>
-                        <div onClick={() => setDrillMode('placement')} className={`p-4 rounded-lg border-2 cursor-pointer ${drillMode === 'placement' ? 'border-cyan-400 bg-gray-700' : 'border-gray-600'}`}>
-                            <h3 className="text-xl font-bold">Shot Placement</h3>
-                            <p className="text-sm text-gray-400">Track where your shots land on the goal to build a heatmap of your accuracy.</p>
-                        </div>
+                        <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                            SHOOTING <span className="text-brand">CENTER</span>
+                        </h1>
                     </div>
-                    <div className="mt-6">
-                        <label htmlFor="total-shots" className="block text-lg font-semibold text-gray-300 mb-2">Number of Shots</label>
-                        <input
-                            id="total-shots"
-                            type="number"
-                            min="1"
-                            max="50"
-                            value={totalShots}
-                            onChange={(e) => setTotalShots(parseInt(e.target.value, 10))}
-                            className="bg-gray-700 text-white rounded-md px-3 py-2 w-24 text-center focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        />
-                    </div>
-                    <button onClick={() => setSessionState('calibration')} className="mt-8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-md text-lg transition-colors">
-                        Start Calibration
+                    <button onClick={onReturnToDashboard} className="cyber-button-outline py-2 px-6">
+                        RETURN TO LAB
                     </button>
+                </div>
+
+                <div className="cyber-card p-1">
+                    <div className="bg-black p-12 text-center border border-surface-border">
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Ballistics Mode</h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                            <div
+                                onClick={() => setDrillMode('release')}
+                                className={`group p-8 border hover:border-brand/50 transition-all cursor-pointer ${drillMode === 'release' ? 'bg-brand/10 border-brand' : 'bg-surface-card border-surface-border'}`}
+                            >
+                                <Zap className={`w-8 h-8 mb-4 ${drillMode === 'release' ? 'text-brand' : 'text-gray-600'}`} />
+                                <h3 className="text-xl font-display font-black italic uppercase italic mb-2">Quick Release</h3>
+                                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500 leading-relaxed">
+                                    Measure reactive latency from whistle trigger to ballistics deployment.
+                                </p>
+                            </div>
+                            <div
+                                onClick={() => setDrillMode('placement')}
+                                className={`group p-8 border hover:border-brand/50 transition-all cursor-pointer ${drillMode === 'placement' ? 'bg-brand/10 border-brand' : 'bg-surface-card border-surface-border'}`}
+                            >
+                                <Target className={`w-8 h-8 mb-4 ${drillMode === 'placement' ? 'text-brand' : 'text-gray-600'}`} />
+                                <h3 className="text-xl font-display font-black italic uppercase italic mb-2">Shot Placement</h3>
+                                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500 leading-relaxed">
+                                    Map spatial grouping and accuracy heatmaps across goal quadrants.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="max-w-xs mx-auto space-y-4">
+                            <label htmlFor="total-shots" className="block text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Sequence Depth (# of shots)</label>
+                            <div className="flex items-center gap-4 justify-center">
+                                <input
+                                    id="total-shots"
+                                    type="number"
+                                    min="1"
+                                    max="50"
+                                    value={totalShots}
+                                    onChange={(e) => setTotalShots(parseInt(e.target.value, 10))}
+                                    className="cyber-input w-24 text-center text-xl font-display font-black italic"
+                                />
+                            </div>
+                        </div>
+
+                        <button onClick={() => setSessionState('calibration')} className="mt-12 cyber-button w-full md:w-auto px-16 py-4 flex items-center justify-center gap-4 group">
+                            INITIALIZE CALIBRATION <Activity className="w-5 h-5 group-hover:animate-pulse" />
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -487,19 +528,33 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
     if (sessionState === 'calibration') {
         return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-cyan-400">Calibrate Your Goal</h1>
-                    <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
-                </div>
-                <div className="w-full max-w-lg bg-gray-800 p-4 rounded-lg shadow-lg text-center mx-auto">
-                    <p className="mb-4 text-gray-300">Position your device so the goal is visible. Drag and resize the box to cover the entire goal frame.</p>
-                    <div className="relative w-full aspect-[4/3] bg-gray-900 rounded-md overflow-hidden mb-4">
-                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover"></video>
-                        <DraggableResizableOverlay overlay={overlay} setOverlay={setOverlay} />
+            <div className="space-y-12 h-screen flex flex-col">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="h-px bg-brand w-12"></div>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Optical Target Lock</p>
+                        </div>
+                        <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                            CALIBRATE <span className="text-brand">FRAME</span>
+                        </h1>
                     </div>
-                    <button onClick={() => { setSessionState('running'); startDrill(); }} className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-md text-lg transition-colors">
-                        Start Drill
+                    <button onClick={onReturnToDashboard} className="text-gray-600 hover:text-white text-[10px] font-mono uppercase tracking-widest">Abort_Protocol</button>
+                </div>
+
+                <div className="flex-grow flex flex-col items-center justify-center space-y-8 pb-12">
+                    <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
+                        <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
+                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover grayscale brightness-50 opacity-100"></video>
+                            <DraggableResizableOverlay overlay={overlay} setOverlay={setOverlay} />
+                        </div>
+                        <div className="absolute -bottom-8 left-0 right-0 text-center">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Awaiting spatial frame alignment with goal perimeter.</p>
+                        </div>
+                    </div>
+
+                    <button onClick={() => { setSessionState('running'); startDrill(); }} className="cyber-button px-20 py-4 text-xl">
+                        START_SEQUENCE
                     </button>
                 </div>
             </div>
@@ -512,24 +567,40 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             : 0;
 
         return (
-            <div className="space-y-6 text-center">
-                <h1 className="text-3xl font-bold text-cyan-400">Session Complete!</h1>
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-semibold mb-4">Your Results ({shotHistory.length} shots)</h2>
-                    {drillMode === 'placement' ? (
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">Shot Placement Chart</h3>
-                            <ShotChart history={shotHistory} />
+            <div className="space-y-12 animate-in zoom-in-95 duration-700">
+                <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-green-500 uppercase">Ballistics Sequence Complete</p>
+                    </div>
+                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter">DATA <span className="text-brand">HARVEST</span></h1>
+                </div>
+
+                <div className="cyber-card p-1 max-w-4xl mx-auto">
+                    <div className="bg-black p-12 border border-surface-border">
+                        <div className="max-w-2xl mx-auto space-y-12">
+                            {drillMode === 'placement' ? (
+                                <div className="space-y-8">
+                                    <h3 className="text-center text-[10px] font-mono tracking-[0.3em] text-gray-500 uppercase">Accuracy Heatmap Clusters</h3>
+                                    <ShotChart history={shotHistory} />
+                                </div>
+                            ) : (
+                                <div className="text-center space-y-4">
+                                    <p className="text-[10px] font-mono tracking-[0.2em] text-gray-400 uppercase">MEAN RELEASE LATENCY</p>
+                                    <p className="text-7xl font-display font-black text-brand italic uppercase tracking-tighter">{avgReleaseTime}<span className="text-xl ml-1">MS</span></p>
+                                    <div className="h-px bg-brand/20 w-12 mx-auto"></div>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8 border-t border-surface-border/30">
+                                <button onClick={() => setSessionState('setup')} className="cyber-button-outline px-12 py-4 flex items-center gap-3 justify-center group">
+                                    <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> RE-INIT_ARRAY
+                                </button>
+                                <button onClick={onReturnToDashboard} className="cyber-button px-12 py-4 flex items-center gap-3 justify-center">
+                                    <Home className="w-4 h-4" /> TERMINATE
+                                </button>
+                            </div>
                         </div>
-                    ) : (
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">Average Release Time</h3>
-                            <p className="text-5xl font-bold text-cyan-400">{avgReleaseTime}ms</p>
-                        </div>
-                    )}
-                    <div className="mt-8 flex gap-4 justify-center">
-                        <button onClick={() => setSessionState('setup')} className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-md text-lg transition-colors">Start New Session</button>
-                        <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors">Return to Menu</button>
                     </div>
                 </div>
             </div>
@@ -537,40 +608,66 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 h-full flex flex-col pb-12">
             {activeAssignment && (
-                <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-cyan-400 mb-4">
-                    <h2 className="text-lg font-bold text-cyan-400">Assigned Drill Goal:</h2>
-                    <p className="text-gray-300 italic">"{activeAssignment.notes}"</p>
+                <div className="cyber-card p-6 border-brand border-2 bg-brand/5 animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-4 mb-2">
+                        <ShieldAlert className="w-4 h-4 text-brand" />
+                        <h2 className="text-xs font-mono font-bold text-brand uppercase tracking-widest">Active Directive Injected</h2>
+                    </div>
+                    <p className="text-white font-display italic font-bold uppercase tracking-tight">"{activeAssignment.notes}"</p>
                 </div>
             )}
-            <div className="flex justify-between items-center flex-wrap gap-2">
-                <h1 className="text-3xl font-bold text-cyan-400">AI Shooting Drill</h1>
-                <p className="text-xl font-semibold">Shot {shotHistory.length + 1} of {totalShots}</p>
-                <button onClick={handleSessionEnd} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">End Session</button>
+
+            <div className="flex justify-between items-center gap-6">
+                <div className="flex items-center gap-6">
+                    <h1 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">BALLISTICS <span className="text-brand">ACTIVE</span></h1>
+                    <div className="h-4 w-px bg-surface-border"></div>
+                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                        SEQ: <span className="text-white font-bold">{shotHistory.length + 1}</span> / {totalShots}
+                    </p>
+                </div>
+                <button
+                    onClick={handleSessionEnd}
+                    className="text-red-500 hover:text-red-400 text-[10px] font-mono uppercase tracking-widest flex items-center gap-2"
+                >
+                    <Binary className="w-4 h-4" /> TERMINATE
+                </button>
             </div>
 
-            <div className="w-full max-w-lg bg-gray-800 p-4 rounded-lg shadow-lg text-center mx-auto">
-                <div className="relative w-full aspect-[4/3] bg-gray-900 rounded-md overflow-hidden mb-4">
-                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover"></video>
-                    <canvas ref={canvasRef} className="hidden"></canvas>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <p className="text-3xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-md">{getStatusMessage()}</p>
-                    </div>
-                    {drillState === 'log_shot' && (
-                        <div
-                            className="absolute grid grid-cols-3 grid-rows-3 cursor-pointer"
-                            style={{ left: overlay.x, top: overlay.y, width: overlay.width, height: overlay.height }}
-                        >
-                            {[...Array(9)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="w-full h-full border border-cyan-400 border-opacity-50 hover:bg-cyan-400 hover:bg-opacity-50 transition-colors"
-                                    onClick={() => handleLogShotPlacement(i)}
-                                ></div>
-                            ))}
+            <div className="flex-grow flex flex-col items-center justify-center space-y-8">
+                <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
+                    <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
+                        <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover transition-all duration-1000 ${drillState === 'measuring' ? 'brightness-100' : 'brightness-50 grayscale'}`}></video>
+                        <canvas ref={canvasRef} className="hidden"></canvas>
+
+                        {/* HUD Overlay */}
+                        <div className="absolute inset-0 pointer-events-none border border-brand/20"></div>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="bg-black/60 backdrop-blur-md px-12 py-6 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                <p className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-2 shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                                    {getStatusMessage()}
+                                </p>
+                            </div>
                         </div>
-                    )}
+
+                        {drillState === 'log_shot' && (
+                            <div
+                                className="absolute grid grid-cols-3 grid-rows-3 cursor-crosshair animate-in fade-in duration-500"
+                                style={{ left: overlay.x, top: overlay.y, width: overlay.width, height: overlay.height }}
+                            >
+                                {[...Array(9)].map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-full h-full border border-brand/10 hover:bg-brand/40 hover:border-brand transition-all flex items-center justify-center group/zone"
+                                        onClick={() => handleLogShotPlacement(i)}
+                                    >
+                                        <div className="opacity-0 group-hover/zone:opacity-100 text-[8px] font-mono text-white font-black bg-brand px-1">Z_{i + 1}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Role, Team } from '../types';
+import { UserPlus, Shield, Binary, Trash2, Edit3, Lock, Unlock, ChevronRight } from 'lucide-react';
 
 interface EditUserModalProps {
     user: User;
@@ -64,101 +65,106 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-lg w-full space-y-4">
-                <h2 className="text-2xl font-bold">Edit User: <span className="text-cyan-400">{user.username}</span></h2>
-                <div>
-                    <label className="block text-sm font-medium mb-1">Username</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={e => setUsername(e.target.value)}
-                        className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="cyber-card p-8 max-w-lg w-full space-y-6 bg-black border-brand/50">
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="h-px bg-brand w-8"></div>
+                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Entity Overwrite Protocol</p>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium mb-1">Email</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium mb-1">Role</label>
-                    <select
-                        value={role}
-                        onChange={e => setRole(e.target.value as Role)}
-                        className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    >
-                        {Object.values(Role).map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                </div>
-                {isCoachOrPlayer && (
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Associated Teams (Coach/Player)</label>
-                        <div className="max-h-32 overflow-y-auto space-y-2 bg-gray-900 p-3 rounded-md border border-gray-700">
-                            {teams.map(t => (
-                                <label key={t.id} className="flex items-center space-x-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={teamIds.includes(t.id)}
-                                        onChange={() => handleTeamSelection(t.id)}
-                                        className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-cyan-500 focus:ring-cyan-600 focus:ring-2"
-                                    />
-                                    <span className="text-gray-300">{t.name}</span>
-                                </label>
-                            ))}
+
+                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">
+                    MODIFY // <span className="text-brand">{user.username}</span>
+                </h2>
+
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Codename</label>
+                            <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full cyber-input text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Auth Protocol</label>
+                            <select value={role} onChange={e => setRole(e.target.value as Role)} className="w-full cyber-input text-sm appearance-none">
+                                {Object.values(Role).map(r => <option key={r} value={r} className="bg-black">{r.toUpperCase()}</option>)}
+                            </select>
                         </div>
                     </div>
-                )}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Reset Password</label>
-                    <input
-                        type="password"
-                        placeholder="Leave blank to keep current password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
-                </div>
-                {user.role === Role.PARENT && (
-                    <div className="space-y-2 border-t border-gray-700 pt-4 mt-4">
-                        <h3 className="text-lg font-semibold text-cyan-400">Follow Management</h3>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Followed Teams</label>
-                            <div className="max-h-24 overflow-y-auto bg-gray-900 p-2 rounded-md space-y-1">
-                                {followedTeamIds.length > 0 ? followedTeamIds.map(id => {
-                                    const team = teams.find(t => t.id === id);
-                                    return (
-                                        <div key={id} className="flex justify-between items-center bg-gray-700 p-1 rounded">
-                                            <span>{team?.name || 'Unknown Team'}</span>
-                                            <button onClick={() => handleRemoveFollowedTeam(id)} className="text-red-400 hover:text-red-300 text-xs">Remove</button>
-                                        </div>
-                                    );
-                                }) : <p className="text-gray-500 text-sm">Not following any teams.</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Followed Players</label>
-                            <div className="max-h-24 overflow-y-auto bg-gray-900 p-2 rounded-md space-y-1">
-                                {followedPlayerIds.length > 0 ? followedPlayerIds.map(id => {
-                                    const player = allPlayers.find(p => p.id === id);
-                                    return (
-                                        <div key={id} className="flex justify-between items-center bg-gray-700 p-1 rounded">
-                                            <span>{player ? `#${player.jerseyNumber} ${player.name}` : 'Unknown Player'}</span>
-                                            <button onClick={() => handleRemoveFollowedPlayer(id)} className="text-red-400 hover:text-red-300 text-xs">Remove</button>
-                                        </div>
-                                    );
-                                }) : <p className="text-gray-500 text-sm">Not following any players.</p>}
-                            </div>
-                        </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Comm Channel (Email)</label>
+                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full cyber-input text-sm" />
                     </div>
-                )}
-                <div className="flex justify-end space-x-2 pt-4">
-                    <button onClick={onClose} className="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-md">Cancel</button>
-                    <button onClick={handleSave} className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>
+
+                    {isCoachOrPlayer && (
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Cluster Assignments</label>
+                            <div className="max-h-32 overflow-y-auto space-y-1 bg-surface-card p-3 border border-surface-border custom-scrollbar">
+                                {teams.map(t => (
+                                    <label key={t.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-white/5 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={teamIds.includes(t.id)}
+                                            onChange={() => handleTeamSelection(t.id)}
+                                            className="h-4 w-4 bg-black border-surface-border text-brand focus:ring-brand focus:ring-offset-0 rounded-none pointer-events-none"
+                                        />
+                                        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{t.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Update Access Key</label>
+                        <input
+                            type="password"
+                            placeholder="REDACTED (LEAVE BLANK TO RETAIN)"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            className="w-full cyber-input text-sm"
+                        />
+                    </div>
+
+                    {user.role === Role.PARENT && (
+                        <div className="pt-4 border-t border-surface-border space-y-4">
+                            <p className="text-[10px] font-mono text-brand uppercase tracking-[0.2em] font-bold">Observer Streams</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Units</label>
+                                    <div className="max-h-24 overflow-y-auto bg-surface-card p-2 border border-surface-border space-y-1 custom-scrollbar">
+                                        {followedTeamIds.length > 0 ? followedTeamIds.map(id => {
+                                            const team = teams.find(t => t.id === id);
+                                            return (
+                                                <div key={id} className="flex justify-between items-center text-[9px] font-mono p-1 border-b border-surface-border/50">
+                                                    <span className="text-gray-300 truncate">{team?.name}</span>
+                                                    <button onClick={() => handleRemoveFollowedTeam(id)} className="text-red-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                                                </div>
+                                            );
+                                        }) : <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest">NONE</p>}
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Entities</label>
+                                    <div className="max-h-24 overflow-y-auto bg-surface-card p-2 border border-surface-border space-y-1 custom-scrollbar">
+                                        {followedPlayerIds.length > 0 ? followedPlayerIds.map(id => {
+                                            const player = allPlayers.find(p => p.id === id);
+                                            return (
+                                                <div key={id} className="flex justify-between items-center text-[9px] font-mono p-1 border-b border-surface-border/50">
+                                                    <span className="text-gray-300 truncate">#{player?.jerseyNumber} {player?.name}</span>
+                                                    <button onClick={() => handleRemoveFollowedPlayer(id)} className="text-red-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                                                </div>
+                                            );
+                                        }) : <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest">NONE</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end gap-6 pt-6">
+                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
+                    <button onClick={handleSave} className="cyber-button py-2 px-8">COMMIT_CHANGES</button>
                 </div>
             </div>
         </div>
@@ -185,16 +191,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
     const handleInvite = (e: React.FormEvent) => {
         e.preventDefault();
         if (username.trim() && password.trim()) {
-            onInviteUser({
-                username,
-                password,
-                role,
-            });
-            setUsername('');
-            setPassword('');
-            setRole(Role.FAN);
+            onInviteUser({ username, password, role });
+            setUsername(''); setPassword(''); setRole(Role.FAN);
         } else {
-            alert("Please provide a username and password.");
+            alert("Protocol Violation: Codename and Access Key required.");
         }
     };
 
@@ -203,127 +203,117 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
         setIsEditModalOpen(true);
     };
 
-    const handleCloseEditModal = () => {
-        setIsEditModalOpen(false);
-        setEditingUser(null);
-    };
-
-    const handleSaveUser = (user: User) => {
-        onUpdateUser(user);
-        handleCloseEditModal();
-    };
-
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-cyan-400">User Management</h1>
-                <button onClick={() => onReturnToDashboard('dashboard')} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                    Return to Main Menu
+        <div className="space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="h-px bg-brand w-12"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Access Control Matrix</p>
+                    </div>
+                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                        USER <span className="text-brand">REGISTRY</span>
+                    </h1>
+                </div>
+                <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
+                    RETURN TO COMMAND
                 </button>
             </div>
 
-            <form onSubmit={handleInvite} className="bg-gray-800 p-4 rounded-lg shadow-lg space-y-4">
-                <h2 className="text-xl font-semibold">Invite New User</h2>
-                <p className="text-sm text-gray-400">Invite a new user here. You can assign them to teams after they've been created by clicking 'Edit'.</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        value={username}
-                        onChange={e => setUsername(e.target.value)}
-                        className="bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        required
-                    />
-                    <input
-                        type="password"
-                        placeholder="Temporary Password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        className="bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        required
-                    />
-                    <select
-                        value={role}
-                        onChange={e => setRole(e.target.value as Role)}
-                        className="bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    >
-                        {Object.values(Role).map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                </div>
-                <button type="submit" className="w-full md:w-auto bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md transition-colors">
-                    Invite User
-                </button>
-            </form>
+            <div className="cyber-card p-8">
+                <form onSubmit={handleInvite} className="space-y-8">
+                    <div>
+                        <h2 className="text-lg font-display font-bold uppercase italic mb-2">Provision New Entity</h2>
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Register identity in the system before node assignment.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Codename</label>
+                            <input type="text" placeholder="IDENTITY_IDENT" value={username} onChange={e => setUsername(e.target.value)} className="w-full cyber-input" required />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Access Key</label>
+                            <input type="password" placeholder="KEY_AUTH" value={password} onChange={e => setPassword(e.target.value)} className="w-full cyber-input" required />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Auth Protocol</label>
+                            <select value={role} onChange={e => setRole(e.target.value as Role)} className="w-full cyber-input appearance-none">
+                                {Object.values(Role).map(r => <option key={r} value={r} className="bg-black">{r.toUpperCase()}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" className="cyber-button px-12 flex items-center gap-3">
+                        INITIALIZE ENTITY <UserPlus className="w-4 h-4" />
+                    </button>
+                </form>
+            </div>
 
-            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold mb-2">Current Users</h2>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                        <thead className="bg-gray-700">
-                            <tr>
-                                <th className="text-left p-3">Username</th>
-                                <th className="text-left p-3">Role</th>
-                                <th className="text-left p-3">Status</th>
-                                <th className="text-left p-3">Associated Teams</th>
-                                <th className="text-left p-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map(user => (
-                                <tr key={user.id} className={`border-b border-gray-700 hover:bg-gray-600 ${user.status === 'blocked' ? 'bg-red-900/50 text-gray-500' : ''}`}>
-                                    <td className="p-3">{user.username}</td>
-                                    <td className="p-3">{user.role}</td>
-                                    <td className="p-3">
-                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.status === 'blocked' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
-                                            {user.status === 'blocked' ? 'Blocked' : 'Active'}
-                                        </span>
-                                    </td>
-                                    <td className="p-3 text-gray-400">
-                                        {user.teamIds && user.teamIds.length > 0
-                                            ? user.teamIds
-                                                .map(id => teams.find(t => t.id === id)?.name)
-                                                .filter(Boolean)
-                                                .join(', ')
-                                            : 'N/A'}
-                                    </td>
-                                    <td className="p-3">
-                                        {user.role !== Role.ADMIN && (
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => handleOpenEditModal(user)}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-md text-sm transition-colors"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => onUpdateUser({ ...user, status: user.status === 'blocked' ? 'active' : 'blocked' })}
-                                                    className={`font-bold py-1 px-3 rounded-md text-sm transition-colors ${user.status === 'blocked' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : 'bg-gray-600 hover:bg-gray-500 text-white'}`}
-                                                >
-                                                    {user.status === 'blocked' ? 'Unblock' : 'Block'}
-                                                </button>
-                                                <button
-                                                    onClick={() => onDeleteUser(user.id)}
-                                                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md text-sm transition-colors"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        )}
-                                    </td>
+            <div className="pt-8">
+                <div className="flex items-center gap-4 mb-8">
+                    <Shield className="w-5 h-5 text-brand" />
+                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Active <span className="text-brand">Node-Set</span></h2>
+                    <div className="h-px bg-surface-border flex-grow"></div>
+                </div>
+
+                <div className="cyber-card">
+                    <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full min-w-[1000px] text-left border-collapse">
+                            <thead className="bg-surface-card border-b border-surface-border">
+                                <tr>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">CODENAME</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">PROTOCOL</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">STATUS</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">UNIT_CLUSTER</th>
+                                    <th className="p-4 px-6 text-right text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">OPERATIONS</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="bg-black">
+                                {users.map(user => (
+                                    <tr key={user.id} className={`border-b border-surface-border/50 hover:bg-white/5 transition-colors ${user.status === 'blocked' ? 'opacity-30 grayscale' : ''}`}>
+                                        <td className="p-4 px-6">
+                                            <p className="font-display font-bold text-white uppercase italic tracking-tight">{user.username}</p>
+                                        </td>
+                                        <td className="p-4 px-6">
+                                            <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{user.role}</span>
+                                        </td>
+                                        <td className="p-4 px-6">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'blocked' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)] animate-pulse'}`}></div>
+                                                <span className={`text-[9px] font-mono uppercase tracking-widest ${user.status === 'blocked' ? 'text-red-500' : 'text-green-500'}`}>
+                                                    {user.status === 'blocked' ? 'Offline/Blocked' : 'Online/Active'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 px-6">
+                                            <div className="flex flex-wrap gap-1">
+                                                {user.teamIds && user.teamIds.length > 0 ? user.teamIds.map(id => (
+                                                    <span key={id} className="text-[8px] font-mono bg-surface-card px-2 py-0.5 border border-surface-border text-gray-500 uppercase">
+                                                        {teams.find(t => t.id === id)?.name}
+                                                    </span>
+                                                )) : <span className="text-[8px] font-mono text-gray-700 uppercase">NONE_LINKED</span>}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 px-6">
+                                            {user.role !== Role.ADMIN && (
+                                                <div className="flex justify-end gap-3 text-gray-500">
+                                                    <button onClick={() => handleOpenEditModal(user)} className="hover:text-brand transition-colors"><Edit3 className="w-4 h-4" /></button>
+                                                    <button onClick={() => onUpdateUser({ ...user, status: user.status === 'blocked' ? 'active' : 'blocked' })} className="hover:text-white transition-colors">
+                                                        {user.status === 'blocked' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                                    </button>
+                                                    <button onClick={() => onDeleteUser(user.id)} className="hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             {isEditModalOpen && editingUser && (
-                <EditUserModal
-                    user={editingUser}
-                    teams={teams}
-                    onSave={handleSaveUser}
-                    onClose={handleCloseEditModal}
-                />
+                <EditUserModal user={editingUser} teams={teams} onSave={handleSaveUser} onClose={handleCloseEditModal} />
             )}
         </div>
     );

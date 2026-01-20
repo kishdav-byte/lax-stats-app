@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DrillAssignment, DrillStatus, SoundEffects, SoundEffectName } from '../types';
+import { Zap, Timer, Activity, ChevronRight, Binary, ShieldAlert, Cpu, Box, RefreshCcw, Home } from 'lucide-react';
 
 // A constant to tune motion sensitivity. Higher means less sensitive.
 const SENSITIVITY_THRESHOLD = 4;
@@ -86,16 +87,12 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         }
 
         const timesToSave = finalReactionTimes || reactionTimes;
-        console.log("Finishing session. Final Times:", finalReactionTimes, "State Times:", reactionTimes, "Times to Save:", timesToSave);
 
         if (activeAssignment) {
-            // This is an assigned drill. We're done here. Let App.tsx handle the rest.
             onCompleteAssignment(activeAssignment.id, DrillStatus.COMPLETED, { reactionTimes: timesToSave });
         } else {
-            // This is a self-started session. Show the summary screen.
             setDrillState('idle');
             setSessionState('finished');
-            // Save the session
             const config = sessionConfigRef.current;
             onSaveSession({
                 reactionTimes: timesToSave,
@@ -133,7 +130,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             }
         } catch (err) {
             console.error("Error accessing camera:", err);
-            setError("Could not access camera. Please check permissions and try again.");
+            setError("COULD NOT ACCESS CAMERA STREAM. VERIFY PERMISSIONS.");
             setDrillState('error');
         }
     };
@@ -145,7 +142,6 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             audioCtx.resume();
         }
 
-        // Check for custom sound, but not for 'countdown'
         const customSoundData = type !== 'countdown' ? soundEffects?.[type as SoundEffectName] : undefined;
 
         if (customSoundData) {
@@ -202,9 +198,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }, [soundEffects]);
 
     const handleDrillComplete = useCallback((time: number) => {
-        console.log("Drill Complete. Time:", time);
         const newTimes = [...reactionTimes, time];
-        console.log("New Times Array:", newTimes);
         setReactionTimes(newTimes);
         setCompletedDrills(prevCount => {
             const newCount = prevCount + 1;
@@ -220,7 +214,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas || video.readyState < video.HAVE_METADATA) {
-            setError("Video feed not ready.");
+            setError("VIDEO STREAM FAILURE.");
             setDrillState('error');
             return;
         }
@@ -290,7 +284,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             try {
                 audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             } catch (e) {
-                setError("Your browser does not support required audio features.");
+                setError("AUDIO ARCHITECTURE FAILURE.");
                 setDrillState('error');
                 return;
             }
@@ -306,28 +300,22 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }, [runDrillSequence]);
 
     useEffect(() => {
-        // This effect handles automatically starting the next drill for BOTH session types.
         if (sessionState !== 'running' || drillState !== 'result') {
             return;
         }
 
         const isLastDrillInCountSession = sessionConfig?.type === 'count' && completedDrills >= sessionConfig.value;
-        if (isLastDrillInCountSession) {
-            // The session is over. handleFinishSession was already called in handleDrillComplete.
-            return;
-        }
+        if (isLastDrillInCountSession) return;
 
         const isTimeUpInTimedSession = sessionConfig?.type === 'timed' && timeRemainingRef.current <= 5;
         if (isTimeUpInTimedSession) {
-            // Not enough time for another full drill cycle. End the session.
             handleFinishSession();
             return;
         }
 
-        // If we've reached here, the session is active and we should start the next drill.
         const timeoutId = setTimeout(() => {
             handleStartDrill();
-        }, 5000); // 5-second pause between drills
+        }, 5000);
 
         return () => clearTimeout(timeoutId);
 
@@ -345,7 +333,6 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         handleStartDrill();
     };
 
-    // If this is an assigned drill, start it immediately.
     useEffect(() => {
         if (activeAssignment) {
             handleStartDrill();
@@ -370,21 +357,18 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
     const getStatusMessage = () => {
         switch (drillState) {
-            case 'idle':
-                return 'Session ended.'; // This state is hit right before the results screen.
-            case 'starting': return 'Starting camera...';
-            case 'countdown': return `Get Ready... ${countdown}`;
-            case 'set': return 'Listen for the tones and whistle...';
-            case 'measuring': return 'GO!';
+            case 'idle': return 'SEQUENCE_TERMINATED';
+            case 'starting': return 'INITIALIZING_STREAM...';
+            case 'countdown': return `T-MINUS ${countdown}`;
+            case 'set': return 'AWAIT WHISTLE TRIGGER';
+            case 'measuring': return 'REACT!';
             case 'result': {
-                const baseMessage = `Time: ${reactionTime}ms`;
-                if (activeAssignment) return baseMessage; // Simpler message for assignments
-
+                const baseMessage = `${reactionTime}ms`;
+                if (activeAssignment) return baseMessage;
                 const isCountSessionOver = sessionConfig?.type === 'count' && completedDrills >= sessionConfig.value;
                 const isTimedSessionOver = sessionConfig?.type === 'timed' && timeRemainingRef.current <= 5;
-
                 if (!isCountSessionOver && !isTimedSessionOver) {
-                    return `${baseMessage} | Next drill starts soon...`;
+                    return `LATENCY: ${baseMessage}`;
                 }
                 return baseMessage;
             }
@@ -395,34 +379,63 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
     if (sessionState === 'setup') {
         return (
-            <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-cyan-400">AI Face-Off Trainer</h1>
-                    <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Return to Training Menu</button>
-                </div>
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-2xl mx-auto text-center">
-                    <h2 className="text-2xl font-semibold mb-4">Choose Your Session</h2>
-                    <div className="space-y-6">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-300 mb-2">By Drill Count</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {[1, 3, 5, 20].map(count => (
-                                    <button key={count} onClick={() => handleSelectSession('count', count)} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-md transition-colors">{count} Drill{count > 1 ? 's' : ''}</button>
-                                ))}                        </div>
+            <div className="space-y-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="h-px bg-brand w-12"></div>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Latency Testing Array</p>
                         </div>
-                        <div className="border-t border-gray-700 my-4"></div>
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-300 mb-2">By Time</h3>
-                            <div className="flex items-center justify-center gap-4">
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="30"
-                                    value={timedDuration}
-                                    onChange={(e) => setTimedDuration(parseInt(e.target.value, 10))}
-                                    className="bg-gray-700 text-white rounded-md px-3 py-2 w-24 text-center focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                />
-                                <button onClick={() => handleSelectSession('timed', timedDuration)} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-6 rounded-md transition-colors">{timedDuration} Minute Session</button>
+                        <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                            FACE-OFF <span className="text-brand">TRAINER</span>
+                        </h1>
+                    </div>
+                    <button onClick={onReturnToDashboard} className="cyber-button-outline py-2 px-6">
+                        RETURN TO LAB
+                    </button>
+                </div>
+
+                <div className="cyber-card p-1">
+                    <div className="bg-black p-12 text-center border border-surface-border">
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Operation Mode</h2>
+
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div className="space-y-6">
+                                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400">Fixed Sequence Count</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {[1, 3, 5, 20].map(count => (
+                                        <button
+                                            key={count}
+                                            onClick={() => handleSelectSession('count', count)}
+                                            className="cyber-button py-4 font-display italic font-black text-xl"
+                                        >
+                                            {count} REPS
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-6 flex flex-col justify-end">
+                                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400">Chrono-Stamina Mode</p>
+                                <div className="bg-surface-card p-8 border border-surface-border flex flex-col items-center gap-6">
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="30"
+                                            value={timedDuration}
+                                            onChange={(e) => setTimedDuration(parseInt(e.target.value, 10))}
+                                            className="cyber-input w-24 text-center text-xl font-display italic font-black"
+                                        />
+                                        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-500">MINS</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handleSelectSession('timed', timedDuration)}
+                                        className="cyber-button w-full flex items-center justify-center gap-3"
+                                    >
+                                        INITIALIZE TIMER <Timer className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -432,36 +445,58 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }
 
     if (sessionState === 'finished') {
-        console.log("Rendering Finished State. Reaction Times:", reactionTimes);
         const stats = getSessionStats();
         return (
-            <div className="space-y-6 text-center">
-                <h1 className="text-3xl font-bold text-cyan-400">Session Complete!</h1>
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-semibold mb-4">Your Results ({reactionTimes.length} drills)</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-6">
-                        <div>
-                            <p className="text-lg text-gray-400">Best Time</p>
-                            <p className="text-4xl font-bold text-green-400">{stats.best}ms</p>
-                        </div>
-                        <div>
-                            <p className="text-lg text-gray-400">Average Time</p>
-                            <p className="text-4xl font-bold text-cyan-400">{stats.average}ms</p>
-                        </div>
-                        <div>
-                            <p className="text-lg text-gray-400">Worst Time</p>
-                            <p className="text-4xl font-bold text-red-400">{stats.worst}ms</p>
-                        </div>
+            <div className="space-y-12 animate-in zoom-in-95 duration-700">
+                <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-green-500 uppercase">Process Complete // Data Archived</p>
                     </div>
-                    <div className="border-t border-gray-700 pt-4">
-                        <h3 className="text-lg font-semibold mb-2">All Reaction Times (ms)</h3>
-                        <div className="bg-gray-900 p-2 rounded-md max-h-40 overflow-y-auto">
-                            <p className="text-gray-300 break-words">{reactionTimes.join(', ')}</p>
+                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter">SESSION <span className="text-brand">REPORT</span></h1>
+                </div>
+
+                <div className="cyber-card p-1 max-w-4xl mx-auto">
+                    <div className="bg-black p-12 border border-surface-border">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+                            <div className="text-center space-y-4">
+                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">PEAK LATENCY</p>
+                                <p className="text-6xl font-display font-black text-green-500 italic uppercase tracking-tighter">{stats.best}<span className="text-xl ml-1">MS</span></p>
+                                <div className="h-px bg-green-500/20 w-12 mx-auto"></div>
+                            </div>
+                            <div className="text-center space-y-4">
+                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">MEAN LATENCY</p>
+                                <p className="text-6xl font-display font-black text-brand italic uppercase tracking-tighter">{stats.average}<span className="text-xl ml-1">MS</span></p>
+                                <div className="h-px bg-brand/20 w-12 mx-auto"></div>
+                            </div>
+                            <div className="text-center space-y-4">
+                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">MIN LATENCY</p>
+                                <p className="text-6xl font-display font-black text-red-500 italic uppercase tracking-tighter">{stats.worst}<span className="text-xl ml-1">MS</span></p>
+                                <div className="h-px bg-red-500/20 w-12 mx-auto"></div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="mt-6 flex gap-4 justify-center">
-                        <button onClick={handleStartNewSession} className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-md text-lg transition-colors">Start New Session</button>
-                        <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors">Return to Menu</button>
+
+                        <div className="bg-surface-card p-8 border border-surface-border mb-12">
+                            <p className="text-[10px] font-mono tracking-[0.2em] text-gray-400 uppercase mb-4 flex items-center gap-2">
+                                <Binary className="w-3 h-3 text-brand" /> Sequence String ({reactionTimes.length} samples)
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {reactionTimes.map((t, i) => (
+                                    <span key={i} className="text-[10px] font-mono bg-black border border-surface-border px-3 py-1 text-white">
+                                        {t}MS
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                            <button onClick={handleStartNewSession} className="cyber-button-outline px-12 py-4 flex items-center gap-3 justify-center group">
+                                <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> REINITIALIZE
+                            </button>
+                            <button onClick={onReturnToDashboard} className="cyber-button px-12 py-4 flex items-center gap-3 justify-center">
+                                <Home className="w-4 h-4" /> TERMINATE
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -469,27 +504,96 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 h-full flex flex-col pb-12">
             {activeAssignment && (
-                <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-cyan-400 mb-4">
-                    <h2 className="text-lg font-bold text-cyan-400">Assigned Drill Goal:</h2>
-                    <p className="text-gray-300 italic">"{activeAssignment.notes}"</p>
+                <div className="cyber-card p-6 border-brand border-2 bg-brand/5 animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-4 mb-2">
+                        <ShieldAlert className="w-4 h-4 text-brand" />
+                        <h2 className="text-xs font-mono font-bold text-brand uppercase tracking-widest">Active Directive Injected</h2>
+                    </div>
+                    <p className="text-white font-display italic font-bold uppercase tracking-tight">"{activeAssignment.notes}"</p>
                 </div>
             )}
-            <div className="flex justify-between items-center flex-wrap gap-2">
-                <h1 className="text-3xl font-bold text-cyan-400">AI Face-Off Trainer</h1>
-                {sessionConfig?.type === 'count' && <p className="text-xl font-semibold">Drill {Math.min(completedDrills + 1, sessionConfig.value)} of {sessionConfig.value}</p>}
-                {sessionConfig?.type === 'timed' && <p className="text-xl font-semibold font-mono">Time Remaining: {formatTime(timeRemaining)}</p>}
-                <button onClick={onReturnToDashboard} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">End Session</button>
+
+            <div className="flex justify-between items-center gap-6">
+                <div className="flex items-center gap-6">
+                    <h1 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">FACE-OFF <span className="text-brand">ACTIVE</span></h1>
+                    <div className="h-4 w-px bg-surface-border"></div>
+                    {sessionConfig?.type === 'count' && (
+                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                            SEQ: <span className="text-white font-bold">{Math.min(completedDrills + 1, sessionConfig.value)}</span> / {sessionConfig.value}
+                        </p>
+                    )}
+                    {sessionConfig?.type === 'timed' && (
+                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                            CHRONO_LEFT: <span className="text-brand font-bold">{formatTime(timeRemaining)}</span>
+                        </p>
+                    )}
+                </div>
+                <button
+                    onClick={() => {
+                        if (window.confirm("TERMINATE OPERATION? DATA FOR THIS DRILL WILL BE LOST.")) {
+                            onReturnToDashboard();
+                        }
+                    }}
+                    className="text-red-500 hover:text-red-400 text-[10px] font-mono uppercase tracking-widest flex items-center gap-2"
+                >
+                    <Binary className="w-4 h-4" /> TERMINATE
+                </button>
             </div>
 
-            <div className="w-full max-w-lg bg-gray-800 p-4 rounded-lg shadow-lg text-center mx-auto">
-                <div className="relative w-full aspect-[4/3] bg-gray-900 rounded-md overflow-hidden mb-4">
-                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scaleX(-1)"></video>
-                    <canvas ref={canvasRef} className="hidden"></canvas>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <p className="text-3xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-md">{getStatusMessage()}</p>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-8">
+                <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
+                    <div className="absolute -inset-0.5 bg-brand/20 opacity-0 group-hover:opacity-100 transition duration-500 rounded-none pointer-events-none"></div>
+                    <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className={`w-full h-full object-cover transform scaleX(-1) grayscale brightness-75 contrast-125 transition-all duration-1000 ${drillState === 'measuring' ? 'grayscale-0 brightness-100 contrast-150' : ''}`}
+                        ></video>
+                        <canvas ref={canvasRef} className="hidden"></canvas>
+
+                        {/* Static Overlay Decoration */}
+                        <div className="absolute inset-0 border-[40px] border-black/20 pointer-events-none"></div>
+                        <div className="absolute top-8 left-8 flex flex-col gap-1 opacity-20">
+                            <div className="w-8 h-[1px] bg-brand"></div>
+                            <div className="w-4 h-[1px] bg-brand"></div>
+                        </div>
+                        <div className="absolute bottom-8 right-8 flex flex-col items-end gap-1 opacity-20">
+                            <div className="w-4 h-[1px] bg-brand"></div>
+                            <div className="w-8 h-[1px] bg-brand"></div>
+                        </div>
+
+                        {/* Status HUD */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <div className="bg-black/60 backdrop-blur-md px-12 py-6 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                <p className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-2 shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                                    {getStatusMessage()}
+                                </p>
+                                {drillState === 'countdown' && (
+                                    <div className="w-32 h-1 bg-surface-border mt-4 overflow-hidden">
+                                        <div
+                                            className="h-full bg-brand transition-all duration-1000 ease-linear"
+                                            style={{ width: `${(countdown / 5) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Scanned Metrics */}
+                        <div className="absolute bottom-12 left-12 text-left space-y-1 hidden md:block opacity-40">
+                            <p className="text-[8px] font-mono text-brand uppercase tracking-widest">SENS_THRESH: {SENSITIVITY_THRESHOLD}</p>
+                            <p className="text-[8px] font-mono text-brand uppercase tracking-widest">RES_ID: {VIDEO_WIDTH}x{VIDEO_HEIGHT}</p>
+                            <p className="text-[8px] font-mono text-brand uppercase tracking-widest">STREAM: ACTIVE_ENCRYPTED</p>
+                        </div>
                     </div>
+                </div>
+
+                <div className="flex gap-12 w-full max-w-2xl px-6 opacity-30">
+                    <div className="flex-grow h-px bg-gradient-to-r from-transparent via-brand to-transparent"></div>
                 </div>
             </div>
         </div>

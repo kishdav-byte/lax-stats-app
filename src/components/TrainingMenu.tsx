@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from '../services/storageService';
 import { TrainingSession } from '../types';
 import TrainingHistory from './TrainingHistory';
+import { Target, Zap, Activity } from 'lucide-react';
 
 interface TrainingMenuProps {
     onViewChange: (view: View) => void;
@@ -11,35 +12,58 @@ interface TrainingMenuProps {
 
 const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange, sessions, onDeleteSession }) => {
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold text-cyan-400">Training Center</h1>
-                <p className="text-gray-400 mt-1">Select a drill to begin your training session.</p>
+        <div className="space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="h-px bg-brand w-12"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Performance Lab</p>
+                    </div>
+                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                        TRAINING <span className="text-brand">CENTER</span>
+                    </h1>
+                </div>
+                <button onClick={() => onViewChange('dashboard')} className="cyber-button-outline py-2 px-6">
+                    RETURN TO COMMAND
+                </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-8">
                 <div
-                    className="bg-gray-800 p-6 rounded-lg shadow-xl hover:shadow-cyan-500/20 transition-all duration-300 cursor-pointer hover:scale-105 flex flex-col items-center justify-center text-center"
+                    className="cyber-card p-1 group cursor-pointer transition-transform duration-500 hover:scale-[1.02]"
                     onClick={() => onViewChange('faceOffTrainer')}
                 >
-                    <h2 className="text-2xl font-semibold">Face-Off Drills</h2>
-                    <p className="text-gray-400 mt-2">Use the AI Trainer to measure and improve your reaction time on the whistle.</p>
+                    <div className="bg-black p-10 flex flex-col items-center justify-center text-center h-full border border-surface-border group-hover:border-brand/40 transition-colors">
+                        <div className="w-16 h-16 mb-6 rounded-full border border-brand/20 flex items-center justify-center group-hover:border-brand transition-colors">
+                            <Zap className="w-8 h-8 text-brand group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4 group-hover:text-brand transition-colors">Face-Off Drills</h2>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest leading-relaxed max-w-[200px]">
+                            Measure reaction latency against automated whistle triggers. AI analysis provided.
+                        </p>
+                        <div className="mt-8 h-[1px] bg-brand/30 w-12 group-hover:w-24 transition-all duration-500"></div>
+                    </div>
                 </div>
+
                 <div
-                    className="bg-gray-800 p-6 rounded-lg shadow-xl hover:shadow-cyan-500/20 transition-all duration-300 cursor-pointer hover:scale-105 flex flex-col items-center justify-center text-center"
+                    className="cyber-card p-1 group cursor-pointer transition-transform duration-500 hover:scale-[1.02]"
                     onClick={() => onViewChange('shootingDrill')}
                 >
-                    <h2 className="text-2xl font-semibold">Shooting Drills</h2>
-                    <p className="text-gray-400 mt-2">Measure your shot release speed or track your shot placement to build an accuracy heatmap.</p>
+                    <div className="bg-black p-10 flex flex-col items-center justify-center text-center h-full border border-surface-border group-hover:border-brand/40 transition-colors">
+                        <div className="w-16 h-16 mb-6 rounded-full border border-brand/20 flex items-center justify-center group-hover:border-brand transition-colors">
+                            <Target className="w-8 h-8 text-brand group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4 group-hover:text-brand transition-colors">Shooting Drills</h2>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest leading-relaxed max-w-[200px]">
+                            Track release velocity and spatial grouping heatmaps via motion detection.
+                        </p>
+                        <div className="mt-8 h-[1px] bg-brand/30 w-12 group-hover:w-24 transition-all duration-500"></div>
+                    </div>
                 </div>
             </div>
 
-            <TrainingHistory sessions={sessions} onDeleteSession={onDeleteSession} />
-
-            <div className="text-center pt-4">
-                <button onClick={() => onViewChange('dashboard')} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
-                    Return to Main Menu
-                </button>
+            <div className="pt-8">
+                <TrainingHistory sessions={sessions} onDeleteSession={onDeleteSession} />
             </div>
         </div>
     );

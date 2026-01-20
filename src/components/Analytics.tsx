@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { Game, StatType, Team, TrainingSession, DrillType } from '../types';
 import { analyzePlayerPerformance, PlayerAnalysisData } from '../services/geminiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart3, Binary, Activity, ChevronRight, Shield, Cpu, Box } from 'lucide-react';
 
 interface AnalyticsProps {
     teams: Team[];
@@ -56,21 +57,46 @@ const AnalysisModal: React.FC<{
     }, [getAnalysis]);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-2xl w-full">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold">AI Analysis for <span className="text-cyan-400">{player.name}</span></h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="cyber-card p-8 max-w-2xl w-full border-brand/50 bg-black">
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="h-px bg-brand w-8"></div>
+                            <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">AI Synthesis Protocol</p>
+                        </div>
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">
+                            ANALYSIS // <span className="text-brand">{player.name}</span>
+                        </h2>
+                    </div>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+                        <Box className="w-6 h-6" />
+                    </button>
                 </div>
-                {isLoading && <p className="text-center animate-pulse">The AI is analyzing the player's performance...</p>}
-                {error && <p className="text-red-400 text-center">{error}</p>}
-                {analysis && (
-                    <div className="prose prose-invert prose-sm max-w-none text-gray-300 bg-gray-900 p-4 rounded-md max-h-96 overflow-y-auto" dangerouslySetInnerHTML={{ __html: analysis.replace(/\n/g, '<br />') }}>
-                        {/* The analysis content will be rendered here */}
+
+                {isLoading && (
+                    <div className="py-20 text-center space-y-4">
+                        <Cpu className="w-12 h-12 text-brand mx-auto animate-spin" />
+                        <p className="text-[10px] font-mono text-brand uppercase tracking-[0.3em] animate-pulse">Running Neural Optimization...</p>
                     </div>
                 )}
-                <div className="mt-4 flex justify-end">
-                    <button onClick={onClose} className="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-md">Close</button>
+
+                {error && (
+                    <div className="p-4 bg-red-900/10 border-l-2 border-red-500 mb-6">
+                        <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest">Protocol Error: {error}</p>
+                    </div>
+                )}
+
+                {analysis && (
+                    <div className="bg-surface-card border border-surface-border p-6 custom-scrollbar max-h-96 overflow-y-auto">
+                        <div className="prose prose-invert prose-sm max-w-none prose-orange selection:bg-brand selection:text-black">
+                            <div className="text-[11px] font-mono leading-relaxed text-gray-300 space-y-4 uppercase tracking-wider" dangerouslySetInnerHTML={{ __html: analysis.replace(/\n/g, '<br />') }} />
+                        </div>
+                    </div>
+                )}
+
+                <div className="mt-8 flex justify-end">
+                    <button onClick={onClose} className="cyber-button py-2 px-8">TERMINATE_VIEW</button>
                 </div>
             </div>
         </div>
@@ -83,7 +109,6 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
     const [analyzingPlayer, setAnalyzingPlayer] = useState<AggregatedStats | null>(null);
 
     const faceOffData = useMemo(() => {
-        console.log("Analytics received trainingSessions:", trainingSessions);
         const sessionsByDate: { [date: string]: number[] } = {};
 
         trainingSessions.forEach(s => {
@@ -96,19 +121,12 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
             }
         });
 
-        const aggregated = Object.entries(sessionsByDate)
-            .map(([date, times]) => {
-                const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
-                return {
-                    date,
-                    fullDate: new Date(date), // This might be approximate depending on locale, but good enough for sorting
-                    averageTime: avg,
-                };
-            })
+        return Object.entries(sessionsByDate)
+            .map(([date, times]) => ({
+                date,
+                averageTime: Math.round(times.reduce((a, b) => a + b, 0) / times.length),
+            }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        console.log("Aggregated Face-Off Data:", aggregated);
-        return aggregated;
     }, [trainingSessions]);
 
     const aggregatedStats: AggregatedStats[] = useMemo(() => {
@@ -135,15 +153,11 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
             const gamePlayerIds = new Set<string>();
             game.stats.forEach(stat => {
                 gamePlayerIds.add(stat.playerId);
-                if (stat.assistingPlayerId) {
-                    gamePlayerIds.add(stat.assistingPlayerId);
-                }
+                if (stat.assistingPlayerId) gamePlayerIds.add(stat.assistingPlayerId);
             });
 
             gamePlayerIds.forEach(playerId => {
-                if (playerStatsMap[playerId]) {
-                    playerStatsMap[playerId].gamesPlayed += 1;
-                }
+                if (playerStatsMap[playerId]) playerStatsMap[playerId].gamesPlayed += 1;
             });
 
             game.stats.forEach(stat => {
@@ -169,7 +183,6 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
             sortablePlayers.sort((a, b) => {
                 const aVal = sortConfig.key in StatType ? (a.stats[sortConfig.key as StatType] || 0) : a[sortConfig.key as 'name' | 'teamName' | 'gamesPlayed'];
                 const bVal = sortConfig.key in StatType ? (b.stats[sortConfig.key as StatType] || 0) : b[sortConfig.key as 'name' | 'teamName' | 'gamesPlayed'];
-
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -179,100 +192,169 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
     }, [aggregatedStats, sortConfig]);
 
     const requestSort = (key: SortKey) => {
-        let direction: SortDirection = 'asc';
-        if (sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
+        setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
     };
 
     const statColumns: { key: StatType, label: string }[] = [
         StatType.GOAL, StatType.ASSIST, StatType.SHOT, StatType.GROUND_BALL,
         StatType.TURNOVER, StatType.CAUSED_TURNOVER, StatType.SAVE, StatType.FACEOFF_WIN
-    ].map(key => ({ key, label: key }));
+    ].map(key => ({ key, label: key.substring(0, 3).toUpperCase() }));
 
 
     return (
         <>
             {analyzingPlayer && <AnalysisModal player={analyzingPlayer} onClose={() => setAnalyzingPlayer(null)} />}
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-cyan-400">Analytics Center</h1>
-                    <button onClick={onReturnToDashboard} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                        Return to Dashboard
+            <div className="space-y-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="h-px bg-brand w-12"></div>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Data Synthesis Grid</p>
+                        </div>
+                        <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                            ANALYTICS <span className="text-brand">CENTER</span>
+                        </h1>
+                    </div>
+                    <button onClick={onReturnToDashboard} className="cyber-button-outline py-2 px-6">
+                        RETURN TO COMMAND
                     </button>
                 </div>
 
                 {/* Training Progress Section */}
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold mb-4 text-cyan-400">Training Progress</h2>
-                    <div className="grid md:grid-cols-1 gap-6">
-                        <div className="bg-gray-900 p-4 rounded-lg">
-                            <h3 className="text-lg font-semibold mb-2 text-center">Face-Off Clamp Speed (Lower is Better)</h3>
-                            {faceOffData.length > 0 ? (
-                                <div className="h-64 w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={faceOffData}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                            <XAxis dataKey="date" stroke="#9CA3AF" />
-                                            <YAxis stroke="#9CA3AF" label={{ value: 'ms', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', color: '#F3F4F6' }}
-                                                itemStyle={{ color: '#22D3EE' }}
-                                            />
-                                            <Legend />
-                                            <Line type="monotone" dataKey="averageTime" name="Avg Reaction Time" stroke="#22D3EE" strokeWidth={2} activeDot={{ r: 8 }} />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            ) : (
-                                <p className="text-center text-gray-500 py-10">No face-off training data available yet.</p>
-                            )}
+                <div className="cyber-card p-1">
+                    <div className="bg-black p-8 border border-surface-border">
+                        <div className="flex items-center gap-4 mb-8">
+                            <Activity className="w-5 h-5 text-brand" />
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Latencies // <span className="text-brand">Performance</span></h2>
+                        </div>
+
+                        <div className="grid md:grid-cols-1 gap-8">
+                            <div className="bg-surface-card p-6 border border-surface-border">
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-400 mb-8 ml-2">Face-Off Clamp Speed Projection // MSvTime</p>
+                                {faceOffData.length > 0 ? (
+                                    <div className="h-72 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={faceOffData}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                                                <XAxis
+                                                    dataKey="date"
+                                                    stroke="#525252"
+                                                    fontSize={10}
+                                                    tickMargin={10}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                />
+                                                <YAxis
+                                                    stroke="#525252"
+                                                    fontSize={10}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    label={{ value: 'MS', angle: -90, position: 'insideLeft', fill: '#525252', fontSize: 10, offset: 0 }}
+                                                />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #262626', borderRadius: '0', fontSize: '10px', fontFamily: 'JetBrains Mono' }}
+                                                    itemStyle={{ color: '#ff5722' }}
+                                                    cursor={{ stroke: '#ff5722', strokeWidth: 1 }}
+                                                />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="averageTime"
+                                                    name="LATENCY"
+                                                    stroke="#ff5722"
+                                                    strokeWidth={3}
+                                                    dot={{ fill: '#ff5722', strokeWidth: 2, r: 4 }}
+                                                    activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="p-20 text-center opacity-20">
+                                        <Binary className="w-12 h-12 mx-auto mb-4" />
+                                        <p className="text-[10px] font-mono uppercase tracking-widest">Awaiting Reactive Data Streams</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold mb-4 text-cyan-400">Team & Player Stats</h2>
-                    <p className="text-gray-400 mb-4 text-sm">
-                        This table aggregates player statistics across all completed games. Click on any column header to sort. Use the AI analysis to get coaching insights on a player's performance.
-                    </p>
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1000px] text-sm text-left">
-                            <thead className="bg-gray-700 text-xs uppercase tracking-wider">
-                                <tr>
-                                    {[{ key: 'name', label: 'Player' }, { key: 'teamName', label: 'Team' }, { key: 'gamesPlayed', label: 'Games' }].map(({ key, label }) => (
-                                        <th key={key} className="p-2 cursor-pointer" onClick={() => requestSort(key as SortKey)}>
-                                            {label} {sortConfig.key === key ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                                        </th>
-                                    ))}
-                                    {statColumns.map(({ key, label }) => (
-                                        <th key={key} className="p-2 text-center cursor-pointer" onClick={() => requestSort(key)}>
-                                            {label.substring(0, 3)} {sortConfig.key === key ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                                        </th>
-                                    ))}
-                                    <th className="p-2 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {sortedPlayers.map(player => (
-                                    <tr key={player.playerId} className="border-b border-gray-700 hover:bg-gray-600">
-                                        <td className="p-2 font-bold">{player.name} <span className="text-cyan-400 text-xs">#{player.jerseyNumber}</span></td>
-                                        <td className="p-2 text-gray-400">{player.teamName}</td>
-                                        <td className="p-2 text-center text-gray-400">{player.gamesPlayed}</td>
-                                        {statColumns.map(({ key }) => (
-                                            <td key={key} className="p-2 text-center">{player.stats[key] || 0}</td>
+                <div className="pt-8">
+                    <div className="flex items-center gap-4 mb-8">
+                        <Shield className="w-5 h-5 text-brand" />
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Entity <span className="text-brand">Matrix</span></h2>
+                        <div className="h-px bg-surface-border flex-grow"></div>
+                    </div>
+
+                    <div className="cyber-card group">
+                        <div className="overflow-x-auto custom-scrollbar">
+                            <table className="w-full min-w-[1000px] text-left border-collapse">
+                                <thead className="bg-surface-card border-b border-surface-border">
+                                    <tr>
+                                        {[{ key: 'name', label: 'ENTITY' }, { key: 'teamName', label: 'UNIT' }, { key: 'gamesPlayed', label: 'SEQS' }].map(({ key, label }) => (
+                                            <th key={key} className="p-4 px-6 cursor-pointer group/th" onClick={() => requestSort(key as SortKey)}>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500 group-hover/th:text-brand transition-colors">{label}</span>
+                                                    {sortConfig.key === key && (
+                                                        <span className="text-brand text-[8px] animate-pulse">{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                                                    )}
+                                                </div>
+                                            </th>
                                         ))}
-                                        <td className="p-2 text-center">
-                                            <button onClick={() => setAnalyzingPlayer(player)} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors">
-                                                Analyze with AI
-                                            </button>
-                                        </td>
+                                        {statColumns.map(({ key, label }) => (
+                                            <th key={key} className="p-4 text-center cursor-pointer group/th" onClick={() => requestSort(key)}>
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500 group-hover/th:text-brand transition-colors">{label}</span>
+                                                    {sortConfig.key === key && (
+                                                        <span className="text-brand text-[8px] animate-pulse">{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                                                    )}
+                                                </div>
+                                            </th>
+                                        ))}
+                                        <th className="p-4 px-6 text-right">
+                                            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">OPERATIONS</span>
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {sortedPlayers.length === 0 && <p className="text-center text-gray-500 py-8">No player stats available. Complete a game to see data here.</p>}
+                                </thead>
+                                <tbody className="bg-black">
+                                    {sortedPlayers.map(player => (
+                                        <tr key={player.playerId} className="border-b border-surface-border/50 hover:bg-brand/5 transition-colors group">
+                                            <td className="p-4 px-6">
+                                                <p className="font-display font-bold text-white uppercase italic tracking-tight">{player.name}</p>
+                                                <p className="text-[9px] font-mono text-brand uppercase tracking-widest mt-0.5">#{player.jerseyNumber}</p>
+                                            </td>
+                                            <td className="p-4 px-6">
+                                                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{player.teamName}</span>
+                                            </td>
+                                            <td className="p-4 px-6 text-center">
+                                                <span className="font-mono text-xs text-white bg-surface-card px-2 py-0.5 border border-surface-border">{player.gamesPlayed}</span>
+                                            </td>
+                                            {statColumns.map(({ key }) => (
+                                                <td key={key} className="p-4 text-center">
+                                                    <span className={`font-mono text-xs ${(player.stats[key] || 0) > 0 ? 'text-white' : 'text-gray-700'}`}>
+                                                        {player.stats[key] || 0}
+                                                    </span>
+                                                </td>
+                                            ))}
+                                            <td className="p-4 px-6 text-right">
+                                                <button
+                                                    onClick={() => setAnalyzingPlayer(player)}
+                                                    className="cyber-button-outline py-1 px-4 text-[9px] flex items-center gap-2 ml-auto group-hover:bg-brand group-hover:text-black transition-all duration-300"
+                                                >
+                                                    SYNTHESIZE <Activity className="w-3 h-3" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {sortedPlayers.length === 0 && (
+                            <div className="p-20 text-center border-t border-surface-border">
+                                <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Unit Database Empty // No Statistics Resolved</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
