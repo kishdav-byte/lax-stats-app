@@ -308,7 +308,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                                         <div>
                                                             <p className="font-bold">{requestingUser.username}</p>
                                                             <p className="text-sm text-gray-400">
-                                                                Wants to join as #{req.playerJersey} ({req.playerPosition})
+                                                                Wants to join as #{req.playerJersey}{req.playerPosition ? ` (${req.playerPosition})` : ''}
                                                             </p>
                                                         </div>
                                                         <div className="flex space-x-2">
