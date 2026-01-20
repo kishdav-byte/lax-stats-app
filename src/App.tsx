@@ -868,106 +868,149 @@ const App: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
-            <nav className="bg-gray-800 shadow-lg sticky top-0 z-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center">
-                            <span className="font-bold text-xl text-cyan-400">LAX Keeper AI</span>
+        <div className="min-h-screen bg-black text-white font-sans flex overflow-hidden">
+            {/* Desktop Sidebar */}
+            <aside className="hidden md:flex w-64 bg-black border-r border-surface-border flex-col relative z-30">
+                <div className="p-8 pb-4">
+                    <div className="mb-8">
+                        <h1 className="text-2xl font-display font-black text-white italic tracking-tighter">
+                            LAX<span className="text-brand">KEEPER</span>
+                        </h1>
+                        <div className="h-[1px] bg-brand w-8 mt-1"></div>
+                        <p className="text-[8px] font-mono uppercase tracking-[0.4em] text-gray-500 mt-2 italic">Intelligent // Athletic // Systems</p>
+                    </div>
+
+                    <div className="space-y-1 mt-12">
+                        <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest mb-4 px-2">Main Menu</p>
+                        {allNavItems.map(item => {
+                            const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
+                            return (
+                                <button
+                                    key={item.view}
+                                    onClick={() => setCurrentView(item.view)}
+                                    className={`w-full text-left px-3 py-3 rounded-none text-xs font-display font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-between group ${isActive
+                                        ? 'bg-brand/10 text-brand border-l-2 border-brand'
+                                        : 'text-gray-400 hover:text-white hover:bg-surface-card'
+                                        }`}
+                                >
+                                    {item.label}
+                                    {isActive && <div className="w-1 h-1 bg-brand rounded-full animate-pulse"></div>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Innovation Lab Marker Decoration */}
+                <div className="mt-auto p-8 opacity-20 pointer-events-none">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-[100px] bg-gradient-to-b from-brand to-transparent"></div>
+                        <div className="vertical-text font-mono text-[8px] uppercase tracking-[0.3em]">INNOVATION // LAB // 001</div>
+                    </div>
+                </div>
+
+                <div className="p-8 pt-0 mt-auto border-t border-surface-border bg-surface-card/30">
+                    <button
+                        onClick={handleLogout}
+                        className="w-full text-left py-4 text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-brand transition-colors flex items-center gap-2"
+                    >
+                        EXTRACT // LOGOUT
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-grow flex flex-col min-w-0 relative">
+                {/* Header */}
+                <header className="h-20 bg-black/80 backdrop-blur-md border-b border-surface-border flex items-center justify-between px-6 md:px-12 sticky top-0 z-20">
+                    <div className="md:hidden">
+                        <h1 className="text-xl font-display font-black text-white italic tracking-tighter">
+                            LAX<span className="text-brand">KEEPER</span>
+                        </h1>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-8">
+                        <div className="h-4 w-px bg-surface-border"></div>
+                        <div className="flex items-center gap-2">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase">Status:</p>
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <p className="text-[10px] font-mono text-green-500 uppercase tracking-widest">System Online</p>
                         </div>
-                        <div className="hidden md:flex items-center space-x-4">
-                            {allNavItems.map(item => {
-                                const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
-                                let className = `px-3 py-2 rounded-md text-sm font-medium`;
-                                if (item.view === 'devSupport') {
-                                    className += isActive ? 'bg-yellow-600 text-white' : 'text-yellow-400 hover:bg-gray-700 hover:text-white';
-                                } else {
-                                    className += isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white';
-                                }
-                                return (
-                                    <button key={item.view} onClick={() => setCurrentView(item.view)} className={className}>
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="text-right hidden sm:block">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Operator Ident</p>
+                            <p className="text-xs font-display font-bold text-white uppercase italic">{currentUser.username} // {currentUser.role}</p>
                         </div>
-                        <div className="hidden md:flex items-center">
-                            <span className="text-gray-300 text-sm mr-4">Welcome, {currentUser.username} ({currentUser.role})</span>
-                            <button onClick={handleLogout} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">Logout</button>
-                        </div>
-                        {/* Mobile Menu Button */}
-                        <div className="-mr-2 flex md:hidden">
-                            <button
-                                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                type="button"
-                                className="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-                                aria-controls="mobile-menu"
-                                aria-expanded={isMenuOpen}
-                            >
-                                <span className="sr-only">Open main menu</span>
-                                {/* Hamburger icon */}
-                                <svg className={!isMenuOpen ? 'block h-6 w-6' : 'hidden h-6 w-6'} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+
+                        {/* Mobile Menu Toggle */}
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="md:hidden p-2 text-gray-400 hover:text-white"
+                        >
+                            {!isMenuOpen ? (
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                                 </svg>
-                                {/* Close icon */}
-                                <svg className={isMenuOpen ? 'block h-6 w-6' : 'hidden h-6 w-6'} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            ) : (
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
+                            )}
+                        </button>
+                    </div>
+                </header>
+
+                {/* Mobile Menu Dropdown */}
+                {isMenuOpen && (
+                    <div className="md:hidden absolute top-20 left-0 w-full bg-black border-b border-surface-border z-40 p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                        {allNavItems.map(item => {
+                            const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
+                            return (
+                                <button
+                                    key={item.view}
+                                    onClick={() => { setCurrentView(item.view); setIsMenuOpen(false); }}
+                                    className={`w-full text-left p-3 text-xs font-display font-bold uppercase tracking-widest ${isActive ? 'text-brand' : 'text-gray-400'}`}
+                                >
+                                    {item.label}
+                                </button>
+                            );
+                        })}
+                        <div className="pt-4 border-t border-surface-border">
+                            <button onClick={handleLogout} className="w-full text-left p-3 text-xs font-mono text-brand uppercase tracking-widest">
+                                Logout
                             </button>
                         </div>
                     </div>
-                </div>
-                {/* Mobile Menu Dropdown */}
-                {isMenuOpen && (
-                    <div className="md:hidden" id="mobile-menu">
-                        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                            {allNavItems.map(item => {
-                                const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
-                                let className = `block w-full text-left px-3 py-2 rounded-md text-base font-medium`;
-                                if (item.view === 'devSupport') {
-                                    className += isActive ? 'bg-yellow-600 text-white' : 'text-yellow-400 hover:bg-gray-700 hover:text-white';
-                                } else {
-                                    className += isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white';
-                                }
-                                return (
-                                    <button key={item.view} onClick={() => { setCurrentView(item.view); setIsMenuOpen(false); }} className={className}>
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
+                )}
+
+                {/* Scrollable Body */}
+                <main className="flex-grow overflow-y-auto custom-scrollbar bg-black">
+                    <div className="max-w-7xl mx-auto p-6 md:p-12">
+                        {/* Innovation Lab Background Text */}
+                        <div className="absolute right-0 top-1/4 opacity-[0.02] pointer-events-none select-none -z-10">
+                            <p className="text-[200px] font-display font-black leading-none uppercase tracking-tighter">AI DATA</p>
                         </div>
-                        {/* Mobile User Info & Logout */}
-                        <div className="pt-4 pb-3 border-t border-gray-700">
-                            <div className="flex items-center px-5">
-                                <div>
-                                    <div className="text-base font-medium leading-none text-white">{currentUser.username}</div>
-                                    <div className="text-sm font-medium leading-none text-gray-400">{currentUser.role}</div>
-                                </div>
+
+                        {currentView !== 'game' && currentView !== 'playerProfile' && (
+                            <div className="mb-12">
+                                <Notifications
+                                    currentUser={currentUser}
+                                    requests={accessRequests}
+                                    teams={teams}
+                                    users={users}
+                                    onUpdateRequestStatus={handleUpdateRequestStatus}
+                                />
                             </div>
-                            <div className="mt-3 px-2 space-y-1">
-                                <button
-                                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
-                                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                >
-                                    Logout
-                                </button>
-                            </div>
+                        )}
+
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            {renderContent()}
                         </div>
                     </div>
-                )}
-            </nav>
-            <main>
-                <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                    {currentView !== 'game' && currentView !== 'playerProfile' && <Notifications
-                        currentUser={currentUser}
-                        requests={accessRequests}
-                        teams={teams}
-                        users={users}
-                        onUpdateRequestStatus={handleUpdateRequestStatus}
-                    />}
-                    {renderContent()}
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 }
