@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { analyzeCodeProblem } from '../services/geminiService';
+import { Cpu, Terminal, Activity, ShieldAlert, Sparkles } from 'lucide-react';
 
 interface DevSupportProps {
     onReturnToDashboard: (view: 'dashboard') => void;
 }
 
-// In a real build system, we might use raw-loader or another mechanism.
-// For this environment, we'll store the code as strings.
 const fileContents = {
     'App.tsx': `... (App.tsx content - too large to include fully here, but was retrieved) ...`,
-    // ... and other files if needed
 };
 
 const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
@@ -21,7 +19,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
 
     const handleAnalyze = async () => {
         if (!question.trim()) {
-            setError('Please enter a question about the code.');
+            setError('PROTOCOL ERROR: INPUT DESCRIPTOR REQUIRED.');
             return;
         }
         setIsLoading(true);
@@ -31,80 +29,130 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
             const result = await analyzeCodeProblem(question, fileContents[selectedFile], selectedFile);
             setAnalysis(result);
         } catch (e: any) {
-            setError(e.message || "An unknown error occurred.");
+            setError(e.message || "ANOMALY DETECTED IN LOGIC STREAM.");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-yellow-400">Developer AI Support</h1>
-                <button onClick={() => onReturnToDashboard('dashboard')} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                    Return to Main Menu
+        <div className="space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="h-px bg-brand w-12"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Core Logic Synthesis</p>
+                    </div>
+                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                        DEVELOPER <span className="text-brand">AI SUPPORT</span>
+                    </h1>
+                </div>
+                <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
+                    RETURN TO COMMAND
                 </button>
             </div>
 
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <p className="text-gray-400 mb-4">
-                    This is a tool for the app administrator to get AI-powered help with the application's source code.
-                    Select a file, ask a question, and the Gemini Pro model will provide an analysis.
-                </p>
+            <div className="grid lg:grid-cols-2 gap-8 items-start">
+                <div className="cyber-card p-1">
+                    <div className="bg-black p-8 border border-surface-border">
+                        <div className="flex items-center gap-4 mb-6">
+                            <Terminal className="w-5 h-5 text-brand" />
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">SIGNAL // <span className="text-brand">INPUT</span></h2>
+                        </div>
 
-                <div className="space-y-4">
-                    <div>
-                        <label htmlFor="file-select" className="block text-sm font-medium mb-1">Select Code File</label>
-                        <select
-                            id="file-select"
-                            value={selectedFile}
-                            onChange={(e) => setSelectedFile(e.target.value as keyof typeof fileContents)}
-                            className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                        >
-                            {Object.keys(fileContents).map(filename => (
-                                <option key={filename} value={filename}>{filename}</option>
-                            ))}
-                        </select>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-8 leading-relaxed">
+                            Initialize AI-powered heuristic analysis of the application source code. Select target data node and define interrogation parameters.
+                        </p>
+
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label htmlFor="file-select" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">TARGET_NODE_PATH</label>
+                                <select
+                                    id="file-select"
+                                    value={selectedFile}
+                                    onChange={(e) => setSelectedFile(e.target.value as keyof typeof fileContents)}
+                                    className="w-full cyber-input appearance-none"
+                                >
+                                    {Object.keys(fileContents).map(filename => (
+                                        <option key={filename} value={filename} className="bg-black">{filename.toUpperCase()}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="question" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">INTERROGATION_STRING</label>
+                                <textarea
+                                    id="question"
+                                    rows={4}
+                                    value={question}
+                                    onChange={(e) => setQuestion(e.target.value)}
+                                    placeholder={`e.g., "Explain 'handleLogin' logic" or "Audit penalty tracking vectors"`}
+                                    className="w-full cyber-input min-h-[120px]"
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleAnalyze}
+                                disabled={isLoading}
+                                className="cyber-button w-full py-4 flex items-center justify-center gap-3 group disabled:opacity-50"
+                            >
+                                {isLoading ? (
+                                    <>SYNTHESIZING... <Activity className="w-5 h-5 animate-spin" /></>
+                                ) : (
+                                    <>INITIALIZE_ANALYSIS <Sparkles className="w-5 h-5 group-hover:animate-pulse" /></>
+                                )}
+                            </button>
+                        </div>
+
+                        {error && (
+                            <div className="mt-6 p-4 border border-red-500/30 bg-red-500/5 flex items-center gap-4 animate-in slide-in-from-top-2">
+                                <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
+                                <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed">{error}</p>
+                            </div>
+                        )}
                     </div>
-                    <div>
-                        <label htmlFor="question" className="block text-sm font-medium mb-1">Your Question</label>
-                        <textarea
-                            id="question"
-                            rows={3}
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            placeholder={`e.g., "Explain the 'handleLogin' function in App.tsx" or "How could I add a feature to track penalties?"`}
-                            className="w-full bg-gray-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                        />
-                    </div>
-                    <button
-                        onClick={handleAnalyze}
-                        disabled={isLoading}
-                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-md text-lg transition-colors disabled:bg-gray-600"
-                    >
-                        {isLoading ? 'Analyzing...' : 'Analyze Code'}
-                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    {analysis ? (
+                        <div className="cyber-card p-1 animate-in fade-in slide-in-from-right-4 duration-700">
+                            <div className="bg-black p-8 border border-surface-border relative">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <Cpu className="w-5 h-5 text-brand" />
+                                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">AI // <span className="text-brand">OUTPUT</span></h2>
+                                    <div className="flex-grow"></div>
+                                    <div className="text-[9px] font-mono text-brand border border-brand/30 px-2 py-0.5 tracking-[0.2em]">VERIFIED</div>
+                                </div>
+
+                                <div className="prose prose-invert prose-sm max-w-none">
+                                    <div className="text-gray-300 font-light leading-relaxed space-y-4" dangerouslySetInnerHTML={{ __html: analysis.replace(/\n/g, '<br />') }}>
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 pt-6 border-t border-surface-border/30 flex justify-between items-center opacity-30">
+                                    <span className="text-[8px] font-mono uppercase tracking-[0.3em]">Neural_Synthesis_Complete</span>
+                                    <span className="text-[8px] font-mono uppercase tracking-[0.3em]">{new Date().toLocaleTimeString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="h-full min-h-[400px] border border-dashed border-surface-border flex flex-col items-center justify-center p-12 text-center opacity-20">
+                            <Cpu className="w-16 h-16 text-white mb-6" />
+                            <p className="text-[10px] font-mono uppercase tracking-[0.4em] max-w-xs leading-relaxed">
+                                Awaiting data stream initiation. Initialize interrogation to populate synthesis matrix.
+                            </p>
+                            <div className="mt-8 flex gap-2">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: `${i * 200}ms` }}></div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {error && <p className="text-red-400 text-center bg-red-900/50 p-3 rounded-md">{error}</p>}
-
-            {isLoading && (
-                <div className="text-center p-8">
-                    <p className="text-lg animate-pulse">The AI is thinking...</p>
-                </div>
-            )}
-
-            {analysis && (
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold text-yellow-400 mb-4">AI Analysis</h2>
-                    <div className="prose prose-invert prose-sm max-w-none text-gray-300" dangerouslySetInnerHTML={{ __html: analysis.replace(/\n/g, '<br />') }}>
-                        {/* The analysis content will be rendered here */}
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
 
 export default DevSupport;
+

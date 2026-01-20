@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Feedback, User, Role, FeedbackType, FeedbackStatus } from '../types';
 import { View } from '../services/storageService';
+import { Activity, MessageSquare, Send, ChevronRight, Activity as Binary } from 'lucide-react';
 
 interface FeedbackComponentProps {
     currentUser: User;
@@ -19,7 +20,7 @@ const FeedbackForm: React.FC<{
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!message.trim()) {
-            alert('Please enter your feedback before submitting.');
+            alert('PROTOCOL VIOLATION: SUBMISSION REQUIRED.');
             return;
         }
         onAddFeedback(feedbackType, message.trim());
@@ -27,40 +28,49 @@ const FeedbackForm: React.FC<{
     };
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold text-cyan-400 mb-4">Submit Feedback</h2>
-            <p className="text-gray-400 mb-6">
-                Have a suggestion, found a bug, or want to share a comment? Let us know! Your feedback helps improve the app for everyone.
-            </p>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="feedbackType" className="block text-sm font-medium mb-1">Feedback Type</label>
-                    <select
-                        id="feedbackType"
-                        value={feedbackType}
-                        onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
-                        className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    >
-                        {Object.values(FeedbackType).map(type => (
-                            <option key={type} value={type}>{type}</option>
-                        ))}
-                    </select>
+        <div className="cyber-card p-1">
+            <div className="bg-black p-8 border border-surface-border">
+                <div className="flex items-center gap-4 mb-6">
+                    <MessageSquare className="w-5 h-5 text-brand" />
+                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">SUBMIT // <span className="text-brand">INPUT_STREAM</span></h2>
                 </div>
-                <div>
-                    <label htmlFor="message" className="block text-sm font-medium mb-1">Message</label>
-                    <textarea
-                        id="message"
-                        rows={6}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Please be as detailed as possible..."
-                        className="w-full bg-gray-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
-                </div>
-                <button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-md text-lg transition-colors">
-                    Submit Feedback
-                </button>
-            </form>
+
+                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-8 leading-relaxed">
+                    Have a suggestion, found a bug, or want to share a comment? Your input optimizes the global protocol.
+                </p>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <label htmlFor="feedbackType" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">TRANSMISSION_TYPE</label>
+                        <select
+                            id="feedbackType"
+                            value={feedbackType}
+                            onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
+                            className="w-full cyber-input appearance-none"
+                        >
+                            {Object.values(FeedbackType).map(type => (
+                                <option key={type} value={type} className="bg-black">{type.toUpperCase()}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="message" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">SIGNAL_CONTENT</label>
+                        <textarea
+                            id="message"
+                            rows={6}
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            placeholder="ENCODE DETAILED DATA STRING HERE..."
+                            className="w-full cyber-input min-h-[150px]"
+                        />
+                    </div>
+
+                    <button type="submit" className="cyber-button w-full py-4 flex items-center justify-center gap-3 group">
+                        INITIALIZE_TRANSMISSION <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };
@@ -79,46 +89,69 @@ const FeedbackViewer: React.FC<{
         });
     }, [feedbackList]);
 
-    const getStatusColor = (status: FeedbackStatus) => {
+    const getStatusStyle = (status: FeedbackStatus) => {
         switch (status) {
-            case FeedbackStatus.NEW: return 'bg-yellow-500 text-black';
-            case FeedbackStatus.VIEWED: return 'bg-blue-500 text-white';
-            case FeedbackStatus.RESOLVED: return 'bg-green-500 text-white';
+            case FeedbackStatus.NEW: return 'text-yellow-500 border-yellow-500/30';
+            case FeedbackStatus.VIEWED: return 'text-brand border-brand/30';
+            case FeedbackStatus.RESOLVED: return 'text-green-500 border-green-500/30';
         }
     };
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold text-cyan-400 mb-4">User Feedback</h2>
+        <div className="space-y-6">
+            <div className="flex items-center gap-4 mb-4">
+                <Activity className="w-5 h-5 text-brand" />
+                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">DATA // <span className="text-brand">ARCHIVE</span></h2>
+                <div className="h-px bg-surface-border flex-grow"></div>
+            </div>
+
             {sortedFeedback.length > 0 ? (
-                <div className="space-y-4">
+                <div className="grid gap-4">
                     {sortedFeedback.map(item => (
-                        <div key={item.id} className="bg-gray-700 p-4 rounded-md border-l-4" style={{ borderColor: getStatusColor(item.status).split(' ')[0].replace('bg-', '#') }}>
-                            <div className="flex justify-between items-start flex-wrap gap-2 mb-2">
-                                <div>
-                                    <p className="font-bold">{item.username} <span className="text-sm text-gray-400">({item.userRole})</span></p>
-                                    <p className="text-xs text-gray-400">{new Date(item.timestamp).toLocaleString()}</p>
+                        <div key={item.id} className="cyber-card p-0.5 opacity-90 hover:opacity-100 transition-opacity">
+                            <div className="bg-black p-6 border border-surface-border relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rotate-45 translate-x-16 -translate-y-16 pointer-events-none"></div>
+
+                                <div className="flex justify-between items-start flex-wrap gap-4 mb-6 relative z-10">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-display font-bold text-white uppercase italic tracking-tight">{item.username}</p>
+                                            <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-0.5">{item.userRole}</span>
+                                        </div>
+                                        <p className="text-[9px] font-mono text-gray-500 uppercase tracking-[0.2em]">{new Date(item.timestamp).toLocaleString()}</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <div className={`text-[10px] font-mono font-black border px-3 py-1 uppercase tracking-tighter ${getStatusStyle(item.status)}`}>
+                                            {item.status}
+                                        </div>
+                                        <select
+                                            value={item.status}
+                                            onChange={(e) => onUpdateFeedbackStatus(item.id, e.target.value as FeedbackStatus)}
+                                            className="bg-black text-[10px] font-mono text-gray-400 border border-surface-border p-1 focus:border-brand outline-none transition-colors"
+                                        >
+                                            {Object.values(FeedbackStatus).map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                                        {item.status}
-                                    </span>
-                                    <select
-                                        value={item.status}
-                                        onChange={(e) => onUpdateFeedbackStatus(item.id, e.target.value as FeedbackStatus)}
-                                        className="bg-gray-600 text-white text-xs rounded-md p-1 border-0 focus:ring-2 focus:ring-cyan-500"
-                                    >
-                                        {Object.values(FeedbackStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
+
+                                <div className="relative z-10">
+                                    <p className="text-[10px] font-mono font-black text-brand uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                        <ChevronRight className="w-3 h-3" /> {item.type}
+                                    </p>
+                                    <div className="bg-surface-card/30 p-4 border-l-2 border-brand/50">
+                                        <p className="text-sm font-light text-gray-300 whitespace-pre-wrap leading-relaxed italic">{item.message}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <p className="text-sm font-semibold mb-2 text-cyan-300">[{item.type}]</p>
-                            <p className="text-gray-300 whitespace-pre-wrap">{item.message}</p>
                         </div>
                     ))}
                 </div>
             ) : (
-                <p className="text-gray-500 text-center py-8">No feedback has been submitted yet.</p>
+                <div className="cyber-card p-12 text-center opacity-20">
+                    <Binary className="w-12 h-12 mx-auto mb-4 text-brand" />
+                    <p className="text-[10px] font-mono uppercase tracking-[0.4em]">No feedback packets resolved in local memory.</p>
+                </div>
             )}
         </div>
     );
@@ -142,24 +175,37 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-cyan-400">{isAdmin ? 'Feedback Management' : 'Submit Feedback'}</h1>
-                <button onClick={() => onReturnToDashboard(getReturnView())} className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                    Return to Dashboard
+        <div className="space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="h-px bg-brand w-12"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Public Interface String</p>
+                    </div>
+                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                        FEEDBACK // <span className="text-brand">{isAdmin ? 'MANAGEMENT' : 'SUBMISSION'}</span>
+                    </h1>
+                </div>
+                <button onClick={() => onReturnToDashboard(getReturnView())} className="cyber-button-outline py-2 px-6">
+                    RETURN TO COMMAND
                 </button>
             </div>
 
-            {isAdmin ? (
-                <FeedbackViewer
-                    feedbackList={feedbackList}
-                    onUpdateFeedbackStatus={onUpdateFeedbackStatus}
-                />
-            ) : (
-                <FeedbackForm onAddFeedback={onAddFeedback} />
-            )}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                {isAdmin ? (
+                    <FeedbackViewer
+                        feedbackList={feedbackList}
+                        onUpdateFeedbackStatus={onUpdateFeedbackStatus}
+                    />
+                ) : (
+                    <div className="max-w-2xl mx-auto">
+                        <FeedbackForm onAddFeedback={onAddFeedback} />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 export default FeedbackComponent;
+
