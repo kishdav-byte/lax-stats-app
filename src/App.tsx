@@ -408,6 +408,7 @@ const App: React.FC = () => {
                 periodLength: 720,
                 totalPeriods: 4,
             };
+            setGames(prev => [...prev, newGame]);
             try {
                 await storageService.saveGame(newGame);
                 alert("Game saved successfully!");
