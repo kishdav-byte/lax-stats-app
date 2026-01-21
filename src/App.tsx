@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { User as UserIcon } from 'lucide-react';
 import { Team, Game, Player, User, Role, AccessRequest, RequestStatus, DrillAssignment, DrillType, DrillStatus, SoundEffects, SoundEffectName, Feedback, FeedbackType, FeedbackStatus, TrainingSession } from './types';
 import TeamManagement from './components/TeamManagement';
 import Schedule from './components/Schedule';
@@ -909,9 +910,18 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Operator Ident</p>
-                            <p className="text-xs font-display font-bold text-white uppercase italic">{currentUser.username} // {currentUser.role}</p>
+                        <div className="flex items-center gap-4 py-2 px-4 bg-brand/5 border border-brand/20 rounded-sm">
+                            <div className="text-right hidden sm:block border-r border-brand/20 pr-4">
+                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] leading-none mb-1">Operator Ident</p>
+                                <div className="flex items-center gap-2 justify-end">
+                                    <p className="text-xs font-display font-black text-white uppercase italic tracking-wider">{currentUser.username}</p>
+                                    <span className="text-[10px] font-mono text-brand/70 font-bold">//</span>
+                                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest">{currentUser.role}</p>
+                                </div>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-brand/20 border border-brand/50 flex items-center justify-center">
+                                <UserIcon className="w-4 h-4 text-brand" />
+                            </div>
                         </div>
 
                         {/* Mobile Menu Toggle */}

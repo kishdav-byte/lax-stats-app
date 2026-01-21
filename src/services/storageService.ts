@@ -110,15 +110,18 @@ export const subscribeToGames = (callback: (games: Game[]) => void) => {
 // --- Save Functions ---
 
 export const saveTeam = async (team: Team) => {
-    await supabase.from('teams').upsert(team);
+    const { error } = await supabase.from('teams').upsert(team);
+    if (error) throw error;
 };
 
 export const deleteTeam = async (teamId: string) => {
-    await supabase.from('teams').delete().eq('id', teamId);
+    const { error } = await supabase.from('teams').delete().eq('id', teamId);
+    if (error) throw error;
 };
 
 export const saveGame = async (game: Game) => {
-    await supabase.from('games').upsert(game);
+    const { error } = await supabase.from('games').upsert(game);
+    if (error) throw error;
 };
 
 export const deleteGame = async (gameId: string) => {
@@ -127,7 +130,8 @@ export const deleteGame = async (gameId: string) => {
 
 export const saveUser = async (user: User) => {
     const { password, ...userProfile } = user;
-    await supabase.from('profiles').upsert(userProfile);
+    const { error } = await supabase.from('profiles').upsert(userProfile);
+    if (error) throw error;
 };
 
 export const deleteUser = async (userId: string) => {

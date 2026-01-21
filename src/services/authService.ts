@@ -13,6 +13,9 @@ export const register = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+            emailRedirectTo: window.location.origin,
+        },
     });
     if (error) throw error;
     return data;
@@ -29,7 +32,8 @@ export const subscribeToAuthChanges = (callback: (user: any | null) => void) => 
         callback(session?.user || null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log("Supabase Auth Event:", event);
         callback(session?.user || null);
     });
 
