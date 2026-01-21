@@ -222,6 +222,7 @@ Return ONLY the zone number as a single integer (0-8). If the ball is not clearl
         });
 
         const zoneText = response.text?.trim() || "";
+        console.log("AI_VISION_DEBUG: Zone raw text ->", zoneText);
         const zone = parseInt(zoneText, 10);
 
         if (isNaN(zone) || zone < 0 || zone > 8) {

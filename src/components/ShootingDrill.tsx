@@ -216,6 +216,9 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             if (zone !== null && zone !== -1) {
                 handleLogShotPlacement(zone);
                 return; // Placement logged by AI
+            } else {
+                console.warn("AI vision failed to detect ball in frame.");
+                setError("AI_VISION_UNDETECTED: PLEASE MARK MANUALLY");
             }
         }
 
