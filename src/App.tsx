@@ -702,6 +702,9 @@ const App: React.FC = () => {
         />;
     }
 
+    // Determine the effective role (simulated role for Admin testing, or actual role)
+    const effectiveRole = currentUser.role === Role.ADMIN && simulatedRole ? simulatedRole : currentUser.role;
+
     const renderContent = () => {
         switch (currentView) {
             case 'teams':
@@ -805,7 +808,7 @@ const App: React.FC = () => {
                 }
                 return null; // Fallback for non-admins, handled by useEffect
             case 'parentDashboard':
-                if (currentUser.role === Role.PARENT) {
+                if (effectiveRole === Role.PARENT || currentUser.role === Role.ADMIN) {
                     return <ParentDashboard
                         currentUser={currentUser}
                         teams={teams}
@@ -815,7 +818,7 @@ const App: React.FC = () => {
                 }
                 return null;
             case 'playerDashboard':
-                if (currentUser.role === Role.PLAYER) {
+                if (effectiveRole === Role.PLAYER || currentUser.role === Role.ADMIN) {
                     return <PlayerDashboard
                         currentUser={currentUser}
                         teams={teams}
@@ -837,9 +840,6 @@ const App: React.FC = () => {
     if (currentUser) {
         console.log("Rendering Nav. User:", currentUser.email, "Role:", currentUser.role, "Simulated:", simulatedRole);
     }
-
-    // Determine the effective role (simulated role for Admin testing, or actual role)
-    const effectiveRole = currentUser.role === Role.ADMIN && simulatedRole ? simulatedRole : currentUser.role;
 
     let allNavItems: { view: storageService.View; label: string }[] = [];
 
