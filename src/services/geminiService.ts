@@ -193,14 +193,17 @@ export const analyzeShotPlacement = async (base64Image: string): Promise<number 
         const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
         const prompt = `
-Analyze this image from a lacrosse shooting drill. The goal is divided into a 3x3 grid (9 zones total).
+Analyze this high-speed frame from a lacrosse shooting drill. 
+A lacrosse ball has just impacted or is passing through the net.
+The net is divided into a 3x3 grid (9 zones total).
 Zones are numbered 0 to 8:
-0 1 2 (Top row)
-3 4 5 (Middle row)
-6 7 8 (Bottom row)
+0 1 2 (Top Left, Top Center, Top Right)
+3 4 5 (Middle Left, Middle Center, Middle Right)
+6 7 8 (Bottom Left, Bottom Center, Bottom Right)
 
-Identify the exact zone where the ball is impacting or has just passed through the net. 
-Return ONLY the zone number as a single integer (0-8). If the ball is not clearly visible or hit outside the net, return -1.
+Identify the specific quadrant where the ball or the net's displacement is most visible.
+Return ONLY the zone number as a single integer (0-8). 
+If the ball is not visible, return -1.
 `;
 
         const response = await ai.models.generateContent({
