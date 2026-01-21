@@ -922,7 +922,7 @@ const App: React.FC = () => {
                                 <div className="absolute inset-0 bg-brand/20 blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <div className="w-10 h-10 rounded-full bg-surface-card border border-brand/30 flex items-center justify-center relative z-10 overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-transparent"></div>
-                                    <UserIcon className="w-5 h-5 text-brand drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                                    <UserIcon className="w-5 h-5 text-brand drop-shadow-[0_0_8px_rgba(255,87,34,0.5)]" />
                                 </div>
                             </div>
                         </div>

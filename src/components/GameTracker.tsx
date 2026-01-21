@@ -555,10 +555,10 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                                             <StatEntryButton label="SHOT_ON_TRG" onClick={() => handleStatButtonClick(StatType.SHOT)} className="bg-white/10 text-white border-white/20 h-20" />
                                             <StatEntryButton label="GB_RECOVERY" onClick={() => handleStatButtonClick(StatType.GROUND_BALL)} className="bg-brand text-black" />
                                             <StatEntryButton label="LOSS_OF_POSS" onClick={() => handleStatButtonClick(StatType.TURNOVER)} className="bg-red-500 text-black" />
-                                            <StatEntryButton label="CAUSED_ERR" onClick={() => handleStatButtonClick(StatType.CAUSED_TURNOVER)} className="bg-blue-500 text-black" />
+                                            <StatEntryButton label="CAUSED_ERR" onClick={() => handleStatButtonClick(StatType.CAUSED_TURNOVER)} className="bg-surface-card text-brand border-brand/30" />
                                             <StatEntryButton label="INFRACTION" onClick={() => setIsPenaltyModalOpen(true)} className="bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.2)]" />
-                                            <StatEntryButton label="CLASH_WIN" onClick={() => handleStatButtonClick(StatType.FACEOFF_WIN)} className="bg-teal-500 text-black" />
-                                            <StatEntryButton label="CLASH_LOSS" onClick={() => handleStatButtonClick(StatType.FACEOFF_LOSS)} className="bg-gray-800 text-gray-400" />
+                                            <StatEntryButton label="CLASH_WIN" onClick={() => handleStatButtonClick(StatType.FACEOFF_WIN)} className="bg-brand/80 text-black" />
+                                            <StatEntryButton label="CLASH_LOSS" onClick={() => handleStatButtonClick(StatType.FACEOFF_LOSS)} className="bg-gray-900 text-gray-600" />
                                         </div>
 
                                         <button onClick={() => setSelectedPlayerInfo(null)} className="w-full py-4 text-[10px] font-mono text-gray-700 uppercase hover:text-white border-t border-surface-border mt-auto">TERMINATE_SELECTION</button>
