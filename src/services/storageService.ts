@@ -80,6 +80,14 @@ export const fetchUserById = async (userId: string): Promise<User | null> => {
 };
 
 export const subscribeToTeams = (callback: (teams: Team[]) => void) => {
+    // Fetch initial data immediately
+    const fetchTeams = async () => {
+        const { data } = await supabase.from('teams').select('*');
+        callback(data || []);
+    };
+    fetchTeams();
+
+    // Subscribe to changes
     const subscription = supabase
         .channel('public:teams')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, async () => {
@@ -94,6 +102,14 @@ export const subscribeToTeams = (callback: (teams: Team[]) => void) => {
 };
 
 export const subscribeToGames = (callback: (games: Game[]) => void) => {
+    // Fetch initial data immediately
+    const fetchGames = async () => {
+        const { data } = await supabase.from('games').select('*');
+        callback(data || []);
+    };
+    fetchGames();
+
+    // Subscribe to changes
     const subscription = supabase
         .channel('public:games')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, async () => {
