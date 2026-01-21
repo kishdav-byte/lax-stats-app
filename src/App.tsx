@@ -910,17 +910,20 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-4 py-2 px-4 bg-brand/5 border border-brand/20 rounded-sm">
-                            <div className="text-right hidden sm:block border-r border-brand/20 pr-4">
-                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] leading-none mb-1">Operator Ident</p>
-                                <div className="flex items-center gap-2 justify-end">
-                                    <p className="text-xs font-display font-black text-white uppercase italic tracking-wider">{currentUser.username}</p>
-                                    <span className="text-[10px] font-mono text-brand/70 font-bold">//</span>
-                                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest">{currentUser.role}</p>
+                        <div className="flex items-center gap-5 py-3 px-6 bg-brand/5 border-r-2 border-brand/30 rounded-l-sm backdrop-blur-sm group hover:bg-brand/10 transition-all duration-300">
+                            <div className="text-right hidden sm:block border-r border-brand/20 pr-5">
+                                <p className="text-[9px] font-mono text-brand/60 uppercase tracking-[0.3em] font-bold leading-none mb-2">Node Operator</p>
+                                <div className="flex flex-col items-end gap-0.5">
+                                    <p className="text-sm font-display font-black text-white uppercase italic tracking-wider leading-none">{currentUser.username}</p>
+                                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em]">{currentUser.role.toUpperCase()}_ACCESS</p>
                                 </div>
                             </div>
-                            <div className="w-8 h-8 rounded-full bg-brand/20 border border-brand/50 flex items-center justify-center">
-                                <UserIcon className="w-4 h-4 text-brand" />
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-brand/20 blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div className="w-10 h-10 rounded-full bg-surface-card border border-brand/30 flex items-center justify-center relative z-10 overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-transparent"></div>
+                                    <UserIcon className="w-5 h-5 text-brand drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                                </div>
                             </div>
                         </div>
 
