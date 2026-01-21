@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DrillAssignment, DrillStatus, SoundEffects, SoundEffectName } from '../types';
-import { Target, Zap, Activity, Binary, ShieldAlert, RefreshCcw, Home, Move, Maximize2 } from 'lucide-react';
+import { Target, Zap, Activity, Binary, ShieldAlert, RefreshCcw, Home, Move, Maximize2, Cpu, Loader2 } from 'lucide-react';
+import { analyzeShotPlacement } from '../services/geminiService';
 
 // --- Constants ---
 const SENSITIVITY_THRESHOLD = 10;
@@ -152,6 +153,8 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     const [shotHistory, setShotHistory] = useState<number[]>([]);
     const [countdown, setCountdown] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [isAiVisionEnabled, setIsAiVisionEnabled] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     const [overlay, setOverlay] = useState({ x: 50, y: 50, width: 200, height: 150 });
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -195,12 +198,27 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         }
     }, [stopCamera, activeAssignment, onCompleteAssignment, shotHistory, totalShots, drillMode, onSaveSession]);
 
-    function handleMotionDetected(time: number) {
+    async function handleMotionDetected(time: number) {
         if (animationFrameIdRef.current) {
             cancelAnimationFrame(animationFrameIdRef.current);
             animationFrameIdRef.current = null;
         }
         setShotTime(time);
+
+        if (isAiVisionEnabled && canvasRef.current) {
+            setIsAnalyzing(true);
+            const shotFrame = canvasRef.current.toDataURL('image/jpeg', 0.8);
+
+            // Analyze placement in background if possible, or wait
+            const zone = await analyzeShotPlacement(shotFrame);
+            setIsAnalyzing(false);
+
+            if (zone !== null && zone !== -1) {
+                handleLogShotPlacement(zone);
+                return; // Placement logged by AI
+            }
+        }
+
         if (drillMode === 'release') {
             const newHistory = [...shotHistory, time];
             setShotHistory(newHistory);
@@ -479,7 +497,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                     <div className="bg-black p-12 text-center border border-surface-border">
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Ballistics Mode</h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div
                                 onClick={() => setDrillMode('release')}
                                 className={`group p-8 border hover:border-brand/50 transition-all cursor-pointer ${drillMode === 'release' ? 'bg-brand/10 border-brand' : 'bg-surface-card border-surface-border'}`}
@@ -502,18 +520,40 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                             </div>
                         </div>
 
-                        <div className="max-w-xs mx-auto space-y-4">
-                            <label htmlFor="total-shots" className="block text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Sequence Depth (# of shots)</label>
-                            <div className="flex items-center gap-4 justify-center">
-                                <input
-                                    id="total-shots"
-                                    type="number"
-                                    min="1"
-                                    max="50"
-                                    value={totalShots}
-                                    onChange={(e) => setTotalShots(parseInt(e.target.value, 10))}
-                                    className="cyber-input w-24 text-center text-xl font-display font-black italic"
-                                />
+                        <div className="bg-surface-card p-6 border border-surface-border mb-8 max-w-2xl mx-auto">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="space-y-4 flex-grow w-full md:w-auto">
+                                    <label htmlFor="total-shots" className="block text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Sequence Depth (# of shots)</label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            id="total-shots"
+                                            type="number"
+                                            min="1"
+                                            max="50"
+                                            value={totalShots}
+                                            onChange={(e) => setTotalShots(parseInt(e.target.value, 10))}
+                                            className="cyber-input w-full md:w-24 text-center text-xl font-display font-black italic"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="h-px md:h-12 w-full md:w-px bg-surface-border"></div>
+
+                                <button
+                                    onClick={() => setIsAiVisionEnabled(!isAiVisionEnabled)}
+                                    className={`flex-grow w-full md:w-auto py-4 px-6 border flex items-center justify-between group transition-all duration-300 ${isAiVisionEnabled ? 'border-brand bg-brand/10' : 'border-surface-border bg-black'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Cpu className={`w-5 h-5 ${isAiVisionEnabled ? 'text-brand' : 'text-gray-500'}`} />
+                                        <div className="text-left">
+                                            <p className={`text-xs font-display font-bold uppercase italic ${isAiVisionEnabled ? 'text-white' : 'text-gray-500'}`}>AI Vision Mode</p>
+                                            <p className="text-[8px] font-mono text-gray-600 uppercase">Auto-Identify Placement</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-10 h-5 rounded-full relative transition-colors ${isAiVisionEnabled ? 'bg-brand' : 'bg-gray-800'}`}>
+                                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isAiVisionEnabled ? 'left-6' : 'left-1'}`}></div>
+                                    </div>
+                                </button>
                             </div>
                         </div>
 
@@ -644,11 +684,28 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                         {/* HUD Overlay */}
                         <div className="absolute inset-0 pointer-events-none border border-brand/20"></div>
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="bg-black/60 backdrop-blur-md px-12 py-6 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                                <p className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-2 shadow-[0_0_20px_rgba(255,87,34,0.3)]">
-                                    {getStatusMessage()}
-                                </p>
-                            </div>
+                            {isAnalyzing ? (
+                                <div className="bg-black/60 backdrop-blur-md px-12 py-8 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                    <Loader2 className="w-8 h-8 text-brand animate-spin mb-4 shadow-[0_0_15px_rgba(255,87,34,0.5)]" />
+                                    <p className="text-xl font-display font-black text-white italic uppercase tracking-tighter shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                                        AI_ANALYZING_FLIGHT...
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="bg-black/60 backdrop-blur-md px-12 py-6 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                    <p className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-2 shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                                        {getStatusMessage()}
+                                    </p>
+                                    {drillState === 'countdown' && (
+                                        <div className="w-32 h-1 bg-surface-border mt-4 overflow-hidden">
+                                            <div
+                                                className="h-full bg-brand transition-all duration-1000 ease-linear"
+                                                style={{ width: `${(countdown / 3) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {drillState === 'log_shot' && (

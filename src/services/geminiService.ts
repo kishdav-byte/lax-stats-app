@@ -188,3 +188,48 @@ Provide a concise analysis of this player's strengths and weaknesses. Offer 2-3 
         return "An error occurred while communicating with the AI. Please check your API key and connection.";
     }
 };
+export const analyzeShotPlacement = async (base64Image: string): Promise<number | null> => {
+    try {
+        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+
+        const prompt = `
+Analyze this image from a lacrosse shooting drill. The goal is divided into a 3x3 grid (9 zones total).
+Zones are numbered 0 to 8:
+0 1 2 (Top row)
+3 4 5 (Middle row)
+6 7 8 (Bottom row)
+
+Identify the exact zone where the ball is impacting or has just passed through the net. 
+Return ONLY the zone number as a single integer (0-8). If the ball is not clearly visible or hit outside the net, return -1.
+`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: [
+                {
+                    role: 'user',
+                    parts: [
+                        { text: prompt },
+                        {
+                            inlineData: {
+                                mimeType: "image/jpeg",
+                                data: base64Image.split(',')[1] // Remove prefix
+                            }
+                        }
+                    ]
+                }
+            ]
+        });
+
+        const zoneText = response.text?.trim() || "";
+        const zone = parseInt(zoneText, 10);
+
+        if (isNaN(zone) || zone < 0 || zone > 8) {
+            return null;
+        }
+        return zone;
+    } catch (error) {
+        console.error("Error analyzing shot placement:", error);
+        return null;
+    }
+};
