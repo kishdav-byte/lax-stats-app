@@ -120,6 +120,23 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
         onUpdateUser({ ...currentUser, followedTeamIds: newFollowedTeams, followedPlayerIds: newFollowedPlayers });
     };
 
+    const handleFollowPlayer = (playerId: string) => {
+        const newFollowedPlayers = [...followedPlayerIds, playerId];
+        onUpdateUser({ ...currentUser, followedPlayerIds: newFollowedPlayers });
+    };
+
+    const handleUnfollowPlayer = (playerId: string) => {
+        const newFollowedPlayers = followedPlayerIds.filter(id => id !== playerId);
+        onUpdateUser({ ...currentUser, followedPlayerIds: newFollowedPlayers });
+    };
+
+    // Get all players from followed teams
+    const allPlayersFromFollowedTeams = followedTeams.flatMap(team =>
+        team.roster.map(player => ({ ...player, teamId: team.id, teamName: team.name }))
+    );
+    const followedPlayers = allPlayersFromFollowedTeams.filter(p => followedPlayerIds.includes(p.id));
+    const unfollowedPlayers = allPlayersFromFollowedTeams.filter(p => !followedPlayerIds.includes(p.id));
+
     return (
         <div className="space-y-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -232,6 +249,56 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                             </div>
                         </div>
                     </section>
+
+                    {/* Tracked Players Section */}
+                    {followedPlayers.length > 0 && (
+                        <section className="mt-8">
+                            <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Tracked Players</h2>
+                            <div className="cyber-card p-4 bg-brand/5">
+                                <div className="space-y-2">
+                                    {followedPlayers.map(player => (
+                                        <div key={player.id} className="flex items-center justify-between p-2 hover:bg-white/5 group transition-colors border-b border-surface-border/50">
+                                            <div className="flex-1">
+                                                <p className="text-xs font-mono text-white">#{player.jerseyNumber} {player.name}</p>
+                                                <p className="text-[8px] font-mono text-gray-500 uppercase">{player.teamName} • {player.position}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => handleUnfollowPlayer(player.id)}
+                                                className="text-red-500/50 hover:text-red-500 transition-colors"
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Available Players Section */}
+                    {unfollowedPlayers.length > 0 && (
+                        <section className="mt-8">
+                            <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Available Players</h2>
+                            <div className="cyber-card p-4 bg-surface-card/50">
+                                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                                    {unfollowedPlayers.map(player => (
+                                        <div key={player.id} className="flex items-center justify-between p-2 hover:bg-white/5 group transition-colors border-b border-surface-border/50">
+                                            <div className="flex-1">
+                                                <p className="text-xs font-mono text-gray-300">#{player.jerseyNumber} {player.name}</p>
+                                                <p className="text-[8px] font-mono text-gray-600 uppercase">{player.teamName} • {player.position}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => handleFollowPlayer(player.id)}
+                                                className="text-[8px] font-mono text-brand uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1"
+                                            >
+                                                TRACK <ArrowRight className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>
