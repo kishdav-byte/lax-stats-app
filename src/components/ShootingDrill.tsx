@@ -464,7 +464,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             case 'idle': return 'SEQUENCE_TERMINATED';
             case 'starting': return 'INITIALIZING_STREAM...';
             case 'countdown': return `T-MINUS ${countdown}`;
-            case 'set': return 'AWAIT WHISTLE TRIGGER';
+            case 'set': return isAiVisionEnabled ? 'AWAIT AI_WHISTLE TRIGGER' : 'AWAIT WHISTLE TRIGGER';
             case 'measuring': return 'REACT!';
             case 'log_shot': return 'MARK SHOT IMPACT ZONE';
             case 'result': {
