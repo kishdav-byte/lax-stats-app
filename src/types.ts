@@ -99,6 +99,7 @@ export interface User {
     followedTeamIds?: string[]; // For parents, teams they are watching
     followedPlayerIds?: string[]; // For parents, players they are watching
     status?: 'active' | 'blocked';
+    bestClampSpeed?: number; // Best reaction time in ms
 }
 
 export enum RequestStatus {

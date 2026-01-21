@@ -296,6 +296,16 @@ const App: React.FC = () => {
         storageService.saveUser(updatedUser);
     };
 
+    const checkAndStoreBestClampSpeed = (results: any) => {
+        if (!currentUser || !results?.reactionTimes || results.reactionTimes.length === 0) return;
+
+        const bestInSession = Math.min(...results.reactionTimes);
+        if (!currentUser.bestClampSpeed || bestInSession < currentUser.bestClampSpeed) {
+            console.log("New Personal Record! Storing best clamp speed:", bestInSession);
+            handleUpdateUser({ ...currentUser, bestClampSpeed: bestInSession });
+        }
+    };
+
     const handleAddTeam = async (teamName: string) => {
         const newTeam: Team = { id: `team_${Date.now()} `, name: teamName, roster: [] };
 
@@ -513,17 +523,27 @@ const App: React.FC = () => {
     };
 
     const handleUpdateDrillAssignment = (assignmentId: string, status: DrillStatus, results?: any) => {
+        let updatedAssignment: DrillAssignment | undefined;
         setDrillAssignments(prev => prev.map(assignment => {
             if (assignment.id === assignmentId) {
-                return {
+                updatedAssignment = {
                     ...assignment,
                     status,
                     results,
                     completedDate: new Date().toISOString()
                 };
+                return updatedAssignment;
             }
             return assignment;
         }));
+
+        if (updatedAssignment) {
+            storageService.saveDrillAssignment(updatedAssignment);
+            if (results?.reactionTimes) {
+                checkAndStoreBestClampSpeed(results);
+            }
+        }
+
         setActiveDrillAssignment(null); // Clear the active assignment
         // Return to the player's dashboard after completion
         setCurrentView(currentUser?.role === Role.PLAYER ? 'playerDashboard' : 'dashboard');
@@ -590,6 +610,10 @@ const App: React.FC = () => {
 
         // Optimistic update
         setTrainingSessions(prev => [...prev, newSession]);
+
+        if (results.reactionTimes) {
+            checkAndStoreBestClampSpeed(results);
+        }
 
         try {
             await storageService.saveTrainingSession(newSession);

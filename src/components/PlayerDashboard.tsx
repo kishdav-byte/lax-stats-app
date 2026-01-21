@@ -157,6 +157,15 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                         <Calendar className="w-8 h-8 text-brand opacity-20" />
                     </div>
                 </div>
+                <div className="cyber-card p-6 border-l-2 border-brand/50 bg-brand/5">
+                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest mb-1">Best Clamp Speed (PR)</p>
+                    <div className="flex items-end justify-between">
+                        <span className="text-4xl font-display font-black text-white italic">
+                            {currentUser.bestClampSpeed ? `${currentUser.bestClampSpeed}ms` : '---'}
+                        </span>
+                        <Activity className="w-8 h-8 text-brand opacity-40 animate-pulse" />
+                    </div>
+                </div>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
