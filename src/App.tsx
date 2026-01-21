@@ -44,6 +44,7 @@ const App: React.FC = () => {
     const [gameForReport, setGameForReport] = useState<Game | null>(null);
     const [viewingPlayer, setViewingPlayer] = useState<{ player: Player; team: Team } | null>(null);
     const [loginError, setLoginError] = useState('');
+    const [simulatedRole, setSimulatedRole] = useState<Role | null>(null);
 
     // Load initial data from Firestore
     useEffect(() => {
@@ -270,6 +271,21 @@ const App: React.FC = () => {
         await authService.logout();
         setCurrentUser(null);
         setCurrentView('dashboard');
+        setSimulatedRole(null);
+    };
+
+    const handleRoleSimulation = (role: Role | null) => {
+        if (currentUser?.role !== Role.ADMIN) return;
+        setSimulatedRole(role);
+
+        // Update view based on simulated role
+        if (role === Role.PLAYER) {
+            setCurrentView('playerDashboard');
+        } else if (role === Role.PARENT) {
+            setCurrentView('parentDashboard');
+        } else {
+            setCurrentView('dashboard');
+        }
     };
 
     const handleInviteUser = (newUser: Omit<User, 'id' | 'email'>) => {
@@ -661,6 +677,7 @@ const App: React.FC = () => {
         setCurrentView('playerProfile');
     };
 
+
     const activeGame = games.find(g => g.id === activeGameId);
 
 
@@ -818,12 +835,15 @@ const App: React.FC = () => {
     const isTrainingView = ['trainingMenu', 'faceOffTrainer', 'shootingDrill'].includes(currentView);
 
     if (currentUser) {
-        console.log("Rendering Nav. User:", currentUser.email, "Role:", currentUser.role);
+        console.log("Rendering Nav. User:", currentUser.email, "Role:", currentUser.role, "Simulated:", simulatedRole);
     }
+
+    // Determine the effective role (simulated role for Admin testing, or actual role)
+    const effectiveRole = currentUser.role === Role.ADMIN && simulatedRole ? simulatedRole : currentUser.role;
 
     let allNavItems: { view: storageService.View; label: string }[] = [];
 
-    if (currentUser.role === Role.ADMIN) {
+    if (effectiveRole === Role.ADMIN) {
         allNavItems = [
             { view: 'dashboard', label: 'Dashboard' },
             { view: 'teams', label: 'Teams' },
@@ -835,7 +855,7 @@ const App: React.FC = () => {
             { view: 'soundEffects', label: 'Sound FX' },
             { view: 'devSupport', label: 'Dev Support' },
         ];
-    } else if (currentUser.role === Role.COACH) {
+    } else if (effectiveRole === Role.COACH) {
         allNavItems = [
             { view: 'dashboard', label: 'Dashboard' },
             { view: 'teams', label: 'Teams' },
@@ -844,13 +864,13 @@ const App: React.FC = () => {
             { view: 'trainingMenu', label: 'Training' },
             { view: 'feedback', label: 'Feedback' },
         ];
-    } else if (currentUser.role === Role.PLAYER) {
+    } else if (effectiveRole === Role.PLAYER) {
         allNavItems = [
             { view: 'playerDashboard', label: 'Dashboard' },
             { view: 'trainingMenu', label: 'Training' },
             { view: 'feedback', label: 'Feedback' },
         ];
-    } else if (currentUser.role === Role.PARENT) {
+    } else if (effectiveRole === Role.PARENT) {
         allNavItems = [
             { view: 'parentDashboard', label: 'Dashboard' },
             { view: 'feedback', label: 'Feedback' },
@@ -903,6 +923,39 @@ const App: React.FC = () => {
                         <div className="vertical-text font-mono text-[8px] uppercase tracking-[0.3em]">INNOVATION // LAB // 001</div>
                     </div>
                 </div>
+
+                {/* Role Simulation Controls (Admin Only) */}
+                {currentUser.role === Role.ADMIN && (
+                    <div className="p-8 pt-0 border-t border-surface-border bg-surface-card/20">
+                        <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mb-3">Test Mode</p>
+                        <div className="space-y-1">
+                            <button
+                                onClick={() => handleRoleSimulation(null)}
+                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${!simulatedRole ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                Admin View
+                            </button>
+                            <button
+                                onClick={() => handleRoleSimulation(Role.PLAYER)}
+                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.PLAYER ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                → Player View
+                            </button>
+                            <button
+                                onClick={() => handleRoleSimulation(Role.COACH)}
+                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.COACH ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                → Coach View
+                            </button>
+                            <button
+                                onClick={() => handleRoleSimulation(Role.PARENT)}
+                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.PARENT ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                → Parent View
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="p-8 pt-0 mt-auto border-t border-surface-border bg-surface-card/30">
                     <button
