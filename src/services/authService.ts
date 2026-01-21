@@ -1,41 +1,45 @@
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    User as FirebaseUser
-} from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { supabase } from '../supabaseClient';
 
 export const login = async (email: string, password: string) => {
-    try {
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        return result;
-    } catch (e) {
-        throw e;
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+    });
+    if (error) throw error;
+    return data;
 };
 
 export const register = async (email: string, password: string) => {
-    return await createUserWithEmailAndPassword(auth, email, password);
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+    });
+    if (error) throw error;
+    return data;
 };
 
 export const logout = async () => {
-    return await signOut(auth);
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
 };
 
-export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => void) => {
-    return onAuthStateChanged(auth, callback);
+export const subscribeToAuthChanges = (callback: (user: any | null) => void) => {
+    // Initial fetch of session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        callback(session?.user || null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        callback(session?.user || null);
+    });
+
+    // Return unsubscribe function
+    return () => subscription.unsubscribe();
 };
 
 export const resetPassword = async (email: string) => {
-    console.log(`Attempting to send password reset email to: ${email}`);
-    const { sendPasswordResetEmail } = await import("firebase/auth");
-    try {
-        await sendPasswordResetEmail(auth, email);
-        console.log("Password reset email sent successfully (from client side).");
-    } catch (error) {
-        console.error("Error sending password reset email:", error);
-        throw error;
-    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+    });
+    if (error) throw error;
 };

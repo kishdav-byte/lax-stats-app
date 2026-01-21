@@ -1,15 +1,5 @@
 import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback, TrainingSession } from '../types';
-import { db } from '../firebaseConfig';
-import {
-    collection,
-    doc,
-    getDocs,
-    setDoc,
-    deleteDoc,
-    onSnapshot,
-    query,
-    where,
-} from "firebase/firestore";
+import { supabase } from '../supabaseClient';
 
 export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile';
 
@@ -41,123 +31,158 @@ export const defaultState: AppDatabase = {
     activeGameId: null,
 };
 
-// --- Firestore Helpers ---
-
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
-
 // --- Fetch Functions ---
 
 export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
     try {
-        const [teamsSnap, gamesSnap, usersSnap, requestsSnap, drillsSnap, feedbackSnap] = await Promise.all([
-            getDocs(collection(db, 'teams')),
-            getDocs(collection(db, 'games')),
-            getDocs(collection(db, 'users')),
-            getDocs(collection(db, 'accessRequests')),
-            getDocs(collection(db, 'drillAssignments')),
-            getDocs(collection(db, 'feedback')),
+        const [
+            { data: teams },
+            { data: games },
+            { data: users },
+            { data: requests },
+            { data: drills },
+            { data: feedback }
+        ] = await Promise.all([
+            supabase.from('teams').select('*'),
+            supabase.from('games').select('*'),
+            supabase.from('profiles').select('*'),
+            supabase.from('access_requests').select('*'),
+            supabase.from('drill_assignments').select('*'),
+            supabase.from('feedback').select('*'),
         ]);
 
         return {
-            teams: teamsSnap.docs.map(d => convertDoc<Team>(d)),
-            games: gamesSnap.docs.map(d => convertDoc<Game>(d)),
-            users: usersSnap.docs.map(d => convertDoc<User>(d)),
-            accessRequests: requestsSnap.docs.map(d => convertDoc<AccessRequest>(d)),
-            drillAssignments: drillsSnap.docs.map(d => convertDoc<DrillAssignment>(d)),
-            feedback: feedbackSnap.docs.map(d => convertDoc<Feedback>(d)),
+            teams: teams || [],
+            games: games || [],
+            users: users || [],
+            accessRequests: requests || [],
+            drillAssignments: drills || [],
+            feedback: feedback || [],
         };
     } catch (error) {
-        console.error("Error fetching initial data:", error);
+        console.error("Error fetching initial data from Supabase:", error);
         return {};
     }
 };
 
+export const fetchUserById = async (userId: string): Promise<User | null> => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+    if (error) {
+        console.warn("fetchUserById error:", error);
+        return null;
+    }
+    return data;
+};
+
 export const subscribeToTeams = (callback: (teams: Team[]) => void) => {
-    const q = collection(db, 'teams');
-    return onSnapshot(q, (snapshot) => {
-        const teams = snapshot.docs.map(d => convertDoc<Team>(d));
-        callback(teams);
-    });
+    const subscription = supabase
+        .channel('public:teams')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, async () => {
+            const { data } = await supabase.from('teams').select('*');
+            callback(data || []);
+        })
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(subscription);
+    };
 };
 
 export const subscribeToGames = (callback: (games: Game[]) => void) => {
-    const q = collection(db, 'games');
-    return onSnapshot(q, (snapshot) => {
-        const games = snapshot.docs.map(d => convertDoc<Game>(d));
-        console.log("🔥 Firestore Update: Received games:", games);
-        callback(games);
-    });
+    const subscription = supabase
+        .channel('public:games')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, async () => {
+            const { data } = await supabase.from('games').select('*');
+            callback(data || []);
+        })
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(subscription);
+    };
 };
 
 // --- Save Functions ---
 
 export const saveTeam = async (team: Team) => {
-    await setDoc(doc(db, 'teams', team.id), team);
+    await supabase.from('teams').upsert(team);
 };
 
 export const deleteTeam = async (teamId: string) => {
-    await deleteDoc(doc(db, 'teams', teamId));
+    await supabase.from('teams').delete().eq('id', teamId);
 };
 
 export const saveGame = async (game: Game) => {
-    await setDoc(doc(db, 'games', game.id), game);
+    await supabase.from('games').upsert(game);
 };
 
 export const deleteGame = async (gameId: string) => {
-    await deleteDoc(doc(db, 'games', gameId));
+    await supabase.from('games').delete().eq('id', gameId);
 };
 
 export const saveUser = async (user: User) => {
-    // We don't save the password in Firestore for security (handled by Auth), 
-    // but we might keep the user document for role/profile info.
-    // Ensure we don't overwrite critical auth fields if we were syncing back from Auth.
-    // For this app's logic, we'll store the user profile.
     const { password, ...userProfile } = user;
-    await setDoc(doc(db, 'users', user.id), userProfile);
+    await supabase.from('profiles').upsert(userProfile);
 };
 
 export const deleteUser = async (userId: string) => {
-    await deleteDoc(doc(db, 'users', userId));
+    await supabase.from('profiles').delete().eq('id', userId);
 };
 
 export const saveAccessRequest = async (request: AccessRequest) => {
-    await setDoc(doc(db, 'accessRequests', request.id), request);
+    await supabase.from('access_requests').upsert(request);
 };
 
 export const saveDrillAssignment = async (assignment: DrillAssignment) => {
-    await setDoc(doc(db, 'drillAssignments', assignment.id), assignment);
+    await supabase.from('drill_assignments').upsert(assignment);
 };
 
 export const saveFeedback = async (feedback: Feedback) => {
-    await setDoc(doc(db, 'feedback', feedback.id), feedback);
+    await supabase.from('feedback').upsert(feedback);
 };
 
-// Sound effects are a bit different, usually a single document configuration
 export const saveSoundEffects = async (effects: SoundEffects) => {
-    // We'll store this in a 'settings' collection
-    await setDoc(doc(db, 'settings', 'soundEffects'), { effects });
+    await supabase.from('settings').upsert({ id: 'sound_effects', data: { effects } });
 };
 
 export const fetchSoundEffects = async (): Promise<SoundEffects> => {
-    const snap = await getDocs(collection(db, 'settings'));
-    const doc = snap.docs.find(d => d.id === 'soundEffects');
-    return doc ? doc.data().effects : {};
+    const { data } = await supabase
+        .from('settings')
+        .select('data')
+        .eq('id', 'sound_effects')
+        .single();
+    return data?.data?.effects || {};
 };
 
 export const saveTrainingSession = async (session: TrainingSession) => {
-    await setDoc(doc(db, 'trainingSessions', session.id), session);
+    await supabase.from('training_sessions').upsert(session);
 };
 
 export const deleteTrainingSession = async (sessionId: string) => {
-    await deleteDoc(doc(db, 'trainingSessions', sessionId));
+    await supabase.from('training_sessions').delete().eq('id', sessionId);
 };
 
 export const subscribeToTrainingSessions = (userId: string, callback: (sessions: TrainingSession[]) => void) => {
-    // Only subscribe to the user's own sessions
-    const q = query(collection(db, 'trainingSessions'), where("userId", "==", userId));
-    return onSnapshot(q, (snapshot) => {
-        const sessions = snapshot.docs.map(d => convertDoc<TrainingSession>(d));
-        callback(sessions);
-    });
-};
+    const subscription = supabase
+        .channel(`public:training_sessions:user:${userId}`)
+        .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'training_sessions', filter: `userId=eq.${userId}` },
+            async () => {
+                const { data } = await supabase
+                    .from('training_sessions')
+                    .select('*')
+                    .eq('userId', userId);
+                callback(data || []);
+            }
+        )
+        .subscribe();
 
+    return () => {
+        supabase.removeChannel(subscription);
+    };
+};

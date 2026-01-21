@@ -22,8 +22,6 @@ import PlayerProfile from './components/PlayerProfile';
 import * as storageService from './services/storageService';
 import * as apiKeyService from './services/apiKeyService';
 import * as authService from './services/authService';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig';
 
 const App: React.FC = () => {
     // Initial state is empty, we load from Firestore
@@ -80,40 +78,18 @@ const App: React.FC = () => {
 
     // Auth Listener
     useEffect(() => {
-        const unsubscribe = authService.subscribeToAuthChanges(async (firebaseUser) => {
-            console.log("Auth state changed. User:", firebaseUser?.uid);
-            if (firebaseUser) {
-                // User is signed in. Find their profile in our 'users' collection.
-                // Note: In a real app, we would fetch the specific user doc here.
-                // Since we loaded all users above, we can find them in state, 
-                // BUT 'users' state might not be ready yet if this fires first.
-                // So we fetch the user doc directly to be safe.
-                const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const unsubscribe = authService.subscribeToAuthChanges(async (sbUser) => {
+            console.log("Auth state changed. User:", sbUser?.id);
+            if (sbUser) {
+                // User is signed in. Find their profile in our 'profiles' table.
+                let userData = await storageService.fetchUserById(sbUser.id);
 
-                // Race getDoc against a timeout
-                let userSnap: any;
-                try {
-                    const getPromise = getDoc(userDocRef);
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
-                    userSnap = await Promise.race([getPromise, timeoutPromise]);
-                } catch (e: any) {
-                    console.warn("Firestore getDoc failed:", e);
-                    if (e.code === 'permission-denied') {
-                        alert("Database permission denied. Please check your Firestore rules.");
-                    }
-                    userSnap = { exists: () => false }; // Fake a missing doc to trigger fallback
-                }
-
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
+                if (userData) {
                     // Merge auth data with profile data
                     const appUser: User = {
-                        id: firebaseUser.uid,
-                        email: firebaseUser.email || '',
-                        username: userData.username || 'User',
-                        role: userData.role || Role.FAN,
-                        status: userData.status || 'active',
-                        ...userData
+                        ...userData,
+                        id: sbUser.id,
+                        email: sbUser.email || userData.email || '',
                     } as User;
 
                     // Auto-upgrade to Admin for specific email (case-insensitive)
@@ -134,28 +110,24 @@ const App: React.FC = () => {
                         setCurrentView('dashboard');
                     }
                 } else {
-                    // User exists in Auth but not in Firestore. Create a default profile.
-                    console.warn("User profile not found in Firestore. Creating default profile...");
+                    // User exists in Auth but not in our profiles table. Create a default profile.
+                    console.warn("User profile not found in Supabase profiles. Creating default profile...");
                     const defaultUser: User = {
-                        id: firebaseUser.uid,
-                        email: firebaseUser.email || '',
-                        username: firebaseUser.displayName || 'User',
+                        id: sbUser.id,
+                        email: sbUser.email || '',
+                        username: sbUser.user_metadata?.full_name || 'User',
                         role: Role.COACH, // Default to Coach for now so they can see things
                         status: 'active',
-                        password: '', // Not stored in Firestore, but required by type
+                        password: '', // Not stored in DB, but required by type
                     };
 
                     try {
-                        const savePromise = storageService.saveUser(defaultUser);
-                        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 2000));
-                        await Promise.race([savePromise, timeoutPromise]);
-
+                        await storageService.saveUser(defaultUser);
                         setCurrentUser(defaultUser);
                         setCurrentView('dashboard');
-                        console.log("Default profile created (or timed out) and logged in.");
+                        console.log("Default profile created and logged in.");
                     } catch (err) {
                         console.error("Failed to create default profile:", err);
-                        // If this fails, we might want to log them out or show an error
                     }
                 }
             } else {
@@ -251,12 +223,14 @@ const App: React.FC = () => {
     const handleRegister = async (username: string, email: string, password: string, role: Role): Promise<{ success: boolean, error?: string }> => {
         console.log("handleRegister called");
         try {
-            const userCred = await authService.register(email, password);
-            const firebaseUser = userCred.user;
-            console.log("Auth user created:", firebaseUser.uid);
+            const data = await authService.register(email, password);
+            const sbUser = data.user;
+            if (!sbUser) throw new Error("Registration failed – user object null.");
+
+            console.log("Auth user created:", sbUser.id);
 
             const newUser: User = {
-                id: firebaseUser.uid,
+                id: sbUser.id,
                 username,
                 email,
                 password: '', // Don't store password
@@ -264,14 +238,10 @@ const App: React.FC = () => {
                 status: 'active',
             };
 
-            // Save profile to Firestore with timeout
-            console.log("Saving user profile to Firestore...");
-            // We race the save against a 2-second timeout so we don't hang the UI if Firestore is slow/offline
-            const savePromise = storageService.saveUser(newUser);
-            const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 2000));
-
-            await Promise.race([savePromise, timeoutPromise]);
-            console.log("User profile save attempted. Proceeding...");
+            // Save profile to Supabase
+            console.log("Saving user profile to Supabase...");
+            await storageService.saveUser(newUser);
+            console.log("User profile saved. Proceeding...");
 
             // Update local state
             setUsers([...users, newUser]);
