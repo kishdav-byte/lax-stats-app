@@ -233,7 +233,7 @@ const GameSetup: React.FC<{
             <div className="flex flex-col items-center">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="h-px bg-brand w-12"></div>
-                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Battlefield Configuration</p>
+                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Game Configuration</p>
                 </div>
                 <h1 className="text-6xl font-display font-black tracking-tighter text-white uppercase italic">
                     GAME <span className="text-brand">SETUP</span>
@@ -297,7 +297,7 @@ const GameSetup: React.FC<{
                             })}
                             className="cyber-button px-20 py-4 text-xl flex items-center gap-3 justify-center"
                         >
-                            INITIALIZE_COMBAT <Zap className="w-5 h-5" />
+                            INITIALIZE_GAME <Zap className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -523,8 +523,8 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                         </div>
 
                         {game.status !== 'finished' && (
-                            <button onClick={() => { if (window.confirm("TERMINATE OPERATION?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="bg-red-900 border border-red-500/50 text-white px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-red-600 transition-all">
-                                END_COMBAT
+                            <button onClick={() => { if (window.confirm("FINISH GAME?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="bg-red-900 border border-red-500/50 text-white px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-red-600 transition-all">
+                                END_GAME
                             </button>
                         )}
                         <button onClick={onReturnToDashboard} className="text-[10px] font-mono font-black text-gray-500 hover:text-white uppercase tracking-widest ml-4">CMD_RETURN</button>

@@ -178,7 +178,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
 
                 <header className="text-center relative py-12">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-12 bg-gradient-to-b from-brand to-transparent"></div>
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.4em] mb-4">Official Athletic Combat Record</p>
+                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.4em] mb-4">Official Athletic Match Record</p>
                     <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter mb-4">POST-MATCH <span className="text-brand">SYNTHESIS</span></h1>
                     <p className="text-sm font-mono text-white/50 uppercase tracking-widest">
                         {new Date(game.scheduledTime).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
