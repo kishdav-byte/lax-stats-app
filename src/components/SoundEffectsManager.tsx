@@ -135,7 +135,22 @@ const SoundEffectRow: React.FC<{
 
 
 const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects, onUpdateSoundEffect, onUpdateDrillTiming, onReturnToDashboard }) => {
-    const timing = soundEffects.drillTiming || { delayType: 'fixed', fixedDelay: 2 };
+    const [activeDrillTab, setActiveDrillTab] = React.useState<'faceOff' | 'shooting'>('faceOff');
+
+    const defaultTiming = {
+        faceOff: { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 },
+        shooting: { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 }
+    };
+
+    const timing = soundEffects.drillTiming || defaultTiming;
+    const currentDrillTiming = timing[activeDrillTab];
+
+    const updateCurrentDrill = (updates: Partial<typeof currentDrillTiming>) => {
+        onUpdateDrillTiming({
+            ...timing,
+            [activeDrillTab]: { ...currentDrillTiming, ...updates }
+        });
+    };
 
     return (
         <div className="space-y-12">
@@ -191,75 +206,102 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                     </div>
                 </div>
 
-                {/* Timing Settings Card */}
+                {/* Granular Timing Settings Card */}
                 <div className="cyber-card p-1">
-                    <div className="bg-black p-8 border border-surface-border h-full">
+                    <div className="bg-black p-8 border border-surface-border h-full flex flex-col">
                         <div className="flex items-center gap-4 mb-8">
                             <Activity className="w-5 h-5 text-brand" />
                             <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">DRILL <span className="text-brand">TIMING</span></h2>
                         </div>
 
-                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-10 leading-relaxed">
-                            Adjust the interval between "Set" and the Whistle. This helps athletes practice their reaction speed under different pressures.
-                        </p>
+                        {/* Drill Selector Tabs */}
+                        <div className="flex gap-2 mb-8 p-1 bg-surface-card border border-surface-border">
+                            <button
+                                onClick={() => setActiveDrillTab('faceOff')}
+                                className={`flex-1 py-2 text-[10px] font-mono font-bold uppercase tracking-widest transition-all ${activeDrillTab === 'faceOff' ? 'bg-brand text-black' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                FACE-OFF MODULE
+                            </button>
+                            <button
+                                onClick={() => setActiveDrillTab('shooting')}
+                                className={`flex-1 py-2 text-[10px] font-mono font-bold uppercase tracking-widest transition-all ${activeDrillTab === 'shooting' ? 'bg-brand text-black' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                SHOOTING MODULE
+                            </button>
+                        </div>
 
-                        <div className="space-y-8">
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => onUpdateDrillTiming({ ...timing, delayType: 'fixed' })}
-                                    className={`flex-1 py-3 border font-display font-bold italic transition-all ${timing.delayType === 'fixed' ? 'bg-brand text-black border-brand' : 'bg-transparent text-gray-500 border-surface-border hover:border-gray-700'}`}
-                                >
-                                    FIXED DELAY
-                                </button>
-                                <button
-                                    onClick={() => onUpdateDrillTiming({ ...timing, delayType: 'random' })}
-                                    className={`flex-1 py-3 border font-display font-bold italic transition-all ${timing.delayType === 'random' ? 'bg-brand text-black border-brand' : 'bg-transparent text-gray-500 border-surface-border hover:border-gray-700'}`}
-                                >
-                                    RANDOM DELAY
-                                </button>
+                        <div className="space-y-8 flex-grow">
+                            {/* 1. Pre-Start Delay */}
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">1. Pre-Sequence Delay (Post-Start)</p>
+                                    <p className="text-2xl font-display font-black text-white italic">{currentDrillTiming.preStartDelay}s</p>
+                                </div>
+                                <input
+                                    type="range" min="0" max="10" step="0.5"
+                                    value={currentDrillTiming.preStartDelay}
+                                    onChange={(e) => updateCurrentDrill({ preStartDelay: parseFloat(e.target.value) })}
+                                    className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
+                                />
+                                <p className="text-[8px] font-mono text-gray-600 uppercase">Wait time after pressing START before first audio signal.</p>
                             </div>
 
-                            {timing.delayType === 'fixed' ? (
-                                <div className="space-y-4 py-4 px-6 bg-surface-card border border-surface-border/50">
-                                    <div className="flex justify-between items-end">
-                                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Delay Duration</p>
-                                        <p className="text-4xl font-display font-black text-brand italic">{timing.fixedDelay} <span className="text-xs uppercase ml-1">sec</span></p>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="0.5"
-                                        max="5"
-                                        step="0.5"
-                                        value={timing.fixedDelay}
-                                        onChange={(e) => onUpdateDrillTiming({ ...timing, fixedDelay: parseFloat(e.target.value) })}
-                                        className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
-                                    />
-                                    <div className="flex justify-between text-[8px] font-mono text-gray-700">
-                                        <span>0.5S (RAPID)</span>
-                                        <span>5.0S (EXTENDED)</span>
-                                    </div>
+                            {/* 2. Whistle Timing */}
+                            <div className="space-y-4 pt-4 border-t border-surface-border/30">
+                                <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">2. Whistle / Trigger Interval (Post-"Set")</p>
+                                <div className="flex gap-2 mb-4">
+                                    <button
+                                        onClick={() => updateCurrentDrill({ whistleDelayType: 'fixed' })}
+                                        className={`flex-1 py-2 text-[9px] font-mono border transition-all ${currentDrillTiming.whistleDelayType === 'fixed' ? 'bg-brand/20 text-brand border-brand' : 'bg-transparent text-gray-600 border-surface-border hover:border-gray-700'}`}
+                                    >
+                                        FIXED
+                                    </button>
+                                    <button
+                                        onClick={() => updateCurrentDrill({ whistleDelayType: 'random' })}
+                                        className={`flex-1 py-2 text-[9px] font-mono border transition-all ${currentDrillTiming.whistleDelayType === 'random' ? 'bg-brand/20 text-brand border-brand' : 'bg-transparent text-gray-600 border-surface-border hover:border-gray-700'}`}
+                                    >
+                                        RANDOM (1.0s - 3.5s)
+                                    </button>
                                 </div>
-                            ) : (
-                                <div className="space-y-4 py-4 px-6 bg-surface-card border border-surface-border/50">
-                                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Active Variances</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {[1, 1.5, 2, 3, 3.5].map(time => (
-                                            <div key={time} className="px-3 py-1 bg-brand/10 border border-brand/20 text-brand font-mono text-[10px] uppercase">
-                                                {time}s
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <p className="text-[9px] font-mono text-gray-500 italic mt-2">
-                                        System will automatically select a random interval from the list above for each rep.
-                                    </p>
-                                </div>
-                            )}
 
-                            <div className="pt-6 border-t border-surface-border/30">
-                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em] leading-relaxed">
-                                    Changes are applied globally to the Face-Off trainer module.
-                                </p>
+                                {currentDrillTiming.whistleDelayType === 'fixed' && (
+                                    <div className="space-y-3 px-4 py-3 bg-surface-card/50 border border-surface-border/30">
+                                        <div className="flex justify-between items-end">
+                                            <p className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Fixed Duration</p>
+                                            <p className="text-xl font-display font-black text-brand italic">{currentDrillTiming.whistleFixedDelay}s</p>
+                                        </div>
+                                        <input
+                                            type="range" min="0.5" max="5" step="0.1"
+                                            value={currentDrillTiming.whistleFixedDelay}
+                                            onChange={(e) => updateCurrentDrill({ whistleFixedDelay: parseFloat(e.target.value) })}
+                                            className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
+                                        />
+                                    </div>
+                                )}
                             </div>
+
+                            {/* 3. Inter-Rep Delay */}
+                            <div className="space-y-3 pt-4 border-t border-surface-border/30">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">3. Inter-Rep Recovery (Multi-Reps)</p>
+                                    <p className="text-2xl font-display font-black text-white italic">{currentDrillTiming.interRepDelay}s</p>
+                                </div>
+                                <input
+                                    type="range" min="1" max="15" step="1"
+                                    value={currentDrillTiming.interRepDelay}
+                                    onChange={(e) => updateCurrentDrill({ interRepDelay: parseFloat(e.target.value) })}
+                                    className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
+                                />
+                                <p className="text-[8px] font-mono text-gray-600 uppercase">Buffer time between consecutive reps for set-up.</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-surface-border/30 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></div>
+                                <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Live Sync Active</span>
+                            </div>
+                            <span className="text-[8px] font-mono text-gray-700 uppercase italic">Applied to: {activeDrillTab.toUpperCase()}</span>
                         </div>
                     </div>
                 </div>
@@ -268,7 +310,7 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
             <div className="mt-8 pt-8 border-t border-surface-border/30 flex items-center justify-center gap-8 opacity-20 group hover:opacity-100 transition-opacity">
                 <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-brand animate-pulse" />
-                    <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Ready</span>
+                    <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Proprietary Training Logic // v2.0</span>
                 </div>
             </div>
         </div>

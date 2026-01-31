@@ -230,7 +230,8 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             if (newHistory.length >= totalShots) {
                 handleSessionEnd();
             } else {
-                sequenceTimeoutRef.current.push(window.setTimeout(startDrill, 3000));
+                const interRepDelay = (soundEffects.drillTiming?.shooting.interRepDelay || 3) * 1000;
+                sequenceTimeoutRef.current.push(window.setTimeout(startDrill, interRepDelay));
             }
         } else {
             setDrillState('log_shot');
@@ -298,6 +299,12 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         let delay = 0;
         const timeouts: number[] = [];
 
+        const timing = soundEffects.drillTiming?.shooting || { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
+
+        // 1. Pre-Sequence Delay
+        delay += (timing.preStartDelay || 0) * 1000;
+
+        // 2. Countdown Sequence (3-2-1)
         for (let i = 3; i > 0; i--) {
             const count = i;
             timeouts.push(window.setTimeout(() => {
@@ -307,24 +314,25 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             delay += 1000;
         }
 
+        // 3. "Set" Command
         timeouts.push(window.setTimeout(() => {
             setCountdown(0);
             setDrillState('set');
             playSound('set');
         }, delay));
 
-        const drillTiming = soundEffects.drillTiming || { delayType: 'fixed', fixedDelay: 2 };
-        let finalDelayMs = 2000;
-
-        if (drillTiming.delayType === 'random') {
+        // 4. Whistle Trigger Interval (Post-"Set")
+        let whistleDelayMs = 2000;
+        if (timing.whistleDelayType === 'random') {
             const randomOptions = [1000, 1500, 2000, 3000, 3500];
-            finalDelayMs = randomOptions[Math.floor(Math.random() * randomOptions.length)];
+            whistleDelayMs = randomOptions[Math.floor(Math.random() * randomOptions.length)];
         } else {
-            finalDelayMs = (drillTiming.fixedDelay || 2) * 1000;
+            whistleDelayMs = (timing.whistleFixedDelay || 2) * 1000;
         }
 
-        delay += finalDelayMs;
+        delay += whistleDelayMs;
 
+        // 5. Whistle Trigger
         timeouts.push(window.setTimeout(() => {
             setDrillState('measuring');
             playSound('whistle');
@@ -363,7 +371,8 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         if (newHistory.length >= totalShots) {
             handleSessionEnd();
         } else {
-            sequenceTimeoutRef.current.push(window.setTimeout(startDrill, 3000));
+            const interRepDelay = (soundEffects.drillTiming?.shooting.interRepDelay || 3) * 1000;
+            sequenceTimeoutRef.current.push(window.setTimeout(startDrill, interRepDelay));
         }
     }
 

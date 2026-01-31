@@ -151,8 +151,18 @@ export interface SoundEffects {
     set?: string;
     whistle?: string;
     drillTiming?: {
-        delayType: 'fixed' | 'random';
-        fixedDelay: number; // in seconds
+        faceOff: {
+            preStartDelay: number; // Delay before first sound
+            whistleDelayType: 'fixed' | 'random';
+            whistleFixedDelay: number;
+            interRepDelay: number; // Delay between consecutive reps
+        };
+        shooting: {
+            preStartDelay: number;
+            whistleDelayType: 'fixed' | 'random';
+            whistleFixedDelay: number;
+            interRepDelay: number;
+        };
     };
 }
 

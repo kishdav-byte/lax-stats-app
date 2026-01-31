@@ -265,34 +265,37 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         let delay = 0;
         const timeouts: number[] = [];
 
-        // 1. Countdown Sequence
+        const timing = soundEffects.drillTiming?.faceOff || { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
+
+        // 1. Pre-Sequence Delay (Custom Post-Start)
+        delay += (timing.preStartDelay || 0) * 1000;
+
+        // 2. Countdown Sequence (5-4-3-2-1)
         for (let i = 5; i > 0; i--) {
             const count = i;
             timeouts.push(window.setTimeout(() => { setCountdown(count); playSound('countdown'); }, delay));
             delay += 1000;
         }
 
-        // 2. "Down" Command
+        // 3. "Down" Command (Transition to Set)
         timeouts.push(window.setTimeout(() => { setCountdown(0); setDrillState('set'); playSound('down'); }, delay));
-        delay += 750; // Fixed transition to 'Set'
+        delay += 750;
 
-        // 3. "Set" Command
+        // 4. "Set" Command
         timeouts.push(window.setTimeout(() => { playSound('set'); }, delay));
 
-        // 4. Admin-configured Delay to Whistle
-        const drillTiming = soundEffects.drillTiming || { delayType: 'fixed', fixedDelay: 2 };
-        let finalDelayMs = 2000;
-
-        if (drillTiming.delayType === 'random') {
+        // 5. Whistle Trigger Interval (Post-"Set")
+        let whistleDelayMs = 2000;
+        if (timing.whistleDelayType === 'random') {
             const randomOptions = [1000, 1500, 2000, 3000, 3500];
-            finalDelayMs = randomOptions[Math.floor(Math.random() * randomOptions.length)];
+            whistleDelayMs = randomOptions[Math.floor(Math.random() * randomOptions.length)];
         } else {
-            finalDelayMs = (drillTiming.fixedDelay || 2) * 1000;
+            whistleDelayMs = (timing.whistleFixedDelay || 2) * 1000;
         }
 
-        delay += finalDelayMs;
+        delay += whistleDelayMs;
 
-        // 5. Whistle (Trigger Measurement)
+        // 6. Whistle (Trigger Measurement)
         timeouts.push(window.setTimeout(() => {
             setDrillState('measuring');
             playSound('whistle');
@@ -338,7 +341,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
         const timeoutId = setTimeout(() => {
             handleStartDrill();
-        }, 5000);
+        }, (soundEffects.drillTiming?.faceOff.interRepDelay || 5) * 1000);
 
         return () => clearTimeout(timeoutId);
 
