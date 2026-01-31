@@ -69,7 +69,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
             <div className="cyber-card p-8 max-w-lg w-full space-y-6 bg-black border-brand/50">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Entity Overwrite Protocol</p>
+                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Edit User Profile</p>
                 </div>
 
                 <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">
@@ -79,11 +79,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Codename</label>
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
                             <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full cyber-input text-sm" />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Auth Protocol</label>
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Account Role</label>
                             <select value={role} onChange={e => setRole(e.target.value as Role)} className="w-full cyber-input text-sm appearance-none">
                                 {Object.values(Role).map(r => <option key={r} value={r} className="bg-black">{r.toUpperCase()}</option>)}
                             </select>
@@ -91,13 +91,13 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Comm Channel (Email)</label>
+                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
                         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full cyber-input text-sm" />
                     </div>
 
                     {isCoachOrPlayer && (
                         <div className="space-y-1">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Cluster Assignments</label>
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Team Assignments</label>
                             <div className="max-h-32 overflow-y-auto space-y-1 bg-surface-card p-3 border border-surface-border custom-scrollbar">
                                 {teams.map(t => (
                                     <label key={t.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-white/5 transition-colors">
@@ -115,7 +115,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                     )}
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Update Access Key</label>
+                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Update Password</label>
                         <input
                             type="password"
                             placeholder="REDACTED (LEAVE BLANK TO RETAIN)"
@@ -127,10 +127,10 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
 
                     {user.role === Role.PARENT && (
                         <div className="pt-4 border-t border-surface-border space-y-4">
-                            <p className="text-[10px] font-mono text-brand uppercase tracking-[0.2em] font-bold">Observer Streams</p>
+                            <p className="text-[10px] font-mono text-brand uppercase tracking-[0.2em] font-bold">Following</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Units</label>
+                                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Teams</label>
                                     <div className="max-h-24 overflow-y-auto bg-surface-card p-2 border border-surface-border space-y-1 custom-scrollbar">
                                         {followedTeamIds.length > 0 ? followedTeamIds.map(id => {
                                             const team = teams.find(t => t.id === id);
@@ -144,7 +144,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Entities</label>
+                                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Players</label>
                                     <div className="max-h-24 overflow-y-auto bg-surface-card p-2 border border-surface-border space-y-1 custom-scrollbar">
                                         {followedPlayerIds.length > 0 ? followedPlayerIds.map(id => {
                                             const player = allPlayers.find(p => p.id === id);
@@ -163,8 +163,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                 </div>
 
                 <div className="flex justify-end gap-6 pt-6">
-                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
-                    <button onClick={handleSave} className="cyber-button py-2 px-8">COMMIT_CHANGES</button>
+                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={handleSave} className="cyber-button py-2 px-8">SAVE CHANGES</button>
                 </div>
             </div>
         </div>
@@ -194,7 +194,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
             onInviteUser({ username, password, role });
             setUsername(''); setPassword(''); setRole(Role.FAN);
         } else {
-            alert("Protocol Violation: Codename and Access Key required.");
+            alert("Problem: Name and Password required.");
         }
     };
 
@@ -219,41 +219,41 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Access Control Matrix</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">User Access</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         USER <span className="text-brand">REGISTRY</span>
                     </h1>
                 </div>
                 <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                    RETURN TO COMMAND
+                    BACK TO DASHBOARD
                 </button>
             </div>
 
             <div className="cyber-card p-8">
                 <form onSubmit={handleInvite} className="space-y-8">
                     <div>
-                        <h2 className="text-lg font-display font-bold uppercase italic mb-2">Provision New Entity</h2>
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Register identity in the system before node assignment.</p>
+                        <h2 className="text-lg font-display font-bold uppercase italic mb-2">Create New User</h2>
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Register a new user in the system.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Codename</label>
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
                             <input type="text" placeholder="IDENTITY_IDENT" value={username} onChange={e => setUsername(e.target.value)} className="w-full cyber-input" required />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Access Key</label>
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Password</label>
                             <input type="password" placeholder="KEY_AUTH" value={password} onChange={e => setPassword(e.target.value)} className="w-full cyber-input" required />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Auth Protocol</label>
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Account Role</label>
                             <select value={role} onChange={e => setRole(e.target.value as Role)} className="w-full cyber-input appearance-none">
                                 {Object.values(Role).map(r => <option key={r} value={r} className="bg-black">{r.toUpperCase()}</option>)}
                             </select>
                         </div>
                     </div>
                     <button type="submit" className="cyber-button px-12 flex items-center gap-3">
-                        INITIALIZE ENTITY <UserPlus className="w-4 h-4" />
+                        CREATE USER <UserPlus className="w-4 h-4" />
                     </button>
                 </form>
             </div>
@@ -261,7 +261,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
             <div className="pt-8">
                 <div className="flex items-center gap-4 mb-8">
                     <Shield className="w-5 h-5 text-brand" />
-                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Active <span className="text-brand">Node-Set</span></h2>
+                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Current <span className="text-brand">Users</span></h2>
                     <div className="h-px bg-surface-border flex-grow"></div>
                 </div>
 
@@ -270,11 +270,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
                         <table className="w-full min-w-[1000px] text-left border-collapse">
                             <thead className="bg-surface-card border-b border-surface-border">
                                 <tr>
-                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">CODENAME</th>
-                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">PROTOCOL</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">NAME</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">ROLE</th>
                                     <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">STATUS</th>
-                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">UNIT_CLUSTER</th>
-                                    <th className="p-4 px-6 text-right text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">OPERATIONS</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">TEAM</th>
+                                    <th className="p-4 px-6 text-right text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-black">

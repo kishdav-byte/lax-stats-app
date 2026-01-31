@@ -74,7 +74,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
     const renderLogin = () => (
         <form onSubmit={handleLoginSubmit} className="space-y-6">
             <div>
-                <label htmlFor="login-email" className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Email Terminal</label>
+                <label htmlFor="login-email" className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Email Address</label>
                 <div className="relative">
                     <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand opacity-50" />
                     <input
@@ -84,12 +84,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
                         onChange={(e) => setLoginUsername(e.target.value)}
                         required
                         className="cyber-input w-full pl-10"
-                        placeholder="IDENT_USER@NODE.COM"
+                        placeholder="your@email.com"
                     />
                 </div>
             </div>
             <div>
-                <label htmlFor="password" className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Access Key</label>
+                <label htmlFor="password" className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Password</label>
                 <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand opacity-50" />
                     <input
@@ -105,7 +105,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
             </div>
             {(error || loginUsername.toLowerCase().includes('undefined')) && (
                 <div className="bg-red-900/10 border-l-2 border-red-500 p-2">
-                    <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest">{error || "SYSTEM_ERROR // UNDEFINED_REFERENCE"}</p>
+                    <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest">{error || "SYSTEM ERROR // UNKNOWN REFERENCE"}</p>
                 </div>
             )}
             <button
@@ -113,22 +113,22 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
                 disabled={isLoading}
                 className="cyber-button w-full flex items-center justify-center gap-2 group"
             >
-                {isLoading ? 'ESTABLISHING LINK...' : (
+                {isLoading ? 'SIGNING IN...' : (
                     <>
-                        EXECUTE ACCESS <Shield className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                        SIGN IN <Shield className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                     </>
                 )}
             </button>
             <div className="flex flex-col gap-4 text-center mt-8">
                 <button type="button" onClick={() => { setView('register'); setRegisterError(''); }} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-white transition-colors">
-                    Initialize New Profile // REGISTER
+                    Create New Profile
                 </button>
                 <button type="button" onClick={() => { setView('reset'); setResetMessage(''); }} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-white transition-colors">
-                    Lost Access Token? // RECOVER
+                    Forgot Password?
                 </button>
                 <div className="h-[1px] bg-surface-border w-1/2 mx-auto mt-4"></div>
                 <button type="button" onClick={onResetApiKey} className="text-[10px] font-mono uppercase tracking-[0.2em] text-orange-500/50 hover:text-orange-500 transition-colors">
-                    AI COMMAND OVERRIDE // RESET KEY
+                    RESET APP SETTINGS
                 </button>
             </div>
         </form>
@@ -137,15 +137,15 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
     const renderRegister = () => (
         <form onSubmit={handleRegisterSubmit} className="space-y-4">
             <div>
-                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Username Alias</label>
-                <input id="reg-username" type="text" value={regUsername} onChange={(e) => setRegUsername(e.target.value)} required className="cyber-input w-full" placeholder="PLAYER_01" />
+                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Username</label>
+                <input id="reg-username" type="text" value={regUsername} onChange={(e) => setRegUsername(e.target.value)} required className="cyber-input w-full" placeholder="LacrossePlayer" />
             </div>
             <div>
-                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Email Endpoint</label>
-                <input id="reg-email" type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required className="cyber-input w-full" placeholder="USER@TERMINAL.NET" />
+                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Email Address</label>
+                <input id="reg-email" type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required className="cyber-input w-full" placeholder="your@email.com" />
             </div>
             <div>
-                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Operational Role</label>
+                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Select Role</label>
                 <select
                     id="reg-role"
                     value={regRole}
@@ -153,19 +153,19 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
                     required
                     className="cyber-input w-full appearance-none"
                 >
-                    <option value="" disabled>SELECT_ASSIGNMENT</option>
-                    <option value={Role.PLAYER}>PLAYER_ASSET</option>
-                    <option value={Role.PARENT}>PARENT_OVERSEER</option>
-                    <option value={Role.COACH}>COACH_COMMANDER</option>
+                    <option value="" disabled>SELECT ROLE</option>
+                    <option value={Role.PLAYER}>PLAYER</option>
+                    <option value={Role.PARENT}>PARENT</option>
+                    <option value={Role.COACH}>COACH</option>
                 </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Set Access Key</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Set Password</label>
                     <input id="reg-password" type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} required className="cyber-input w-full" placeholder="••••" />
                 </div>
                 <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Confirm Key</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Confirm Password</label>
                     <input id="reg-confirm-password" type="password" value={regConfirmPassword} onChange={(e) => setRegConfirmPassword(e.target.value)} required className="cyber-input w-full" placeholder="••••" />
                 </div>
             </div>
@@ -175,11 +175,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
                 </div>
             )}
             <button type="submit" className="cyber-button w-full flex items-center justify-center gap-2 group">
-                INITIALIZE PROFILE <UserPlus className="w-4 h-4" />
+                CREATE PROFILE <UserPlus className="w-4 h-4" />
             </button>
             <div className="text-center mt-6">
                 <button type="button" onClick={() => setView('login')} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-white">
-                    Return to Secure Login // BACK
+                    Back to Login
                 </button>
             </div>
         </form>
@@ -188,8 +188,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
     const renderReset = () => (
         <form onSubmit={handleResetSubmit} className="space-y-6">
             <div>
-                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Verification Email</label>
-                <input id="reset-email" type="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required className="cyber-input w-full" placeholder="RECOVER@NODE.COM" />
+                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-1">Email Address</label>
+                <input id="reset-email" type="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required className="cyber-input w-full" placeholder="your@email.com" />
             </div>
             {resetMessage && (
                 <div className="bg-brand/10 border-l-2 border-brand p-2">
@@ -197,11 +197,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
                 </div>
             )}
             <button type="submit" className="cyber-button w-full">
-                SEND SIGNAL // RECOVER
+                RESET PASSWORD
             </button>
             <div className="text-center mt-6">
                 <button type="button" onClick={() => setView('login')} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-white">
-                    Return to Terminal // BACK
+                    Back to Login
                 </button>
             </div>
         </form>
@@ -209,10 +209,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onPasswordResetReque
 
     const renderContent = () => {
         switch (view) {
-            case 'register': return { title: 'PROFILE_NITIALIZATION', subtitle: 'COLLECTIVE // ENROLLMENT', content: renderRegister() };
-            case 'reset': return { title: 'KEY_RECOVERY', subtitle: 'ACCESS // REESTABLISH', content: renderReset() };
+            case 'register': return { title: 'CREATE PROFILE', subtitle: 'NEW PLAYER ENROLLMENT', content: renderRegister() };
+            case 'reset': return { title: 'RESET PASSWORD', subtitle: 'REGAIN ACCOUNT ACCESS', content: renderReset() };
             case 'login':
-            default: return { title: 'SECURE_SESSION', subtitle: 'VERIFIED ACCESS // COMMAND LOGIN', content: renderLogin() };
+            default: return { title: 'USER LOGIN', subtitle: 'LOG IN TO YOUR ACCOUNT', content: renderLogin() };
         }
     };
 

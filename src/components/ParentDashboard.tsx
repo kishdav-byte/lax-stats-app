@@ -61,7 +61,7 @@ const LiveGameViewer: React.FC<{ game: Game }> = ({ game }) => {
                         <div className="absolute inset-0 bg-brand blur-md animate-pulse rounded-full opacity-50"></div>
                         <Activity className="relative w-6 h-6 text-brand" />
                     </div>
-                    <h2 className="text-2xl font-display font-black text-white italic tracking-tighter uppercase italic">Live Protocol Active</h2>
+                    <h2 className="text-2xl font-display font-black text-white italic tracking-tighter uppercase italic">Live Game Active</h2>
                 </div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-12 max-w-4xl mx-auto mb-8">
@@ -91,7 +91,7 @@ const LiveGameViewer: React.FC<{ game: Game }> = ({ game }) => {
                     </div>
                 ) : (
                     <div className="border-t border-surface-border/30 mt-8 pt-4 text-center">
-                        <p className="text-[10px] font-mono text-gray-600 uppercase tracking-[0.2em] italic">Awaiting Telemetry Stream...</p>
+                        <p className="text-[10px] font-mono text-gray-600 uppercase tracking-[0.2em] italic">Waiting for game updates...</p>
                     </div>
                 )}
             </div>
@@ -143,7 +143,7 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Observer Console</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Parent View</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         PARENT <span className="text-brand">DASHBOARD</span>
@@ -151,7 +151,7 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                 </div>
                 <div className="flex items-center gap-4 py-2 px-4 bg-surface-card border border-surface-border">
                     <Eye className="w-4 h-4 text-brand" />
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Status: Monitoring</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Status: Viewing</span>
                 </div>
             </div>
 
@@ -164,7 +164,7 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                     <section>
                         <div className="flex items-center gap-4 mb-6">
                             <Shield className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Monitored <span className="text-brand">Units</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Followed <span className="text-brand">Teams</span></h2>
                             <div className="h-px bg-surface-border flex-grow"></div>
                         </div>
 
@@ -179,7 +179,7 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                                             <div className="flex justify-between items-start mb-6">
                                                 <div>
                                                     <h3 className="text-xl font-display font-bold text-white uppercase italic tracking-tight">{team.name}</h3>
-                                                    <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Active Stream Linked</p>
+                                                    <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Team Linked</p>
                                                 </div>
                                                 <button onClick={() => handleUnfollowTeam(team.id)} className="text-red-500/50 hover:text-red-500 transition-colors">
                                                     <Trash2 className="w-4 h-4" />
@@ -189,7 +189,7 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                                             <div className="space-y-6">
                                                 <div>
                                                     <p className="text-[9px] font-mono text-brand uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                        <Calendar className="w-3 h-3" /> Next Sequence
+                                                        <Calendar className="w-3 h-3" /> Next Game
                                                     </p>
                                                     {upcomingGames.length > 0 ? (
                                                         <div className="bg-surface-card/50 p-3 border border-surface-border">
@@ -197,13 +197,13 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                                                             <p className="text-[8px] font-mono text-gray-500 mt-1 uppercase">{new Date(upcomingGames[0].scheduledTime).toLocaleString()}</p>
                                                         </div>
                                                     ) : (
-                                                        <p className="text-[9px] font-mono text-gray-600 italic">No Sequences Scheduled</p>
+                                                        <p className="text-[9px] font-mono text-gray-600 italic">No Games Scheduled</p>
                                                     )}
                                                 </div>
 
                                                 <div>
                                                     <p className="text-[9px] font-mono text-brand uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                        <Users className="w-3 h-3" /> Unit Roster
+                                                        <Users className="w-3 h-3" /> Team Roster
                                                     </p>
                                                     <div className="max-h-32 overflow-y-auto space-y-1 custom-scrollbar pr-2">
                                                         {team.roster.map(player => (
@@ -221,7 +221,7 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                             </div>
                         ) : (
                             <div className="cyber-card p-12 text-center opacity-50 grayscale">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No Units Monitored</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No teams followed</p>
                             </div>
                         )}
                     </section>
@@ -229,9 +229,9 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
 
                 <div className="space-y-8">
                     <section>
-                        <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Discovery Stream</h2>
+                        <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Discover Teams</h2>
                         <div className="cyber-card p-6 bg-brand/5">
-                            <p className="text-[10px] font-mono text-brand uppercase tracking-widest mb-4">Available Units</p>
+                            <p className="text-[10px] font-mono text-brand uppercase tracking-widest mb-4">Available Teams</p>
                             <div className="space-y-3">
                                 {unfollowedTeams.length > 0 ? unfollowedTeams.map(team => (
                                     <div key={team.id} className="flex items-center justify-between p-2 hover:bg-white/5 group transition-colors border-b border-surface-border/50">
@@ -240,11 +240,11 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
                                             onClick={() => handleFollowTeam(team.id)}
                                             className="text-[8px] font-mono text-brand uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2"
                                         >
-                                            LINK_STREAM <ArrowRight className="w-3 h-3" />
+                                            FOLLOW TEAM <ArrowRight className="w-3 h-3" />
                                         </button>
                                     </div>
                                 )) : (
-                                    <p className="text-[8px] font-mono text-gray-600 uppercase italic">All Units Sync'd</p>
+                                    <p className="text-[8px] font-mono text-gray-600 uppercase italic">All teams followed</p>
                                 )}
                             </div>
                         </div>

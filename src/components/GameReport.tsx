@@ -34,7 +34,7 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
         <div className="bg-black border border-surface-border overflow-hidden">
             <div className="bg-surface-card p-4 border-b border-surface-border">
                 <h3 className="text-sm font-mono font-black text-brand uppercase tracking-[0.3em] flex items-center gap-2">
-                    <Shield className="w-4 h-4" /> UNIT_METRICS // {team.name}
+                    <Shield className="w-4 h-4" /> TEAM STATS // {team.name}
                 </h3>
             </div>
             <div className="overflow-x-auto custom-scrollbar">
@@ -42,7 +42,7 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
                     <thead className="bg-black/40 text-[9px] font-mono text-gray-500 uppercase tracking-widest">
                         <tr>
                             <th className="p-4 border-b border-surface-border">#</th>
-                            <th className="p-4 border-b border-surface-border">ENTITY</th>
+                            <th className="p-4 border-b border-surface-border">PLAYER</th>
                             <th className="p-4 border-b border-surface-border">POS</th>
                             <th className="p-4 text-center border-b border-surface-border text-white">G</th>
                             <th className="p-4 text-center border-b border-surface-border text-white">A</th>
@@ -75,7 +75,7 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
                     </tbody>
                     <tfoot className="bg-surface-card/20 font-display italic font-black text-white uppercase text-xs">
                         <tr>
-                            <td colSpan={3} className="p-4 text-right text-gray-600 tracking-widest font-mono">AGGREGATE_FIELD_TOTALS</td>
+                            <td colSpan={3} className="p-4 text-right text-gray-600 tracking-widest font-mono">TEAM TOTALS</td>
                             <td className="p-4 text-center text-brand underline">{totalGoals}</td>
                             <td className="p-4 text-center text-brand underline">{totalAssists}</td>
                             <td className="p-4 text-center text-brand underline underline-offset-4 decoration-2">{totalGoals + totalAssists}</td>
@@ -140,20 +140,20 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                 <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-4">
                         <FileText className="w-5 h-5 text-brand" />
-                        <h1 className="text-sm font-mono font-black text-white uppercase tracking-[0.4em]">SYNTHESIS_REPORT // {game.id.substring(0, 8).toUpperCase()}</h1>
+                        <h1 className="text-sm font-mono font-black text-white uppercase tracking-[0.4em]">GAME REPORT // {game.id.substring(0, 8).toUpperCase()}</h1>
                     </div>
 
                     <div className="flex items-center gap-3">
                         {isEditing ? (
                             <>
-                                <button onClick={handleSave} className="cyber-button py-2 px-6 text-[10px] flex items-center gap-2">COMMIT_SAVE <Save className="w-4 h-4" /></button>
-                                <button onClick={handleCancel} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white px-4">Abort</button>
+                                <button onClick={handleSave} className="cyber-button py-2 px-6 text-[10px] flex items-center gap-2">SAVE CHANGES <Save className="w-4 h-4" /></button>
+                                <button onClick={handleCancel} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white px-4">Cancel</button>
                             </>
                         ) : (
                             <>
                                 {canEdit && (
                                     <button onClick={() => setIsEditing(true)} className="cyber-button-outline py-2 px-6 text-[10px] flex items-center gap-2">
-                                        MODIFY_RECORD <Edit3 className="w-4 h-4" />
+                                        EDIT REPORT <Edit3 className="w-4 h-4" />
                                     </button>
                                 )}
                                 <button onClick={() => window.print()} className="bg-white text-black px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all flex items-center gap-2">
@@ -172,14 +172,14 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                 {isEditing && (
                     <div className="no-print p-4 bg-brand/5 border-l-2 border-brand mb-12 flex items-center gap-4">
                         <Binary className="w-5 h-5 text-brand animate-pulse" />
-                        <p className="text-[10px] font-mono text-brand uppercase tracking-widest">RECORD_OVERWRITE_ACTIVE: Manual data adjustment authorized.</p>
+                        <p className="text-[10px] font-mono text-brand uppercase tracking-widest">EDIT MODE ACTIVE: You can now adjust game data.</p>
                     </div>
                 )}
 
                 <header className="text-center relative py-12">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-12 bg-gradient-to-b from-brand to-transparent"></div>
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.4em] mb-4">Official Athletic Match Record</p>
-                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter mb-4">POST-MATCH <span className="text-brand">SYNTHESIS</span></h1>
+                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.4em] mb-4">Official Game Record</p>
+                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter mb-4">GAME <span className="text-brand">REPORT</span></h1>
                     <p className="text-sm font-mono text-white/50 uppercase tracking-widest">
                         {new Date(game.scheduledTime).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
@@ -188,7 +188,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                 <div className="grid md:grid-cols-[1fr_auto_1fr] items-center gap-12 border-y border-surface-border py-12">
                     <div className="text-right">
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4">{game.homeTeam.name}</h2>
-                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Home_Unit</p>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Home Team</p>
                     </div>
 
                     <div className="flex flex-col items-center">
@@ -216,7 +216,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
 
                     <div className="text-left">
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4">{game.awayTeam.name}</h2>
-                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Away_Unit</p>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Away Team</p>
                     </div>
                 </div>
 
@@ -225,7 +225,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                         <div className="bg-black p-8 border border-surface-border h-full">
                             <div className="flex items-center gap-3 mb-6">
                                 <Cpu className="w-5 h-5 text-brand" />
-                                <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">AI_SYNOPSIS</h3>
+                                <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">AI SUMMARY</h3>
                             </div>
 
                             {isEditing ? (
@@ -237,7 +237,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                                 />
                             ) : (
                                 <div className="font-mono text-[11px] text-gray-400 leading-relaxed uppercase tracking-wider whitespace-pre-wrap">
-                                    {game.aiSummary || 'NO_SYNOPSIS_RESOLVED_FOR_THIS_SESSION'}
+                                    {game.aiSummary || 'NO AI SUMMARY GENERATED'}
                                 </div>
                             )}
                         </div>
@@ -248,27 +248,27 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                             <div className="bg-black p-8 border border-surface-border">
                                 <div className="flex items-center gap-3 mb-6">
                                     <Binary className="w-5 h-5 text-brand" />
-                                    <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">DATA_CORRECTIONS</h3>
+                                    <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">NOTES / CORRECTIONS</h3>
                                 </div>
                                 {isEditing ? (
                                     <textarea
                                         value={editedGame.correctionNotes || ''}
                                         onChange={(e) => setEditedGame(prev => ({ ...prev, correctionNotes: e.target.value }))}
-                                        placeholder="INPUT_CORRECTION_STRING_HERE"
+                                        placeholder="Add notes or corrections here..."
                                         className="w-full bg-surface-card border border-surface-border p-4 font-mono text-[11px] text-gray-300 custom-scrollbar uppercase tracking-wider"
                                         rows={4}
                                     />
                                 ) : (
                                     <div className={`p-4 font-mono text-[11px] leading-relaxed uppercase tracking-wider ${game.correctionNotes ? 'text-brand italic bg-brand/5 border-l border-brand' : 'text-gray-600 italic'}`}>
-                                        {game.correctionNotes || 'NO_CORRECTION_DATA_LOGGED'}
+                                        {game.correctionNotes || 'NO NOTES LOGGED'}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <div className="bg-surface-card border border-surface-border p-8 text-center flex flex-col items-center justify-center min-h-[160px]">
-                            <p className="text-[10px] font-mono text-gray-500 uppercase mb-2 tracking-[0.2em]">Data_Integrity_Checksum</p>
-                            <p className="text-[9px] font-mono text-brand font-black break-all uppercase opacity-40">MD5: {game.id.replace(/-/g, '')}_SECURE_RSTR_NODE</p>
+                            <p className="text-[10px] font-mono text-gray-500 uppercase mb-2 tracking-[0.2em]">Game ID Verification</p>
+                            <p className="text-[9px] font-mono text-brand font-black break-all uppercase opacity-40">ID: {game.id.replace(/-/g, '')}</p>
                         </div>
                     </div>
                 </div>
@@ -276,7 +276,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                 <div className="space-y-12 pt-12">
                     <div className="flex items-center gap-4">
                         <BarChart3 className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Unit <span className="text-brand">Performance Matrix</span></h2>
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Team <span className="text-brand">Performance</span></h2>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </div>
                     <ReportStatsTable team={game.homeTeam} playerStats={playerStats} />
@@ -284,7 +284,7 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                 </div>
 
                 <footer className="text-center pt-24 pb-12 opacity-30">
-                    <p className="text-[8px] font-mono uppercase tracking-[0.5em] text-gray-500">End of Record // Lax Stats AI Operational Intelligence // Confidential</p>
+                    <p className="text-[8px] font-mono uppercase tracking-[0.5em] text-gray-500">Lax Stats AI Analysis // End of Report</p>
                 </footer>
             </div>
         </div>

@@ -20,7 +20,7 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = ({ team, onClose, onSubmit }
             onSubmit(team.id, jersey.trim(), position);
             onClose();
         } else {
-            alert("Protocol Violation: Jersey number and position required.");
+            alert("Error: Jersey number and position required.");
         }
     };
 
@@ -29,7 +29,7 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = ({ team, onClose, onSubmit }
             <form onSubmit={handleSubmit} className="cyber-card p-8 max-w-md w-full space-y-6 bg-black border-brand/50">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Unit Assignment Request</p>
+                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Join Team Request</p>
                 </div>
 
                 <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">
@@ -122,7 +122,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Operational Access</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Player View</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         PLAYER <span className="text-brand">DASHBOARD</span>
@@ -130,14 +130,14 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                 </div>
                 <div className="flex items-center gap-4 py-2 px-4 bg-surface-card border border-surface-border">
                     <Activity className="w-4 h-4 text-brand animate-pulse" />
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Node Online: {currentUser.username}</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Player Online: {currentUser.username}</span>
                 </div>
             </div>
 
             {/* Top Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="cyber-card p-6 border-l-2 border-l-brand">
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">Active Unit Assignments</p>
+                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">My Teams</p>
                     <div className="flex items-end justify-between">
                         <span className="text-4xl font-display font-black text-white italic">{myTeams.length}</span>
                         <Users className="w-8 h-8 text-brand opacity-20" />
@@ -151,7 +151,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                     </div>
                 </div>
                 <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">Upcoming Sequences</p>
+                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">Upcoming Games</p>
                     <div className="flex items-end justify-between">
                         <span className="text-4xl font-display font-black text-white italic">{upcomingGames.length}</span>
                         <Calendar className="w-8 h-8 text-brand opacity-20" />
@@ -175,7 +175,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                     <section>
                         <div className="flex items-center gap-4 mb-6">
                             <Crosshair className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Tactical <span className="text-brand">Assigments</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Drill <span className="text-brand">Assignments</span></h2>
                             <div className="h-px bg-surface-border flex-grow"></div>
                         </div>
 
@@ -194,7 +194,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                             onClick={() => onStartDrill(drill)}
                                             className="cyber-button-outline w-full py-2 text-xs"
                                         >
-                                            INITIALIZE DRILL
+                                            START DRILL
                                         </button>
                                     </div>
                                 ))}
@@ -210,7 +210,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                     <section>
                         <div className="flex items-center gap-4 mb-6">
                             <Shield className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Active <span className="text-brand">Clusters</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Active <span className="text-brand">Teams</span></h2>
                             <div className="h-px bg-surface-border flex-grow"></div>
                         </div>
 
@@ -220,7 +220,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                     <div className="flex justify-between items-end mb-6">
                                         <div>
                                             <h3 className="text-xl font-display font-bold text-white uppercase italic tracking-tight">{team.name}</h3>
-                                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Unit Identified // Node Linked</p>
+                                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Team Joined</p>
                                         </div>
                                     </div>
                                     <div className="overflow-x-auto">
@@ -228,8 +228,8 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                             <thead>
                                                 <tr className="border-b border-surface-border">
                                                     <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest">ID</th>
-                                                    <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest">CODENAME</th>
-                                                    <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest text-right">PROTOCOL</th>
+                                                    <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest">PLAYER</th>
+                                                    <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest text-right">POSITION</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -243,13 +243,13 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                             </tbody>
                                         </table>
                                         {team.roster.length > 5 && (
-                                            <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mt-2 text-center">+ {team.roster.length - 5} MORE ENTITIES</p>
+                                            <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mt-2 text-center">+ {team.roster.length - 5} MORE PLAYERS</p>
                                         )}
                                     </div>
                                 </div>
                             )) : (
                                 <div className="cyber-card p-12 text-center opacity-50 grayscale">
-                                    <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No Linked Units</p>
+                                    <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No teams joined</p>
                                 </div>
                             )}
                         </div>
@@ -260,26 +260,26 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                 <div className="space-y-8">
                     {/* Game Feed */}
                     <section>
-                        <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Sequence Feed</h2>
+                        <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Game Feed</h2>
                         <div className="space-y-4">
                             {upcomingGames.slice(0, 3).map(game => (
                                 <div key={game.id} className="bg-surface-card border-l-2 border-brand p-4 space-y-2">
-                                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest">Upcoming // Live In T-Minus</p>
+                                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest">Upcoming // Ready to start</p>
                                     <p className="text-sm font-display font-bold text-white uppercase italic">{game.homeTeam.name} vs {game.awayTeam.name}</p>
-                                    <p className="text-[8px] font-mono text-gray-500">INIT: {new Date(game.scheduledTime).toLocaleString()}</p>
+                                    <p className="text-[8px] font-mono text-gray-500">START: {new Date(game.scheduledTime).toLocaleString()}</p>
                                 </div>
                             ))}
                             {upcomingGames.length === 0 && (
-                                <p className="text-[10px] font-mono text-gray-600 uppercase text-center py-4 bg-surface-card/20 border border-surface-border italic">No Upcoming Sequences</p>
+                                <p className="text-[10px] font-mono text-gray-600 uppercase text-center py-4 bg-surface-card/20 border border-surface-border italic">No Upcoming Games</p>
                             )}
                         </div>
                     </section>
 
                     {/* Join Section */}
                     <section>
-                        <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Unit Expansion</h2>
+                        <h2 className="text-sm font-display font-bold text-white uppercase italic tracking-widest mb-4">Discover Teams</h2>
                         <div className="cyber-card p-6 bg-brand/5">
-                            <p className="text-[10px] font-mono text-brand uppercase tracking-widest mb-4">Available Clusters</p>
+                            <p className="text-[10px] font-mono text-brand uppercase tracking-widest mb-4">Available Teams</p>
                             <div className="space-y-2">
                                 {otherTeams.length > 0 ? otherTeams.map(team => (
                                     <div key={team.id} className="flex items-center justify-between p-2 hover:bg-white/5 group transition-colors border-b border-surface-border/50">
@@ -288,18 +288,18 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                             onClick={() => handleOpenJoinModal(team)}
                                             className="text-[8px] font-mono text-brand uppercase tracking-widest hover:text-white transition-colors flex-shrink-0"
                                         >
-                                            [REQUEST_ASSIGN]
+                                            [JOIN TEAM]
                                         </button>
                                     </div>
                                 )) : (
-                                    <p className="text-[8px] font-mono text-gray-600 uppercase italic">No Available Units</p>
+                                    <p className="text-[8px] font-mono text-gray-600 uppercase italic">No Available Teams</p>
                                 )}
                             </div>
                         </div>
                     </section>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -81,7 +81,7 @@ const DraggableResizableOverlay: React.FC<{
             </div>
 
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-brand text-black px-3 py-1 text-[8px] font-mono font-black uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.3)]">
-                CALIBRATE_LOCK_TARGET
+                SET_FRAME_POSITION
             </div>
 
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20">
@@ -218,7 +218,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                 return; // Placement logged by AI
             } else {
                 console.warn("AI vision failed to detect ball in frame.");
-                setError("AI_VISION_UNDETECTED: PLEASE MARK MANUALLY");
+                setError("SHOT_UNDETECTED: PLEASE MARK MANUALLY");
             }
         }
 
@@ -241,7 +241,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas || video.readyState < video.HAVE_METADATA) {
-            setError("OPTICAL_FEED_DISCONNECTED");
+            setError("CAMERA_FEED_DISCONNECTED");
             setDrillState('error');
             return;
         }
@@ -370,7 +370,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             }
         } catch (err) {
             console.error("Error accessing camera:", err);
-            setError("OPTICAL_CAPTURE_UNAVAILABLE. CHECK PERMISSIONS.");
+            setError("CAMERA_CAPTURE_UNAVAILABLE. CHECK PERMISSIONS.");
             setDrillState('error');
         }
     }, [stopCamera]);
@@ -462,7 +462,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     const getStatusMessage = () => {
         switch (drillState) {
             case 'idle': return 'SEQUENCE_TERMINATED';
-            case 'starting': return 'INITIALIZING_STREAM...';
+            case 'starting': return 'STARTING_CAMERA...';
             case 'countdown': return `T-MINUS ${countdown}`;
             case 'set': return isAiVisionEnabled ? 'AWAIT AI_WHISTLE TRIGGER' : 'AWAIT WHISTLE TRIGGER';
             case 'measuring': return 'REACT!';
@@ -485,20 +485,20 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                     <div>
                         <div className="flex items-center gap-4 mb-2">
                             <div className="h-px bg-brand w-12"></div>
-                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Optical Training Array</p>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Shooting Training</p>
                         </div>
                         <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                            SHOOTING <span className="text-brand">CENTER</span>
+                            SHOOTING <span className="text-brand">DRILLS</span>
                         </h1>
                     </div>
                     <button onClick={onReturnToDashboard} className="cyber-button-outline py-2 px-6">
-                        RETURN TO LAB
+                        BACK TO DASHBOARD
                     </button>
                 </div>
 
                 <div className="cyber-card p-1">
                     <div className="bg-black p-12 text-center border border-surface-border">
-                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Ballistics Mode</h2>
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Drill Mode</h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div
@@ -508,7 +508,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                                 <Zap className={`w-8 h-8 mb-4 ${drillMode === 'release' ? 'text-brand' : 'text-gray-600'}`} />
                                 <h3 className="text-xl font-display font-black italic uppercase italic mb-2">Quick Release</h3>
                                 <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500 leading-relaxed">
-                                    Measure reactive latency from whistle trigger to ballistics deployment.
+                                    Measure reaction time from whistle to shot.
                                 </p>
                             </div>
                             <div
@@ -561,7 +561,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                         </div>
 
                         <button onClick={() => setSessionState('calibration')} className="mt-12 cyber-button w-full md:w-auto px-16 py-4 flex items-center justify-center gap-4 group">
-                            INITIALIZE CALIBRATION <Activity className="w-5 h-5 group-hover:animate-pulse" />
+                            START SETUP <Activity className="w-5 h-5 group-hover:animate-pulse" />
                         </button>
                     </div>
                 </div>
@@ -579,10 +579,10 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                             <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Optical Target Lock</p>
                         </div>
                         <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                            CALIBRATE <span className="text-brand">FRAME</span>
+                            ALIGN <span className="text-brand">CAMERA</span>
                         </h1>
                     </div>
-                    <button onClick={onReturnToDashboard} className="text-gray-600 hover:text-white text-[10px] font-mono uppercase tracking-widest">Abort_Protocol</button>
+                    <button onClick={onReturnToDashboard} className="text-gray-600 hover:text-white text-[10px] font-mono uppercase tracking-widest">Cancel</button>
                 </div>
 
                 <div className="flex-grow flex flex-col items-center justify-center space-y-8 pb-12">
@@ -592,12 +592,12 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                             <DraggableResizableOverlay overlay={overlay} setOverlay={setOverlay} />
                         </div>
                         <div className="absolute -bottom-8 left-0 right-0 text-center">
-                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Awaiting spatial frame alignment with goal perimeter.</p>
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Position the camera and align the grid with the goal.</p>
                         </div>
                     </div>
 
                     <button onClick={() => { setSessionState('running'); startDrill(); }} className="cyber-button px-20 py-4 text-xl">
-                        START_SEQUENCE
+                        START DRILL
                     </button>
                 </div>
             </div>
@@ -614,9 +614,9 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                 <div className="flex flex-col items-center">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-green-500 uppercase">Ballistics Sequence Complete</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-green-500 uppercase">Drill Complete</p>
                     </div>
-                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter">DATA <span className="text-brand">HARVEST</span></h1>
+                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter">SESSION <span className="text-brand">SUMMARY</span></h1>
                 </div>
 
                 <div className="cyber-card p-1 max-w-4xl mx-auto">
@@ -637,10 +637,10 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
                             <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8 border-t border-surface-border/30">
                                 <button onClick={() => setSessionState('setup')} className="cyber-button-outline px-12 py-4 flex items-center gap-3 justify-center group">
-                                    <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> RE-INIT_ARRAY
+                                    <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> RESTART DRILL
                                 </button>
                                 <button onClick={onReturnToDashboard} className="cyber-button px-12 py-4 flex items-center gap-3 justify-center">
-                                    <Home className="w-4 h-4" /> TERMINATE
+                                    <Home className="w-4 h-4" /> EXIT
                                 </button>
                             </div>
                         </div>
@@ -656,7 +656,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                 <div className="cyber-card p-6 border-brand border-2 bg-brand/5 animate-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-4 mb-2">
                         <ShieldAlert className="w-4 h-4 text-brand" />
-                        <h2 className="text-xs font-mono font-bold text-brand uppercase tracking-widest">Active Directive Injected</h2>
+                        <h2 className="text-xs font-mono font-bold text-brand uppercase tracking-widest">Current Drill Goal</h2>
                     </div>
                     <p className="text-white font-display italic font-bold uppercase tracking-tight">"{activeAssignment.notes}"</p>
                 </div>
@@ -664,17 +664,17 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
             <div className="flex justify-between items-center gap-6">
                 <div className="flex items-center gap-6">
-                    <h1 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">BALLISTICS <span className="text-brand">ACTIVE</span></h1>
+                    <h1 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">DRILL <span className="text-brand">ACTIVE</span></h1>
                     <div className="h-4 w-px bg-surface-border"></div>
                     <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
-                        SEQ: <span className="text-white font-bold">{shotHistory.length + 1}</span> / {totalShots}
+                        SHOT: <span className="text-white font-bold">{shotHistory.length + 1}</span> / {totalShots}
                     </p>
                 </div>
                 <button
                     onClick={handleSessionEnd}
                     className="text-red-500 hover:text-red-400 text-[10px] font-mono uppercase tracking-widest flex items-center gap-2"
                 >
-                    <Binary className="w-4 h-4" /> TERMINATE
+                    <Binary className="w-4 h-4" /> EXIT
                 </button>
             </div>
 
@@ -691,7 +691,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                                 <div className="bg-black/60 backdrop-blur-md px-12 py-8 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
                                     <Loader2 className="w-8 h-8 text-brand animate-spin mb-4 shadow-[0_0_15px_rgba(255,87,34,0.5)]" />
                                     <p className="text-xl font-display font-black text-white italic uppercase tracking-tighter shadow-[0_0_20px_rgba(255,87,34,0.3)]">
-                                        AI_ANALYZING_FLIGHT...
+                                        AI ANALYZING SHOT...
                                     </p>
                                 </div>
                             ) : (

@@ -357,8 +357,8 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
     const getStatusMessage = () => {
         switch (drillState) {
-            case 'idle': return 'SEQUENCE_TERMINATED';
-            case 'starting': return 'INITIALIZING_STREAM...';
+            case 'idle': return 'DRILL_ENDED';
+            case 'starting': return 'STARTING_CAMERA...';
             case 'countdown': return `T-MINUS ${countdown}`;
             case 'set': return 'AWAIT WHISTLE TRIGGER';
             case 'measuring': return 'REACT!';
@@ -384,24 +384,24 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                     <div>
                         <div className="flex items-center gap-4 mb-2">
                             <div className="h-px bg-brand w-12"></div>
-                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Latency Testing Array</p>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Face-Off Training</p>
                         </div>
                         <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                             FACE-OFF <span className="text-brand">TRAINER</span>
                         </h1>
                     </div>
                     <button onClick={onReturnToDashboard} className="cyber-button-outline py-2 px-6">
-                        RETURN TO LAB
+                        BACK TO DASHBOARD
                     </button>
                 </div>
 
                 <div className="cyber-card p-1">
                     <div className="bg-black p-12 text-center border border-surface-border">
-                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Operation Mode</h2>
+                        <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-12">Select Trainer Mode</h2>
 
                         <div className="grid md:grid-cols-2 gap-12">
                             <div className="space-y-6">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400">Fixed Sequence Count</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400">Training Reps</p>
                                 <div className="grid grid-cols-2 gap-4">
                                     {[1, 3, 5, 20].map(count => (
                                         <button
@@ -416,7 +416,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                             </div>
 
                             <div className="space-y-6 flex flex-col justify-end">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400">Chrono-Stamina Mode</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400">Timed Mode</p>
                                 <div className="bg-surface-card p-8 border border-surface-border flex flex-col items-center gap-6">
                                     <div className="flex items-center gap-4">
                                         <input
@@ -433,7 +433,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                                         onClick={() => handleSelectSession('timed', timedDuration)}
                                         className="cyber-button w-full flex items-center justify-center gap-3"
                                     >
-                                        INITIALIZE TIMER <Timer className="w-4 h-4" />
+                                        START DRILL <Timer className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -451,26 +451,26 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                 <div className="flex flex-col items-center">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-green-500 uppercase">Process Complete // Data Archived</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-green-500 uppercase">Drill Complete</p>
                     </div>
-                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter">SESSION <span className="text-brand">REPORT</span></h1>
+                    <h1 className="text-6xl font-display font-black text-white italic uppercase tracking-tighter">DRILL <span className="text-brand">SUMMARY</span></h1>
                 </div>
 
                 <div className="cyber-card p-1 max-w-4xl mx-auto">
                     <div className="bg-black p-12 border border-surface-border">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
                             <div className="text-center space-y-4">
-                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">PEAK LATENCY</p>
+                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">BEST TIME</p>
                                 <p className="text-6xl font-display font-black text-green-500 italic uppercase tracking-tighter">{stats.best}<span className="text-xl ml-1">MS</span></p>
                                 <div className="h-px bg-green-500/20 w-12 mx-auto"></div>
                             </div>
                             <div className="text-center space-y-4">
-                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">MEAN LATENCY</p>
+                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">AVERAGE TIME</p>
                                 <p className="text-6xl font-display font-black text-brand italic uppercase tracking-tighter">{stats.average}<span className="text-xl ml-1">MS</span></p>
                                 <div className="h-px bg-brand/20 w-12 mx-auto"></div>
                             </div>
                             <div className="text-center space-y-4">
-                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">MIN LATENCY</p>
+                                <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">SLOWEST TIME</p>
                                 <p className="text-6xl font-display font-black text-red-500 italic uppercase tracking-tighter">{stats.worst}<span className="text-xl ml-1">MS</span></p>
                                 <div className="h-px bg-red-500/20 w-12 mx-auto"></div>
                             </div>
@@ -478,7 +478,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
                         <div className="bg-surface-card p-8 border border-surface-border mb-12">
                             <p className="text-[10px] font-mono tracking-[0.2em] text-gray-400 uppercase mb-4 flex items-center gap-2">
-                                <Binary className="w-3 h-3 text-brand" /> Sequence String ({reactionTimes.length} samples)
+                                <Binary className="w-3 h-3 text-brand" /> Session History ({reactionTimes.length} reps)
                             </p>
                             <div className="flex flex-wrap gap-2">
                                 {reactionTimes.map((t, i) => (
@@ -491,7 +491,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
                         <div className="flex flex-col sm:flex-row gap-6 justify-center">
                             <button onClick={handleStartNewSession} className="cyber-button-outline px-12 py-4 flex items-center gap-3 justify-center group">
-                                <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> REINITIALIZE
+                                <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> RESTART
                             </button>
                             <button onClick={onReturnToDashboard} className="cyber-button px-12 py-4 flex items-center gap-3 justify-center">
                                 <Home className="w-4 h-4" /> TERMINATE
@@ -509,7 +509,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                 <div className="cyber-card p-6 border-brand border-2 bg-brand/5 animate-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-4 mb-2">
                         <ShieldAlert className="w-4 h-4 text-brand" />
-                        <h2 className="text-xs font-mono font-bold text-brand uppercase tracking-widest">Active Directive Injected</h2>
+                        <h2 className="text-xs font-mono font-bold text-brand uppercase tracking-widest">Current Drill Goal</h2>
                     </div>
                     <p className="text-white font-display italic font-bold uppercase tracking-tight">"{activeAssignment.notes}"</p>
                 </div>
@@ -517,28 +517,28 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
             <div className="flex justify-between items-center gap-6">
                 <div className="flex items-center gap-6">
-                    <h1 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">FACE-OFF <span className="text-brand">ACTIVE</span></h1>
+                    <h1 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">FACE-OFF <span className="text-brand">DRILL</span></h1>
                     <div className="h-4 w-px bg-surface-border"></div>
                     {sessionConfig?.type === 'count' && (
                         <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
-                            SEQ: <span className="text-white font-bold">{Math.min(completedDrills + 1, sessionConfig.value)}</span> / {sessionConfig.value}
+                            REP: <span className="text-white font-bold">{Math.min(completedDrills + 1, sessionConfig.value)}</span> / {sessionConfig.value}
                         </p>
                     )}
                     {sessionConfig?.type === 'timed' && (
                         <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
-                            CHRONO_LEFT: <span className="text-brand font-bold">{formatTime(timeRemaining)}</span>
+                            TIME REMAINING: <span className="text-brand font-bold">{formatTime(timeRemaining)}</span>
                         </p>
                     )}
                 </div>
                 <button
                     onClick={() => {
-                        if (window.confirm("TERMINATE OPERATION? DATA FOR THIS DRILL WILL BE LOST.")) {
+                        if (window.confirm("End drill? Any data not saved will be lost.")) {
                             onReturnToDashboard();
                         }
                     }}
                     className="text-red-500 hover:text-red-400 text-[10px] font-mono uppercase tracking-widest flex items-center gap-2"
                 >
-                    <Binary className="w-4 h-4" /> TERMINATE
+                    <Binary className="w-4 h-4" /> EXIT
                 </button>
             </div>
 
@@ -587,7 +587,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                         <div className="absolute bottom-12 left-12 text-left space-y-1 hidden md:block opacity-40">
                             <p className="text-[8px] font-mono text-brand uppercase tracking-widest">SENS_THRESH: {SENSITIVITY_THRESHOLD}</p>
                             <p className="text-[8px] font-mono text-brand uppercase tracking-widest">RES_ID: {VIDEO_WIDTH}x{VIDEO_HEIGHT}</p>
-                            <p className="text-[8px] font-mono text-brand uppercase tracking-widest">STREAM: ACTIVE_ENCRYPTED</p>
+                            <p className="text-[8px] font-mono text-brand uppercase tracking-widest">STREAM: ACTIVE</p>
                         </div>
                     </div>
                 </div>

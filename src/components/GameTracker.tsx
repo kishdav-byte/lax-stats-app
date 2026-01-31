@@ -36,14 +36,14 @@ const StatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]: { [k
         <div className="cyber-card p-1">
             <div className="bg-black p-6 border border-surface-border">
                 <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter mb-4 flex items-center gap-3">
-                    {team.name} // <span className="text-brand text-sm">FINAL_METRICS</span>
+                    {team.name} // <span className="text-brand text-sm">STATS</span>
                 </h3>
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead className="bg-surface-card border-b border-white/10">
                             <tr>
                                 <th className="p-2 text-[9px] font-mono text-gray-500 uppercase tracking-widest">#</th>
-                                <th className="p-2 text-[9px] font-mono text-gray-500 uppercase tracking-widest">ENTITY</th>
+                                <th className="p-2 text-[9px] font-mono text-gray-500 uppercase tracking-widest">PLAYER</th>
                                 <th className="p-2 text-[9px] font-mono text-gray-500 uppercase tracking-widest">POS</th>
                                 <th className="p-2 text-center text-[9px] font-mono text-brand uppercase tracking-widest">G</th>
                                 <th className="p-2 text-center text-[9px] font-mono text-brand uppercase tracking-widest">A</th>
@@ -76,7 +76,7 @@ const StatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]: { [k
                         </tbody>
                         <tfoot className="bg-surface-card/50 border-t-2 border-brand/20">
                             <tr className="font-display italic font-black text-white uppercase">
-                                <td colSpan={3} className="p-3 text-right text-xs tracking-widest text-gray-500">AGGREGATE_TOTALS</td>
+                                <td colSpan={3} className="p-3 text-right text-xs tracking-widest text-gray-500">TOTALS</td>
                                 <td className="p-3 text-center text-brand">{totalGoals}</td>
                                 <td className="p-3 text-center text-brand">{totalAssists}</td>
                                 <td className="p-3 text-center text-brand underline decoration-brand/50">{totalGoals + totalAssists}</td>
@@ -98,7 +98,7 @@ const RosterColumn: React.FC<{
     selectedPlayerId: string | null;
 }> = ({ team, onSelectPlayer, selectedPlayerId }) => (
     <div className="space-y-3">
-        <h3 className="text-xs font-mono font-black text-gray-500 uppercase tracking-[0.3em] mb-4 text-center border-b border-surface-border pb-2">{team.name} // UNITS</h3>
+        <h3 className="text-xs font-mono font-black text-gray-500 uppercase tracking-[0.3em] mb-4 text-center border-b border-surface-border pb-2">{team.name} // ROSTER</h3>
         <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {team.roster.map(player => (
                 <div
@@ -110,7 +110,12 @@ const RosterColumn: React.FC<{
                         }`}
                 >
                     <span className={`font-mono text-[10px] font-black group-hover:text-brand transition-colors ${selectedPlayerId === player.id ? 'text-brand' : 'text-gray-600'}`}>#{player.jerseyNumber}</span>
-                    <span className={`font-display font-bold uppercase italic text-sm tracking-tight transition-colors ${selectedPlayerId === player.id ? 'text-white' : 'text-gray-400'}`}>{player.name}</span>
+                    <div className="flex flex-col">
+                        <span className={`font-display font-bold uppercase italic text-sm tracking-tight transition-colors ${selectedPlayerId === player.id ? 'text-white' : 'text-gray-400'}`}>{player.name}</span>
+                        <div className="flex gap-2 mt-1">
+                            <span className="text-[8px] font-mono text-gray-500">{player.position}</span>
+                        </div>
+                    </div>
                 </div>
             ))}
         </div>
@@ -147,7 +152,7 @@ const PenaltyBox: React.FC<{ penalties: Penalty[], clock: number, homeTeam: Team
         <div className="my-6 cyber-card p-1 border-yellow-500/50 bg-yellow-500/5">
             <div className="bg-black p-4 border border-yellow-500/20">
                 <h3 className="text-xs font-mono font-black text-yellow-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                    <ShieldAlert className="w-4 h-4" /> PENALTY_ARRAY_STATUS
+                    <ShieldAlert className="w-4 h-4" /> PENALTIES ACTIVE
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {activePenalties.map(penalty => {
@@ -158,7 +163,7 @@ const PenaltyBox: React.FC<{ penalties: Penalty[], clock: number, homeTeam: Team
                                 <p className="text-[10px] font-mono text-gray-500 uppercase mb-1">{teamName} // #{player?.jerseyNumber}</p>
                                 <p className="font-display font-bold text-white uppercase italic text-xs mb-3 truncate w-full text-center">{player?.name}</p>
                                 <p className="text-[14px] font-mono font-black text-yellow-500 tracking-tighter shadow-yellow-500/20">{formatTime(remainingTime)}</p>
-                                <p className="text-[8px] font-mono text-yellow-500/50 uppercase mt-1">RELEASE_TMINUS</p>
+                                <p className="text-[8px] font-mono text-yellow-500/50 uppercase mt-1">TIME REMAINING</p>
                             </div>
                         );
                     })}
@@ -183,24 +188,24 @@ const PenaltyModal: React.FC<{
             <div className="cyber-card p-8 max-w-md w-full border-yellow-500">
                 <div className="flex items-center gap-4 mb-8">
                     <ShieldAlert className="w-6 h-6 text-yellow-500" />
-                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">INFRACTION // <span className="text-yellow-500">ENTRY</span></h2>
+                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">PENALTY // <span className="text-yellow-500">REPORT</span></h2>
                 </div>
 
                 <div className="space-y-6">
                     <div className="p-4 bg-yellow-500/5 border border-yellow-500/30">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">TARGET_UNIT</p>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">PLAYER</p>
                         <p className="text-white font-display italic font-bold uppercase">{teamName} // #{player.jerseyNumber} {player.name}</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-widest ml-1">VIOLATION_TYPE</label>
+                        <label className="text-[10px] text-gray-500 uppercase tracking-widest ml-1">PENALTY TYPE</label>
                         <select value={type} onChange={e => setType(e.target.value as PenaltyType)} className="w-full cyber-input appearance-none text-sm">
                             {Object.values(PenaltyType).map(ptype => <option key={ptype} value={ptype} className="bg-black">{ptype.toUpperCase()}</option>)}
                         </select>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-widest ml-1">TEMPORAL_DURATION</label>
+                        <label className="text-[10px] text-gray-500 uppercase tracking-widest ml-1">PENALTY TIME</label>
                         <div className="grid grid-cols-5 gap-2">
                             {[30, 60, 90, 120, 180].map(d => (
                                 <button key={d} onClick={() => setDuration(d)} className={`py-2 text-[10px] border transition-all ${duration === d ? 'bg-yellow-500 text-black border-yellow-500 font-bold' : 'bg-black text-gray-500 border-surface-border'}`}>
@@ -212,8 +217,8 @@ const PenaltyModal: React.FC<{
                 </div>
 
                 <div className="mt-12 flex justify-between gap-6">
-                    <button onClick={onClose} className="text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
-                    <button onClick={() => onAddPenalty(type, duration)} className="cyber-button-outline border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black py-2 px-8 text-xs font-bold">COMMIT_PENALTY</button>
+                    <button onClick={onClose} className="text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={() => onAddPenalty(type, duration)} className="cyber-button-outline border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black py-2 px-8 text-xs font-bold">ADD PENALTY</button>
                 </div>
             </div>
         </div>
@@ -244,7 +249,7 @@ const GameSetup: React.FC<{
                 <div className="bg-black p-12 text-center border border-surface-border">
                     <div className="grid md:grid-cols-2 gap-12 mb-12">
                         <div className="space-y-6">
-                            <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">Temporal Segments</p>
+                            <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">Game Segments</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <button
                                     onClick={() => setPeriodType('quarters')}
@@ -262,13 +267,13 @@ const GameSetup: React.FC<{
                             <p className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">{periodType === 'quarters' ? '4x 12-Minute Iterations' : '2x 20-Minute Iterations'}</p>
                         </div>
                         <div className="space-y-6">
-                            <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">Chronograph Model</p>
+                            <p className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">Time Mode</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <button
                                     onClick={() => setClockType('stop')}
                                     className={`cyber-button-outline py-4 font-display italic font-black text-xl transition-all ${clockType === 'stop' ? 'bg-brand text-black border-brand' : ''}`}
                                 >
-                                    STOP_TIME
+                                    STOP_CLOCK
                                 </button>
                                 <button
                                     onClick={() => setClockType('running')}
@@ -277,7 +282,7 @@ const GameSetup: React.FC<{
                                     RUNNING
                                 </button>
                             </div>
-                            <p className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Running clock: strictly tournament protocol.</p>
+                            <p className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Running clock: standard tournament rules.</p>
                         </div>
                     </div>
 
@@ -286,7 +291,7 @@ const GameSetup: React.FC<{
                             onClick={onReturnToDashboard}
                             className="bg-gray-900 border border-gray-800 text-gray-500 hover:text-white px-12 py-4 text-xs font-mono uppercase tracking-widest transition-all"
                         >
-                            Abort_Setup
+                            Cancel Setup
                         </button>
                         <button
                             onClick={() => onStartGame({
@@ -297,7 +302,7 @@ const GameSetup: React.FC<{
                             })}
                             className="cyber-button px-20 py-4 text-xl flex items-center gap-3 justify-center"
                         >
-                            INITIALIZE_GAME <Zap className="w-5 h-5" />
+                            START GAME <Zap className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -327,20 +332,20 @@ const LiveStatsSummary: React.FC<{
     const homeTotals = calculateTeamTotals(homeTeam);
     const awayTotals = calculateTeamTotals(awayTeam);
     const statsToDisplay: { key: StatType; label: string }[] = [
-        { key: StatType.SHOT, label: "BALLISTICS" },
-        { key: StatType.SAVE, label: "INTERCEPTIONS" },
-        { key: StatType.GROUND_BALL, label: "POSS_RECOVERY" },
-        { key: StatType.FACEOFF_WIN, label: "CLASH_WINS" },
-        { key: StatType.TURNOVER, label: "OS_ERRORS" },
+        { key: StatType.SHOT, label: "SHOTS" },
+        { key: StatType.SAVE, label: "SAVES" },
+        { key: StatType.GROUND_BALL, label: "GROUND BALLS" },
+        { key: StatType.FACEOFF_WIN, label: "FACEOFF WINS" },
+        { key: StatType.TURNOVER, label: "TURNOVERS" },
     ];
 
     return (
         <div className="cyber-card p-1 border-brand/20">
             <div className="bg-black p-6 border border-surface-border">
-                <h3 className="text-xs font-mono font-black text-brand uppercase tracking-[0.3em] mb-6 text-center">LIVE_SIGNAL_ANALYSIS</h3>
+                <h3 className="text-xs font-mono font-black text-brand uppercase tracking-[0.3em] mb-6 text-center">LIVE STATS SUMMARY</h3>
                 <div className="grid grid-cols-3 gap-4 font-mono">
                     <div className="text-right text-[10px] font-black text-gray-500 uppercase tracking-widest underline decoration-brand/30 underline-offset-8 mb-4">{homeTeam.name.toUpperCase()}</div>
-                    <div className="text-center text-[10px] font-black text-brand uppercase tracking-widest mb-4">METRIC</div>
+                    <div className="text-center text-[10px] font-black text-brand uppercase tracking-widest mb-4">STAT</div>
                     <div className="text-left text-[10px] font-black text-gray-500 uppercase tracking-widest underline decoration-brand/30 underline-offset-8 mb-4">{awayTeam.name.toUpperCase()}</div>
 
                     {statsToDisplay.map(({ key, label }) => (
@@ -481,15 +486,21 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                     <div className="px-12 py-8 flex items-center justify-between gap-12 border border-white/5">
                         <div className="flex-1 text-right">
                             <h2 className="text-sm font-mono font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{game.homeTeam.name}</h2>
-                            <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.home}</p>
+                            <div className="flex items-center justify-end gap-4">
+                                <div className="flex flex-col gap-1 no-print">
+                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: game.score.home + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
+                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: Math.max(0, game.score.home - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
+                                </div>
+                                <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.home}</p>
+                            </div>
                         </div>
 
                         <div className="flex flex-col items-center gap-2">
                             <div className="flex items-center gap-3">
-                                <div className="w-1 h-1 bg-brand rounded-full animate-ping"></div>
-                                <p className="text-[10px] font-mono text-brand uppercase tracking-[0.4em]">Signal_Live</p>
+                                <div className={`w-2 h-2 rounded-full ${isClockRunning ? 'bg-brand animate-ping' : 'bg-gray-600'}`}></div>
+                                <p className={`text-[10px] font-mono uppercase tracking-[0.4em] ${isClockRunning ? 'text-brand' : 'text-gray-600'}`}>{isClockRunning ? 'LIVE' : 'PAUSED'}</p>
                             </div>
-                            <p className={`text-7xl font-mono font-black tracking-tighter ${isClockRunning ? 'text-brand drop-shadow-[0_0_10px_rgba(255,87,34,0.3)]' : 'text-gray-700'}`}>
+                            <p className={`text-7xl font-mono font-black tracking-tighter transition-colors duration-500 ${isClockRunning ? 'text-brand drop-shadow-[0_0_15px_rgba(255,87,34,0.4)]' : 'text-gray-800'}`}>
                                 {formatTime(clock)}
                             </p>
                             <div className="flex items-center gap-4 bg-brand/10 border border-brand/30 px-6 py-1">
@@ -499,35 +510,46 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
 
                         <div className="flex-1 text-left">
                             <h2 className="text-sm font-mono font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{game.awayTeam.name}</h2>
-                            <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.away}</p>
+                            <div className="flex items-center justify-start gap-4">
+                                <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.away}</p>
+                                <div className="flex flex-col gap-1 no-print">
+                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: game.score.away + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
+                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: Math.max(0, game.score.away - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Control HUD Overlay */}
                     <div className="bg-surface-card border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-6">
                         <button onClick={() => setIsClockRunning(!isClockRunning)} className={`flex items-center gap-3 px-8 py-2 font-display italic font-black text-xs uppercase tracking-widest transition-all ${isClockRunning ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'}`}>
-                            {isClockRunning ? 'HALT_CHRONO' : 'INIT_CHRONO'}
+                            {isClockRunning ? 'PAUSE CLOCK' : 'START CLOCK'}
                             {isClockRunning ? <Timer className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
                         </button>
 
                         <div className="flex items-center gap-4 border-x border-white/10 px-6">
                             <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.max(1, game.currentPeriod - 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                            <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest">SEG_INCR</span>
+                            <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest">PERIOD</span>
                             <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.min(game.totalPeriods || 4, game.currentPeriod + 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4" /></button>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET_T</button>
-                            <button onClick={() => setClock(p => Math.max(0, p - 10))} className="text-[10px] font-mono font-black text-gray-500 hover:text-brand transition-colors p-2">-10S</button>
-                            <button onClick={() => setClock(p => p + 10)} className="text-[10px] font-mono font-black text-gray-500 hover:text-brand transition-colors p-2">+10S</button>
+                        <div className="flex items-center gap-2 border-l border-white/10 pl-6">
+                            <button onClick={() => setClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET TIME</button>
+                            <div className="flex items-center gap-1 bg-black/40 border border-white/5 px-2">
+                                <button onClick={() => setClock(p => Math.max(0, p - 60))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-1M</button>
+                                <button onClick={() => setClock(p => Math.max(0, p - 10))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-10S</button>
+                                <div className="w-px h-3 bg-white/10 mx-1"></div>
+                                <button onClick={() => setClock(p => p + 10)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+10S</button>
+                                <button onClick={() => setClock(p => p + 60)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+1M</button>
+                            </div>
                         </div>
 
                         {game.status !== 'finished' && (
                             <button onClick={() => { if (window.confirm("FINISH GAME?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="bg-red-900 border border-red-500/50 text-white px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-red-600 transition-all">
-                                END_GAME
+                                END GAME
                             </button>
                         )}
-                        <button onClick={onReturnToDashboard} className="text-[10px] font-mono font-black text-gray-500 hover:text-white uppercase tracking-widest ml-4">CMD_RETURN</button>
+                        <button onClick={onReturnToDashboard} className="text-[10px] font-mono font-black text-gray-500 hover:text-white uppercase tracking-widest ml-4">EXIT TRACKER</button>
                     </div>
                 </div>
             </div>
@@ -545,28 +567,28 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                                 {selectedPlayerInfo ? (
                                     <div className="flex-grow flex flex-col animate-in fade-in duration-300">
                                         <div className="mb-8 border-b border-surface-border pb-4">
-                                            <p className="text-[10px] font-mono italic text-brand uppercase tracking-[0.2em] mb-1">Target_Unit_Selected</p>
+                                            <p className="text-[10px] font-mono italic text-brand uppercase tracking-[0.2em] mb-1">Player Selected</p>
                                             <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">#{selectedPlayerInfo.player.jerseyNumber} {selectedPlayerInfo.player.name}</h3>
                                             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">{selectedPlayerInfo.teamId === game.homeTeam.id ? game.homeTeam.name : game.awayTeam.name}</p>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 mb-8">
                                             <StatEntryButton label="GOAL" onClick={() => { setIsClockRunning(false); setAssistModal({ show: true, scoringPlayer: selectedPlayerInfo.player, scoringTeamId: selectedPlayerInfo.teamId }); }} className="bg-green-500 text-black h-20" />
-                                            <StatEntryButton label="SHOT_ON_TRG" onClick={() => handleStatButtonClick(StatType.SHOT)} className="bg-white/10 text-white border-white/20 h-20" />
-                                            <StatEntryButton label="GB_RECOVERY" onClick={() => handleStatButtonClick(StatType.GROUND_BALL)} className="bg-brand text-black" />
-                                            <StatEntryButton label="LOSS_OF_POSS" onClick={() => handleStatButtonClick(StatType.TURNOVER)} className="bg-red-500 text-black" />
-                                            <StatEntryButton label="CAUSED_ERR" onClick={() => handleStatButtonClick(StatType.CAUSED_TURNOVER)} className="bg-surface-card text-brand border-brand/30" />
-                                            <StatEntryButton label="INFRACTION" onClick={() => setIsPenaltyModalOpen(true)} className="bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.2)]" />
-                                            <StatEntryButton label="CLASH_WIN" onClick={() => handleStatButtonClick(StatType.FACEOFF_WIN)} className="bg-brand/80 text-black" />
-                                            <StatEntryButton label="CLASH_LOSS" onClick={() => handleStatButtonClick(StatType.FACEOFF_LOSS)} className="bg-gray-900 text-gray-600" />
+                                            <StatEntryButton label="SHOT" onClick={() => handleStatButtonClick(StatType.SHOT)} className="bg-white/10 text-white border-white/20 h-20" />
+                                            <StatEntryButton label="GB" onClick={() => handleStatButtonClick(StatType.GROUND_BALL)} className="bg-brand text-black" />
+                                            <StatEntryButton label="TURNOVER" onClick={() => handleStatButtonClick(StatType.TURNOVER)} className="bg-red-500 text-black" />
+                                            <StatEntryButton label="CAUSED TO" onClick={() => handleStatButtonClick(StatType.CAUSED_TURNOVER)} className="bg-surface-card text-brand border-brand/30" />
+                                            <StatEntryButton label="PENALTY" onClick={() => setIsPenaltyModalOpen(true)} className="bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.2)]" />
+                                            <StatEntryButton label="FACEOFF WIN" onClick={() => handleStatButtonClick(StatType.FACEOFF_WIN)} className="bg-brand/80 text-black" />
+                                            <StatEntryButton label="FACEOFF LOSS" onClick={() => handleStatButtonClick(StatType.FACEOFF_LOSS)} className="bg-gray-900 text-gray-600" />
                                         </div>
 
-                                        <button onClick={() => setSelectedPlayerInfo(null)} className="w-full py-4 text-[10px] font-mono text-gray-700 uppercase hover:text-white border-t border-surface-border mt-auto">TERMINATE_SELECTION</button>
+                                        <button onClick={() => setSelectedPlayerInfo(null)} className="w-full py-4 text-[10px] font-mono text-gray-700 uppercase hover:text-white border-t border-surface-border mt-auto">DESELECT PLAYER</button>
                                     </div>
                                 ) : (
                                     <div className="flex-grow flex flex-col items-center justify-center text-center opacity-20">
                                         <Activity className="w-16 h-16 mb-4 text-brand animate-pulse" />
-                                        <p className="font-mono text-[10px] uppercase tracking-[0.4em] max-w-[200px]">Awaiting Entity Identification Protocol...</p>
+                                        <p className="font-mono text-[10px] uppercase tracking-[0.4em] max-w-[200px]">Select a player to add stats...</p>
                                     </div>
                                 )}
                             </div>
@@ -581,10 +603,10 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                     <div className="cyber-card p-1">
                         <div className="bg-black p-12 text-center border border-brand/50">
                             <Trophy className="w-16 h-16 text-brand mx-auto mb-6" />
-                            <h2 className="text-5xl font-display font-black text-white italic uppercase tracking-tighter mb-8">OPERATION <span className="text-brand">ARCHIVED</span></h2>
+                            <h2 className="text-5xl font-display font-black text-white italic uppercase tracking-tighter mb-8">GAME <span className="text-brand">FINISHED</span></h2>
                             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                                <button onClick={() => onViewReport(game)} className="cyber-button px-12 py-4 text-xl">VIEW_SYNTHESIS_REPORT</button>
-                                <button onClick={handleReturnToDashboard} className="cyber-button-outline px-12 py-4 text-xl">EXIT_COMMAND</button>
+                                <button onClick={() => onViewReport(game)} className="cyber-button px-12 py-4 text-xl">VIEW GAME REPORT</button>
+                                <button onClick={handleReturnToDashboard} className="cyber-button-outline px-12 py-4 text-xl">EXIT TO DASHBOARD</button>
                             </div>
                         </div>
                     </div>
@@ -593,7 +615,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                         <div className="cyber-card p-8">
                             <div className="flex items-center gap-4 mb-6">
                                 <Cpu className="w-6 h-6 text-brand" />
-                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">NEURAL <span className="text-brand">SYNOPSIS</span></h2>
+                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">AI <span className="text-brand">SUMMARY</span></h2>
                                 <div className="h-px bg-surface-border flex-grow"></div>
                             </div>
                             <div className="prose prose-invert max-w-none">
@@ -604,7 +626,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                         <div className="cyber-card p-12 text-center border-dashed">
                             <button onClick={async () => { setIsGeneratingSummary(true); const s = await generateGameSummary(game); onUpdateGame({ ...game, aiSummary: s }); setIsGeneratingSummary(false); }} disabled={isGeneratingSummary} className="cyber-button px-12 py-4 flex items-center gap-4 mx-auto disabled:opacity-50">
                                 {isGeneratingSummary ? <Cpu className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
-                                {isGeneratingSummary ? 'SYNTHESIZING...' : 'GENERATE_AI_SUMMARY'}
+                                {isGeneratingSummary ? 'GENERATING...' : 'GENERATE AI SUMMARY'}
                             </button>
                         </div>
                     )}
@@ -612,7 +634,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                     <div>
                         <div className="flex items-center gap-4 mb-8">
                             <Binary className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">CHRONO <span className="text-brand">LOG</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">GAME <span className="text-brand">LOG</span></h2>
                             <div className="h-px bg-surface-border flex-grow"></div>
                         </div>
                         <div className="cyber-card h-80 overflow-y-auto custom-scrollbar bg-surface-card p-6">
@@ -640,7 +662,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
             {assistModal.show && assistModal.scoringPlayer && assistModal.scoringTeamId && (
                 <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[100] p-4 text-xs font-mono">
                     <div className="cyber-card p-8 max-w-2xl w-full border-brand">
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter mb-4">ASSIST_PROTOCOL // <span className="text-brand">SELECT_SOURCE</span></h2>
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter mb-4">ASSIST // <span className="text-brand">SELECT PLAYER</span></h2>
                         <p className="text-gray-500 uppercase tracking-widest mb-8 font-mono">IDENTIFY PRIMARY SOURCE FOR GOAL AT {formatTime(clock)} BY {assistModal.scoringPlayer.name.toUpperCase()}</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-96 pr-2 custom-scrollbar">
                             {(assistModal.scoringTeamId === game.homeTeam.id ? game.homeTeam.roster : game.awayTeam.roster)
@@ -653,8 +675,8 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                                 ))}
                         </div>
                         <div className="mt-12 flex justify-between border-t border-surface-border pt-6">
-                            <button onClick={() => { handleStatAdd(assistModal.scoringPlayer!, assistModal.scoringTeamId!, StatType.GOAL); setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setSelectedPlayerInfo(null); }} className="text-gray-500 hover:text-white uppercase tracking-widest">UNASSISTED_GOAL</button>
-                            <button onClick={() => { setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setIsClockRunning(true); }} className="text-red-500 uppercase tracking-widest font-black">ABORT</button>
+                            <button onClick={() => { handleStatAdd(assistModal.scoringPlayer!, assistModal.scoringTeamId!, StatType.GOAL); setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setSelectedPlayerInfo(null); }} className="text-gray-500 hover:text-white uppercase tracking-widest">UNASSISTED GOAL</button>
+                            <button onClick={() => { setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setIsClockRunning(true); }} className="text-red-500 uppercase tracking-widest font-black">CANCEL</button>
                         </div>
                     </div>
                 </div>

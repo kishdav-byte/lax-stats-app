@@ -23,12 +23,12 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
             <div className="relative">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="h-px bg-brand w-12"></div>
-                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Operational Overview</p>
+                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">App Overview</p>
                 </div>
                 <h1 className="text-5xl md:text-6xl font-display font-black tracking-tighter text-white">
-                    COMMAND <span className="text-brand">CENTER</span>
+                    DASH<span className="text-brand">BOARD</span>
                 </h1>
-                <p className="text-gray-500 font-mono text-xs uppercase tracking-widest mt-2">Secure Session // Verified Access // Node 0-1</p>
+                <p className="text-gray-500 font-mono text-xs uppercase tracking-widest mt-2">Intelligent // Athletic // Systems</p>
             </div>
 
             {/* Live Game Alert */}
@@ -41,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                                 <Activity className="relative w-8 h-8 text-brand" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-display font-bold text-white uppercase italic">Live Protocol Active</h2>
+                                <h2 className="text-xl font-display font-bold text-white uppercase italic">Live Game Active</h2>
                                 <p className="text-brand font-mono text-[10px] uppercase tracking-widest">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
                             </div>
                         </div>
@@ -49,7 +49,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                             onClick={() => onViewChange('game')}
                             className="cyber-button w-full md:w-auto flex items-center justify-center gap-2"
                         >
-                            RESUME PROTOCOL <ChevronRight className="w-4 h-4" />
+                            RESUME GAME <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -63,23 +63,23 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                         <span className="text-5xl font-display font-black text-white">{upcomingGames.length}</span>
                         <Calendar className="w-8 h-8 text-brand opacity-20" />
                     </div>
-                    <p className="text-gray-600 text-[10px] uppercase mt-2">Awaiting Initialization</p>
+                    <p className="text-gray-600 text-[10px] uppercase mt-2">Ready to Start</p>
                 </div>
                 <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">Completed Cycles</p>
+                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">Finished Games</p>
                     <div className="flex items-end justify-between">
                         <span className="text-5xl font-display font-black text-white">{finishedGames.length}</span>
                         <Binary className="w-8 h-8 text-brand opacity-20" />
                     </div>
-                    <p className="text-gray-600 text-[10px] uppercase mt-2">Total Log Entries</p>
+                    <p className="text-gray-600 text-[10px] uppercase mt-2">Total Statistics Recorded</p>
                 </div>
                 <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">Security Level</p>
+                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">System Status</p>
                     <div className="flex items-end justify-between">
-                        <span className="text-5xl font-display font-black text-white">L-01</span>
+                        <span className="text-5xl font-display font-black text-white">ONLINE</span>
                         <ShieldCheck className="w-8 h-8 text-brand opacity-20" />
                     </div>
-                    <p className="text-gray-600 text-[10px] uppercase mt-2">End-to-End Encrypted</p>
+                    <p className="text-gray-600 text-[10px] uppercase mt-2">Active & Secure</p>
                 </div>
             </div>
 
@@ -90,10 +90,10 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     onClick={() => onViewChange('teams')}
                 >
                     <Users className="w-10 h-10 text-brand mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-display font-bold text-white mb-2 italic">Roster Matrix</h3>
-                    <p className="text-gray-400 text-sm font-sans mb-6">Manage player identifiers, team structures, and assignment protocols.</p>
+                    <h3 className="text-xl font-display font-bold text-white mb-2 italic">Teams & Rosters</h3>
+                    <p className="text-gray-400 text-sm font-sans mb-6">Manage players, team structures, and view profiles.</p>
                     <div className="flex items-center gap-2 text-brand font-mono text-[10px] uppercase tracking-widest">
-                        Access Module <ChevronRight className="w-3 h-3" />
+                        Open <ChevronRight className="w-3 h-3" />
                     </div>
                 </div>
 
@@ -102,10 +102,10 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     onClick={() => onViewChange('schedule')}
                 >
                     <Calendar className="w-10 h-10 text-brand mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-display font-bold text-white mb-2 italic">Sequence Schedule</h3>
-                    <p className="text-gray-400 text-sm font-sans mb-6">Orchestrate game occurrences and temporal planning for the active season.</p>
+                    <h3 className="text-xl font-display font-bold text-white mb-2 italic">Game Schedule</h3>
+                    <p className="text-gray-400 text-sm font-sans mb-6">Schedule and manage upcoming games for the season.</p>
                     <div className="flex items-center gap-2 text-brand font-mono text-[10px] uppercase tracking-widest">
-                        Access Module <ChevronRight className="w-3 h-3" />
+                        Open <ChevronRight className="w-3 h-3" />
                     </div>
                 </div>
 
@@ -115,10 +115,10 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                         onClick={() => onViewChange('soundEffects')}
                     >
                         <Volume2 className="w-10 h-10 text-brand mb-4 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-xl font-display font-bold text-white mb-2 italic">Acoustic Assets</h3>
-                        <p className="text-gray-400 text-sm font-sans mb-6">Manage custom sonic triggers for tactical training and drill execution.</p>
+                        <h3 className="text-xl font-display font-bold text-white mb-2 italic">Sound Effects</h3>
+                        <p className="text-gray-400 text-sm font-sans mb-6">Manage custom sounds for training and game drills.</p>
                         <div className="flex items-center gap-2 text-brand font-mono text-[10px] uppercase tracking-widest">
-                            Access Module <ChevronRight className="w-3 h-3" />
+                            Open <ChevronRight className="w-3 h-3" />
                         </div>
                     </div>
                 )}
@@ -129,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                 {/* Upcoming */}
                 <div>
                     <h2 className="text-2xl font-display font-black text-white italic mb-6 flex items-center gap-4">
-                        UPCOMING <span className="text-brand">SEQUENCES</span>
+                        UPCOMING <span className="text-brand">GAMES</span>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </h2>
                     {upcomingGames.length > 0 ? (
@@ -138,10 +138,10 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                                 <div key={game.id} className="cyber-card p-6 flex items-center justify-between group">
                                     <div>
                                         <p className="font-display font-bold text-lg text-white group-hover:text-brand transition-colors italic uppercase">{game.homeTeam.name} // {game.awayTeam.name}</p>
-                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Deploying: {new Date(game.scheduledTime).toLocaleString()}</p>
+                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Game Time: {new Date(game.scheduledTime).toLocaleString()}</p>
                                     </div>
                                     <button onClick={() => onStartGame(game.id)} className="cyber-button py-1 px-4 text-xs">
-                                        INITIALIZE
+                                        START
                                     </button>
                                 </div>
                             ))}
@@ -149,7 +149,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     ) : (
                         <div className="cyber-card p-12 text-center opacity-50 grayscale">
                             <Binary className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                            <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No Upcoming Data Strings</p>
+                            <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No games scheduled</p>
                         </div>
                     )}
                 </div>
@@ -157,7 +157,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                 {/* Finished */}
                 <div>
                     <h2 className="text-2xl font-display font-black text-white italic mb-6 flex items-center gap-4">
-                        ARCHIVED <span className="text-brand">LOGS</span>
+                        GAME <span className="text-brand">HISTORY</span>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </h2>
                     {finishedGames.length > 0 ? (
@@ -169,13 +169,13 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                                             <p className="font-display font-bold text-lg text-white uppercase italic">{game.homeTeam.name} // {game.awayTeam.name}</p>
                                             <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
                                         </div>
-                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Archived: {new Date(game.scheduledTime).toLocaleDateString()}</p>
+                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Played: {new Date(game.scheduledTime).toLocaleDateString()}</p>
                                     </div>
                                     <button
                                         onClick={() => onViewReport(game)}
                                         className="cyber-button-outline py-1 px-4 text-xs"
                                     >
-                                        ANALYSIS
+                                        VIEW REPORT
                                     </button>
                                 </div>
                             ))}
@@ -183,7 +183,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     ) : (
                         <div className="cyber-card p-12 text-center opacity-50 grayscale">
                             <Binary className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                            <p className="text-[10px] font-mono uppercase tracking-[0.3em]">Archive Database Empty</p>
+                            <p className="text-[10px] font-mono uppercase tracking-[0.3em]">Game history is empty</p>
                         </div>
                     )}
                 </div>

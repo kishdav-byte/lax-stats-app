@@ -17,14 +17,14 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange, sessions, onD
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Performance Lab</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Training Hub</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         TRAINING <span className="text-brand">CENTER</span>
                     </h1>
                 </div>
                 <button onClick={() => onViewChange('dashboard')} className="cyber-button-outline py-2 px-6">
-                    RETURN TO COMMAND
+                    BACK TO DASHBOARD
                 </button>
             </div>
 
@@ -39,7 +39,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange, sessions, onD
                         </div>
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4 group-hover:text-brand transition-colors">Face-Off Drills</h2>
                         <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest leading-relaxed max-w-[200px]">
-                            Measure reaction latency against automated whistle triggers. AI analysis provided.
+                            Practice reaction time against automated whistle sounds. AI feedback included.
                         </p>
                         <div className="mt-8 h-[1px] bg-brand/30 w-12 group-hover:w-24 transition-all duration-500"></div>
                     </div>
@@ -55,7 +55,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onViewChange, sessions, onD
                         </div>
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4 group-hover:text-brand transition-colors">Shooting Drills</h2>
                         <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest leading-relaxed max-w-[200px]">
-                            Track release velocity and spatial grouping heatmaps via motion detection.
+                            Track shot speed and accuracy with heatmaps using motion detection.
                         </p>
                         <div className="mt-8 h-[1px] bg-brand/30 w-12 group-hover:w-24 transition-all duration-500"></div>
                     </div>

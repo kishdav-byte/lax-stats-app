@@ -44,7 +44,7 @@ const ImportRosterModal: React.FC<ImportRosterModalProps> = ({ team, onClose, on
             <div className="cyber-card p-8 max-w-2xl w-full border-brand/50 bg-black">
                 <div className="flex items-center gap-4 mb-6">
                     <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Data Ingestion Protocol</p>
+                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Import Roster</p>
                 </div>
 
                 <h2 className="text-2xl font-display font-black mb-2 uppercase italic">Import Roster // {team.name}</h2>
@@ -59,7 +59,7 @@ const ImportRosterModal: React.FC<ImportRosterModalProps> = ({ team, onClose, on
                 />
 
                 <div className="flex justify-end gap-4">
-                    <button onClick={onClose} disabled={isGenerating} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
+                    <button onClick={onClose} disabled={isGenerating} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
                     <button
                         onClick={handleGenerate}
                         disabled={isGenerating || !pastedContent.trim()}
@@ -80,7 +80,7 @@ const ImportRosterModal: React.FC<ImportRosterModalProps> = ({ team, onClose, on
                 {generatedRoster && (
                     <div className="mt-8 pt-8 border-t border-surface-border animate-in fade-in duration-500">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-display font-bold uppercase italic">{generatedRoster.length} Entities Identified</h3>
+                            <h3 className="text-lg font-display font-bold uppercase italic">{generatedRoster.length} Players Found</h3>
                             <Binary className="w-5 h-5 text-brand opacity-20" />
                         </div>
                         <div className="max-h-48 overflow-y-auto custom-scrollbar bg-surface-card p-4 space-y-2 border border-surface-border">
@@ -118,7 +118,7 @@ const AssignDrillModal: React.FC<AssignDrillModalProps> = ({ player, onClose, on
         if (notes.trim()) {
             onAssign(drillType, notes);
         } else {
-            alert("Protocol requires notes/goals for assignment.");
+            alert("Please add notes or goals for this assignment.");
         }
     };
 
@@ -127,14 +127,14 @@ const AssignDrillModal: React.FC<AssignDrillModalProps> = ({ player, onClose, on
             <div className="cyber-card p-8 max-w-md w-full space-y-8 bg-black">
                 <div className="flex items-center gap-4">
                     <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Tactical Assignment</p>
+                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Drill Assignment</p>
                 </div>
 
-                <h2 className="text-2xl font-display font-black uppercase italic">Target // {player.name}</h2>
+                <h2 className="text-2xl font-display font-black uppercase italic">Player // {player.name}</h2>
 
                 <div className="space-y-6">
                     <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Protocol Type</label>
+                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Drill Type</label>
                         <select
                             value={drillType}
                             onChange={e => setDrillType(e.target.value as DrillType)}
@@ -144,7 +144,7 @@ const AssignDrillModal: React.FC<AssignDrillModalProps> = ({ player, onClose, on
                         </select>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Operation Notes</label>
+                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Coaching Notes</label>
                         <textarea
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
@@ -156,9 +156,9 @@ const AssignDrillModal: React.FC<AssignDrillModalProps> = ({ player, onClose, on
                 </div>
 
                 <div className="flex justify-end gap-6 pt-4">
-                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
+                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
                     <button onClick={handleSubmit} className="cyber-button px-8 flex items-center gap-2">
-                        INITIALIZE <Activity className="w-4 h-4" />
+                        START <Activity className="w-4 h-4" />
                     </button>
                 </div>
             </div>
@@ -290,18 +290,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                         </h1>
                     </div>
                     <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                        RETURN TO COMMAND
+                        BACK TO DASHBOARD
                     </button>
                 </div>
 
                 <div className="cyber-card p-8">
-                    <h2 className="text-lg font-display font-bold mb-4 uppercase italic">Initialize New Team String</h2>
+                    <h2 className="text-lg font-display font-bold mb-4 uppercase italic">Add New Team</h2>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <input
                             type="text"
                             value={newTeamName}
                             onChange={(e) => setNewTeamName(e.target.value)}
-                            placeholder="ENTER TEAM DESIGNATION..."
+                            placeholder="Enter team name..."
                             className="flex-grow cyber-input"
                         />
                         <button onClick={handleAddTeam} className="cyber-button flex items-center justify-center gap-2">
@@ -315,7 +315,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                     <div className="md:col-span-1 space-y-4">
                         <div className="flex items-center gap-4 mb-4">
                             <Binary className="w-4 h-4 text-brand" />
-                            <h2 className="text-sm font-display font-bold uppercase tracking-widest">Active Units</h2>
+                            <h2 className="text-sm font-display font-bold uppercase tracking-widest">Active Teams</h2>
                         </div>
                         <div className="space-y-2">
                             {teams.map(team => (
@@ -323,8 +323,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                     key={team.id}
                                     onClick={() => setSelectedTeam(team)}
                                     className={`w-full text-left p-4 rounded-none border border-surface-border transition-all flex items-center justify-between group ${selectedTeam?.id === team.id
-                                            ? 'bg-brand/10 border-brand text-brand'
-                                            : 'bg-surface-card text-gray-400 hover:text-white hover:border-brand/50'
+                                        ? 'bg-brand/10 border-brand text-brand'
+                                        : 'bg-surface-card text-gray-400 hover:text-white hover:border-brand/50'
                                         }`}
                                 >
                                     <span className="font-display font-black uppercase tracking-tight italic">{team.name}</span>
@@ -340,14 +340,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                                 <div className="border-b border-surface-border pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                     <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">
-                                        {selectedTeam.name} <span className="text-brand text-xl font-mono align-middle ml-2 opacity-20">// RSTR_01</span>
+                                        {selectedTeam.name}
                                     </h2>
                                     <div className="flex gap-4">
                                         <button onClick={() => setIsImportModalOpen(true)} className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2">
-                                            WEB_IMPORT <Upload className="w-3 h-3" />
+                                            IMPORT WEB <Upload className="w-3 h-3" />
                                         </button>
                                         <button onClick={() => { onDeleteTeam(selectedTeam.id); setSelectedTeam(null); }} className="text-red-500 hover:text-red-400 transition-colors text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
-                                            PURGE <Trash2 className="w-3 h-3" />
+                                            DELETE TEAM <Trash2 className="w-3 h-3" />
                                         </button>
                                     </div>
                                 </div>
@@ -355,7 +355,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                 {pendingRequestsForTeam.length > 0 && (
                                     <div className="cyber-card p-6 border-brand border-2">
                                         <h3 className="text-sm font-display font-bold text-brand mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
-                                            <Shield className="w-4 h-4 animate-pulse" /> Access Authorization Pending
+                                            <Shield className="w-4 h-4 animate-pulse" /> Team Join Requests
                                         </h3>
                                         <ul className="space-y-3">
                                             {pendingRequestsForTeam.map(req => {
@@ -388,7 +388,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                     </h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-surface-card p-6 border border-surface-border">
                                         <div className="sm:col-span-1">
-                                            <input type="text" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="DESIGNATION" className="w-full cyber-input text-xs" />
+                                            <input type="text" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="NAME" className="w-full cyber-input text-xs" />
                                         </div>
                                         <div className="sm:col-span-1">
                                             <input type="text" value={newPlayerNumber} onChange={(e) => setNewPlayerNumber(e.target.value)} placeholder="00" className="w-full cyber-input text-xs" />
@@ -404,7 +404,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                             </select>
                                         </div>
                                         <button onClick={handleAddPlayer} className="cyber-button text-xs py-2 px-4 shadow-[0_0_15px_rgba(255,87,34,0.3)]">
-                                            COMMIT_ADD
+                                            ADD PLAYER
                                         </button>
                                     </div>
                                 </div>
@@ -436,7 +436,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                                                     {!player.userId && (
                                                                         <>
                                                                             <div className="w-1 h-1 bg-surface-border rounded-full"></div>
-                                                                            <span className="text-[8px] font-mono text-yellow-500/50 uppercase tracking-widest italic">Manual Record</span>
+                                                                            <span className="text-[8px] font-mono text-yellow-500/50 uppercase tracking-widest italic">Added Manually</span>
                                                                         </>
                                                                     )}
                                                                 </div>
@@ -448,7 +448,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                                                     onClick={() => handleOpenAssignDrillModal(player)}
                                                                     className="text-brand hover:text-brand-light text-[10px] font-mono uppercase tracking-widest font-bold flex items-center gap-2"
                                                                 >
-                                                                    INITIALIZE_DRILL <Activity className="w-3 h-3" />
+                                                                    ASSIGN DRILL <Activity className="w-3 h-3" />
                                                                 </button>
                                                             )}
                                                             <div className="w-[1px] h-4 bg-surface-border hidden md:block"></div>
@@ -462,7 +462,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                                     </div>
                                                     {playerAssignments.length > 0 && (
                                                         <div className="bg-brand/5 border-t border-brand/20 p-4 space-y-2">
-                                                            <p className="text-[8px] font-mono text-brand uppercase tracking-[0.3em] font-bold">Active Directives:</p>
+                                                            <p className="text-[8px] font-mono text-brand uppercase tracking-[0.3em] font-bold">Assigned Drills:</p>
                                                             {playerAssignments.map(drill => (
                                                                 <div key={drill.id} className="flex items-center gap-3">
                                                                     <div className="w-1 h-1 bg-brand rounded-full animate-pulse"></div>
@@ -479,7 +479,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                         {selectedTeam.roster.length === 0 && (
                                             <div className="p-12 text-center border border-dashed border-surface-border animate-pulse">
                                                 <Users className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Entities Found in Unit Database</p>
+                                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No players found in this team</p>
                                             </div>
                                         )}
                                     </div>
@@ -488,8 +488,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                         ) : (
                             <div className="cyber-card p-12 text-center h-full flex flex-col items-center justify-center opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
                                 <Users className="w-16 h-16 mb-6 opacity-20 text-brand" />
-                                <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter mb-2">Select Unit Cluster</h3>
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500 max-w-xs">Awaiting team designation selection from units list.</p>
+                                <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter mb-2">Select a Team</h3>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500 max-w-xs">Select a team from the list to view its roster.</p>
                             </div>
                         )}
                     </div>

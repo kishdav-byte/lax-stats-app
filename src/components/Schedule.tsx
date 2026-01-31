@@ -23,7 +23,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
 
         if (homeTeam && trimmedAwayName && gameDate) {
             if (homeTeam.name.toLowerCase() === trimmedAwayName.toLowerCase()) {
-                alert("Protocol Error: Home and Away endpoints cannot be identical.");
+                alert("Problem: Home and Away teams cannot be the same.");
                 return;
             }
 
@@ -35,7 +35,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
             setAwayTeamName('');
             setGameDate('');
         } else {
-            alert("Protocol Violation: All temporal and unit fields must be populated.");
+            alert("Problem: All team and time fields must be filled out.");
         }
     };
 
@@ -49,43 +49,43 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Temporal Coordination</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Manage Games</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         GAME <span className="text-brand">SCHEDULE</span>
                     </h1>
                 </div>
                 <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                    RETURN TO COMMAND
+                    BACK TO DASHBOARD
                 </button>
             </div>
 
             {teams.length > 0 ? (
                 <div className="cyber-card p-8">
-                    <h2 className="text-lg font-display font-bold mb-8 uppercase italic">Schedule New Sequence</h2>
+                    <h2 className="text-lg font-display font-bold mb-8 uppercase italic">Schedule New Game</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                         <div className="space-y-2">
-                            <label htmlFor="homeTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Home Unit</label>
+                            <label htmlFor="homeTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Home Team</label>
                             <select
                                 id="homeTeam"
                                 value={homeTeamId}
                                 onChange={e => setHomeTeamId(e.target.value)}
                                 className="w-full cyber-input appearance-none"
                             >
-                                <option value="" className="bg-black">SELECT HOME UNIT</option>
+                                <option value="" className="bg-black">SELECT HOME TEAM</option>
                                 {teams.map(t => <option key={t.id} value={t.id} className="bg-black">{t.name.toUpperCase()}</option>)}
                             </select>
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="awayTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Away Unit / Opponent</label>
+                            <label htmlFor="awayTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Away Team / Opponent</label>
                             <div className="relative">
                                 <input
                                     id="awayTeam"
                                     type="text"
                                     value={awayTeamName}
                                     onChange={e => setAwayTeamName(e.target.value)}
-                                    placeholder="TARGET DESIGNATION..."
+                                    placeholder="OPPONENT NAME..."
                                     className="w-full cyber-input"
                                     list="teams-list"
                                 />
@@ -96,7 +96,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="gameDate" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Temporal Trigger</label>
+                            <label htmlFor="gameDate" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Game Time</label>
                             <input
                                 type="datetime-local"
                                 id="gameDate"
@@ -107,13 +107,13 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                         </div>
                     </div>
                     <button onClick={handleAddGame} className="mt-8 cyber-button w-full md:w-auto px-12 flex items-center justify-center gap-3">
-                        INITIALIZE SEQUENCE <Calendar className="w-4 h-4" />
+                        ADD GAME <Calendar className="w-4 h-4" />
                     </button>
                 </div>
             ) : (
                 <div className="cyber-card p-12 text-center border-dashed border-surface-border grayscale">
                     <TableProperties className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Initialization Required: Create units before scheduling sequences.</p>
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Notice: Create teams before scheduling games.</p>
                 </div>
             )}
 
@@ -121,7 +121,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                 {/* Upcoming */}
                 <div>
                     <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
-                        UPCOMING <span className="text-brand">SEQUENCES</span>
+                        UPCOMING <span className="text-brand">GAMES</span>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </h2>
                     <div className="space-y-4">
@@ -153,7 +153,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                         {scheduledGames.length === 0 && (
                             <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
                                 <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Pending Sequence Strings</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Pending Games</p>
                             </div>
                         )}
                     </div>
@@ -162,7 +162,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                 {/* Completed */}
                 <div>
                     <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
-                        COMPLETED <span className="text-brand">LOGS</span>
+                        COMPLETED <span className="text-brand">GAMES</span>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </h2>
                     <div className="space-y-4">
@@ -175,14 +175,14 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                                             <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
                                         </div>
                                         <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
-                                            Archived: {new Date(game.scheduledTime).toLocaleDateString()}
+                                            Played: {new Date(game.scheduledTime).toLocaleDateString()}
                                         </p>
                                     </div>
                                     <button
                                         onClick={() => onViewReport(game)}
                                         className="cyber-button-outline py-1 px-4 text-[10px]"
                                     >
-                                        DATA_ANALYSIS
+                                        GAME REPORT
                                     </button>
                                 </div>
                             </div>
@@ -190,7 +190,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                         {finishedGames.length === 0 && (
                             <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
                                 <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Archive Database Empty</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">History Empty</p>
                             </div>
                         )}
                     </div>
