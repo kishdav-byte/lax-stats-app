@@ -582,11 +582,15 @@ const App: React.FC = () => {
     };
 
     const handleUpdateSoundEffect = (name: SoundEffectName, data: string | undefined) => {
-        setSoundEffects(prev => ({
-            ...prev,
-            [name]: data,
-        }));
-        storageService.saveSoundEffects({ ...soundEffects, [name]: data });
+        const updatedEffects = { ...soundEffects, [name]: data };
+        setSoundEffects(updatedEffects);
+        storageService.saveSoundEffects(updatedEffects);
+    };
+
+    const handleUpdateDrillTiming = (timing: SoundEffects['drillTiming']) => {
+        const updatedEffects = { ...soundEffects, drillTiming: timing };
+        setSoundEffects(updatedEffects);
+        storageService.saveSoundEffects(updatedEffects);
     };
 
     const handleAddFeedback = (type: FeedbackType, message: string) => {
@@ -794,6 +798,7 @@ const App: React.FC = () => {
                     return <SoundEffectsManager
                         soundEffects={soundEffects}
                         onUpdateSoundEffect={handleUpdateSoundEffect}
+                        onUpdateDrillTiming={handleUpdateDrillTiming}
                         onReturnToDashboard={() => setCurrentView('dashboard')}
                     />;
                 }

@@ -315,16 +315,20 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
                                                 {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'NEVER'}
                                             </span>
                                         </td>
-                                        <td className="p-4 px-6">
-                                            {user.role !== Role.ADMIN && (
-                                                <div className="flex justify-end gap-3 text-gray-500">
-                                                    <button onClick={() => handleOpenEditModal(user)} className="hover:text-brand transition-colors"><Edit3 className="w-4 h-4" /></button>
-                                                    <button onClick={() => onUpdateUser({ ...user, status: user.status === 'blocked' ? 'active' : 'blocked' })} className="hover:text-white transition-colors">
-                                                        {user.status === 'blocked' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                                    </button>
-                                                    <button onClick={() => onDeleteUser(user.id)} className="hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                                                </div>
-                                            )}
+                                        <td className="p-4 px-6 text-right">
+                                            <div className="flex justify-end gap-3 text-gray-500">
+                                                <button onClick={() => handleOpenEditModal(user)} className="hover:text-brand transition-colors"><Edit3 className="w-4 h-4" /></button>
+                                                <button onClick={() => onUpdateUser({ ...user, status: user.status === 'blocked' ? 'active' : 'blocked' })} className="hover:text-white transition-colors">
+                                                    {user.status === 'blocked' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => onDeleteUser(user.id)}
+                                                    className="hover:text-red-500 transition-colors"
+                                                    title="Delete User"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

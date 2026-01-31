@@ -150,6 +150,10 @@ export interface SoundEffects {
     down?: string; // Base64 encoded audio data
     set?: string;
     whistle?: string;
+    drillTiming?: {
+        delayType: 'fixed' | 'random';
+        fixedDelay: number; // in seconds
+    };
 }
 
 export enum FeedbackType {

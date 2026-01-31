@@ -313,8 +313,17 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             playSound('set');
         }, delay));
 
-        const randomDelay = Math.random() * 1500 + 500;
-        delay += randomDelay;
+        const drillTiming = soundEffects.drillTiming || { delayType: 'fixed', fixedDelay: 2 };
+        let finalDelayMs = 2000;
+
+        if (drillTiming.delayType === 'random') {
+            const randomOptions = [1000, 1500, 2000, 3000, 3500];
+            finalDelayMs = randomOptions[Math.floor(Math.random() * randomOptions.length)];
+        } else {
+            finalDelayMs = (drillTiming.fixedDelay || 2) * 1000;
+        }
+
+        delay += finalDelayMs;
 
         timeouts.push(window.setTimeout(() => {
             setDrillState('measuring');

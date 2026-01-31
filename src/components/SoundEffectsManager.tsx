@@ -6,6 +6,7 @@ import { Upload, Play, RefreshCcw, Volume2, Music, Activity } from 'lucide-react
 interface SoundEffectsManagerProps {
     soundEffects: SoundEffects;
     onUpdateSoundEffect: (name: SoundEffectName, data: string | undefined) => void;
+    onUpdateDrillTiming: (timing: SoundEffects['drillTiming']) => void;
     onReturnToDashboard: (view: View) => void;
 }
 
@@ -133,7 +134,9 @@ const SoundEffectRow: React.FC<{
 };
 
 
-const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects, onUpdateSoundEffect, onReturnToDashboard }) => {
+const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects, onUpdateSoundEffect, onUpdateDrillTiming, onReturnToDashboard }) => {
+    const timing = soundEffects.drillTiming || { delayType: 'fixed', fixedDelay: 2 };
+
     return (
         <div className="space-y-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -151,50 +154,126 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                 </button>
             </div>
 
-            <div className="cyber-card p-1">
-                <div className="bg-black p-8 border border-surface-border">
-                    <div className="flex items-center gap-4 mb-8">
-                        <Music className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">UPLOAD <span className="text-brand">SOUNDS</span></h2>
-                    </div>
+            <div className="grid lg:grid-cols-2 gap-8">
+                {/* Audio Upload Card */}
+                <div className="cyber-card p-1">
+                    <div className="bg-black p-8 border border-surface-border h-full">
+                        <div className="flex items-center gap-4 mb-8">
+                            <Music className="w-5 h-5 text-brand" />
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">UPLOAD <span className="text-brand">SOUNDS</span></h2>
+                        </div>
 
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-10 leading-relaxed max-w-3xl">
-                        Upload custom sounds for training drills. Supported formats: MP3, WAV, OGG.
-                        If no custom sounds are uploaded, the system will use defaults.
-                    </p>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-10 leading-relaxed">
+                            Upload custom sounds for training drills. Supported formats: MP3, WAV, OGG.
+                            If no custom sounds are uploaded, the system will use defaults.
+                        </p>
 
-                    <div className="grid gap-4">
-                        <SoundEffectRow
-                            name="down"
-                            label="Down"
-                            soundData={soundEffects.down}
-                            onUpdate={onUpdateSoundEffect}
-                        />
-                        <SoundEffectRow
-                            name="set"
-                            label="Set"
-                            soundData={soundEffects.set}
-                            onUpdate={onUpdateSoundEffect}
-                        />
-                        <SoundEffectRow
-                            name="whistle"
-                            label="Whistle"
-                            soundData={soundEffects.whistle}
-                            onUpdate={onUpdateSoundEffect}
-                        />
-                    </div>
-
-                    <div className="mt-12 pt-8 border-t border-surface-border/30 flex items-center justify-center gap-8 opacity-20 group hover:opacity-100 transition-opacity">
-                        <div className="flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-brand animate-pulse" />
-                            <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Ready</span>
+                        <div className="grid gap-4">
+                            <SoundEffectRow
+                                name="down"
+                                label="Down"
+                                soundData={soundEffects.down}
+                                onUpdate={onUpdateSoundEffect}
+                            />
+                            <SoundEffectRow
+                                name="set"
+                                label="Set"
+                                soundData={soundEffects.set}
+                                onUpdate={onUpdateSoundEffect}
+                            />
+                            <SoundEffectRow
+                                name="whistle"
+                                label="Whistle"
+                                soundData={soundEffects.whistle}
+                                onUpdate={onUpdateSoundEffect}
+                            />
                         </div>
                     </div>
+                </div>
+
+                {/* Timing Settings Card */}
+                <div className="cyber-card p-1">
+                    <div className="bg-black p-8 border border-surface-border h-full">
+                        <div className="flex items-center gap-4 mb-8">
+                            <Activity className="w-5 h-5 text-brand" />
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">DRILL <span className="text-brand">TIMING</span></h2>
+                        </div>
+
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-10 leading-relaxed">
+                            Adjust the interval between "Set" and the Whistle. This helps athletes practice their reaction speed under different pressures.
+                        </p>
+
+                        <div className="space-y-8">
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => onUpdateDrillTiming({ ...timing, delayType: 'fixed' })}
+                                    className={`flex-1 py-3 border font-display font-bold italic transition-all ${timing.delayType === 'fixed' ? 'bg-brand text-black border-brand' : 'bg-transparent text-gray-500 border-surface-border hover:border-gray-700'}`}
+                                >
+                                    FIXED DELAY
+                                </button>
+                                <button
+                                    onClick={() => onUpdateDrillTiming({ ...timing, delayType: 'random' })}
+                                    className={`flex-1 py-3 border font-display font-bold italic transition-all ${timing.delayType === 'random' ? 'bg-brand text-black border-brand' : 'bg-transparent text-gray-500 border-surface-border hover:border-gray-700'}`}
+                                >
+                                    RANDOM DELAY
+                                </button>
+                            </div>
+
+                            {timing.delayType === 'fixed' ? (
+                                <div className="space-y-4 py-4 px-6 bg-surface-card border border-surface-border/50">
+                                    <div className="flex justify-between items-end">
+                                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Delay Duration</p>
+                                        <p className="text-4xl font-display font-black text-brand italic">{timing.fixedDelay} <span className="text-xs uppercase ml-1">sec</span></p>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0.5"
+                                        max="5"
+                                        step="0.5"
+                                        value={timing.fixedDelay}
+                                        onChange={(e) => onUpdateDrillTiming({ ...timing, fixedDelay: parseFloat(e.target.value) })}
+                                        className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <div className="flex justify-between text-[8px] font-mono text-gray-700">
+                                        <span>0.5S (RAPID)</span>
+                                        <span>5.0S (EXTENDED)</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 py-4 px-6 bg-surface-card border border-surface-border/50">
+                                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Active Variances</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[1, 1.5, 2, 3, 3.5].map(time => (
+                                            <div key={time} className="px-3 py-1 bg-brand/10 border border-brand/20 text-brand font-mono text-[10px] uppercase">
+                                                {time}s
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-[9px] font-mono text-gray-500 italic mt-2">
+                                        System will automatically select a random interval from the list above for each rep.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="pt-6 border-t border-surface-border/30">
+                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em] leading-relaxed">
+                                    Changes are applied globally to the Face-Off trainer module.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-surface-border/30 flex items-center justify-center gap-8 opacity-20 group hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-brand animate-pulse" />
+                    <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Ready</span>
                 </div>
             </div>
         </div>
     );
 };
 
-export default SoundEffectsManager;
 
+export default SoundEffectsManager;
