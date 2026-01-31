@@ -20,7 +20,7 @@ const FeedbackForm: React.FC<{
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!message.trim()) {
-            alert('PROTOCOL VIOLATION: SUBMISSION REQUIRED.');
+            alert('Problem: Please enter a message.');
             return;
         }
         onAddFeedback(feedbackType, message.trim());
@@ -32,16 +32,16 @@ const FeedbackForm: React.FC<{
             <div className="bg-black p-8 border border-surface-border">
                 <div className="flex items-center gap-4 mb-6">
                     <MessageSquare className="w-5 h-5 text-brand" />
-                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">SUBMIT // <span className="text-brand">INPUT_STREAM</span></h2>
+                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">SUBMIT <span className="text-brand">FEEDBACK</span></h2>
                 </div>
 
                 <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-8 leading-relaxed">
-                    Have a suggestion, found a bug, or want to share a comment? Your input optimizes the global protocol.
+                    Have a suggestion, found a bug, or want to share a comment? Your input helps us improve the app.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
-                        <label htmlFor="feedbackType" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">TRANSMISSION_TYPE</label>
+                        <label htmlFor="feedbackType" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">FEEDBACK TYPE</label>
                         <select
                             id="feedbackType"
                             value={feedbackType}
@@ -55,19 +55,19 @@ const FeedbackForm: React.FC<{
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="message" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">SIGNAL_CONTENT</label>
+                        <label htmlFor="message" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">YOUR MESSAGE</label>
                         <textarea
                             id="message"
                             rows={6}
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder="ENCODE DETAILED DATA STRING HERE..."
+                            placeholder="Type your feedback here..."
                             className="w-full cyber-input min-h-[150px]"
                         />
                     </div>
 
                     <button type="submit" className="cyber-button w-full py-4 flex items-center justify-center gap-3 group">
-                        INITIALIZE_TRANSMISSION <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                        SEND FEEDBACK <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </button>
                 </form>
             </div>
@@ -101,7 +101,7 @@ const FeedbackViewer: React.FC<{
         <div className="space-y-6">
             <div className="flex items-center gap-4 mb-4">
                 <Activity className="w-5 h-5 text-brand" />
-                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">DATA // <span className="text-brand">ARCHIVE</span></h2>
+                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">FEEDBACK <span className="text-brand">LIST</span></h2>
                 <div className="h-px bg-surface-border flex-grow"></div>
             </div>
 
@@ -150,7 +150,7 @@ const FeedbackViewer: React.FC<{
             ) : (
                 <div className="cyber-card p-12 text-center opacity-20">
                     <Binary className="w-12 h-12 mx-auto mb-4 text-brand" />
-                    <p className="text-[10px] font-mono uppercase tracking-[0.4em]">No feedback packets resolved in local memory.</p>
+                    <p className="text-[10px] font-mono uppercase tracking-[0.4em]">No feedback received yet.</p>
                 </div>
             )}
         </div>
@@ -180,14 +180,14 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Public Interface String</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Feedback Support</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                        FEEDBACK // <span className="text-brand">{isAdmin ? 'MANAGEMENT' : 'SUBMISSION'}</span>
+                        FEEDBACK <span className="text-brand">{isAdmin ? 'MANAGEMENT' : 'SUBMISSION'}</span>
                     </h1>
                 </div>
                 <button onClick={() => onReturnToDashboard(getReturnView())} className="cyber-button-outline py-2 px-6">
-                    RETURN TO COMMAND
+                    BACK TO DASHBOARD
                 </button>
             </div>
 

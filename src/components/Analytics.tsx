@@ -63,7 +63,7 @@ const AnalysisModal: React.FC<{
                     <div>
                         <div className="flex items-center gap-4 mb-2">
                             <div className="h-px bg-brand w-8"></div>
-                            <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">AI Synthesis Protocol</p>
+                            <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">AI Player Insights</p>
                         </div>
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">
                             ANALYSIS // <span className="text-brand">{player.name}</span>
@@ -77,13 +77,13 @@ const AnalysisModal: React.FC<{
                 {isLoading && (
                     <div className="py-20 text-center space-y-4">
                         <Cpu className="w-12 h-12 text-brand mx-auto animate-spin" />
-                        <p className="text-[10px] font-mono text-brand uppercase tracking-[0.3em] animate-pulse">Running Neural Optimization...</p>
+                        <p className="text-[10px] font-mono text-brand uppercase tracking-[0.3em] animate-pulse">Generating Player Analysis...</p>
                     </div>
                 )}
 
                 {error && (
                     <div className="p-4 bg-red-900/10 border-l-2 border-red-500 mb-6">
-                        <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest">Protocol Error: {error}</p>
+                        <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest">Problem: {error}</p>
                     </div>
                 )}
 
@@ -96,7 +96,7 @@ const AnalysisModal: React.FC<{
                 )}
 
                 <div className="mt-8 flex justify-end">
-                    <button onClick={onClose} className="cyber-button py-2 px-8">TERMINATE_VIEW</button>
+                    <button onClick={onClose} className="cyber-button py-2 px-8">CLOSE ANALYSIS</button>
                 </div>
             </div>
         </div>
@@ -209,14 +209,14 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                     <div>
                         <div className="flex items-center gap-4 mb-2">
                             <div className="h-px bg-brand w-12"></div>
-                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Data Synthesis Grid</p>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Performance Data</p>
                         </div>
                         <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                             ANALYTICS <span className="text-brand">CENTER</span>
                         </h1>
                     </div>
                     <button onClick={onReturnToDashboard} className="cyber-button-outline py-2 px-6">
-                        RETURN TO COMMAND
+                        BACK TO DASHBOARD
                     </button>
                 </div>
 
@@ -225,12 +225,12 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                     <div className="bg-black p-8 border border-surface-border">
                         <div className="flex items-center gap-4 mb-8">
                             <Activity className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Latencies // <span className="text-brand">Performance</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Reaction <span className="text-brand">Training</span></h2>
                         </div>
 
                         <div className="grid md:grid-cols-1 gap-8">
                             <div className="bg-surface-card p-6 border border-surface-border">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-400 mb-8 ml-2">Face-Off Clamp Speed Projection // MSvTime</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-400 mb-8 ml-2">Face-Off Reaction Time Trends</p>
                                 {faceOffData.length > 0 ? (
                                     <div className="h-72 w-full">
                                         <ResponsiveContainer width="100%" height="100%">
@@ -259,7 +259,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                                 <Line
                                                     type="monotone"
                                                     dataKey="averageTime"
-                                                    name="LATENCY"
+                                                    name="REACTION TIME"
                                                     stroke="#ff5722"
                                                     strokeWidth={3}
                                                     dot={{ fill: '#ff5722', strokeWidth: 2, r: 4 }}
@@ -271,7 +271,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                 ) : (
                                     <div className="p-20 text-center opacity-20">
                                         <Binary className="w-12 h-12 mx-auto mb-4" />
-                                        <p className="text-[10px] font-mono uppercase tracking-widest">Awaiting Reactive Data Streams</p>
+                                        <p className="text-[10px] font-mono uppercase tracking-widest">Awaiting Training Data</p>
                                     </div>
                                 )}
                             </div>
@@ -282,7 +282,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                 <div className="pt-8">
                     <div className="flex items-center gap-4 mb-8">
                         <Shield className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Entity <span className="text-brand">Matrix</span></h2>
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Player <span className="text-brand">Stats</span></h2>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </div>
 
@@ -291,7 +291,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                             <table className="w-full min-w-[1000px] text-left border-collapse">
                                 <thead className="bg-surface-card border-b border-surface-border">
                                     <tr>
-                                        {[{ key: 'name', label: 'ENTITY' }, { key: 'teamName', label: 'UNIT' }, { key: 'gamesPlayed', label: 'SEQS' }].map(({ key, label }) => (
+                                        {[{ key: 'name', label: 'PLAYER' }, { key: 'teamName', label: 'TEAM' }, { key: 'gamesPlayed', label: 'GAMES' }].map(({ key, label }) => (
                                             <th key={key} className="p-4 px-6 cursor-pointer group/th" onClick={() => requestSort(key as SortKey)}>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500 group-hover/th:text-brand transition-colors">{label}</span>
@@ -312,7 +312,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                             </th>
                                         ))}
                                         <th className="p-4 px-6 text-right">
-                                            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">OPERATIONS</span>
+                                            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">ACTIONS</span>
                                         </th>
                                     </tr>
                                 </thead>
@@ -341,7 +341,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                                     onClick={() => setAnalyzingPlayer(player)}
                                                     className="cyber-button-outline py-1 px-4 text-[9px] flex items-center gap-2 ml-auto group-hover:bg-brand group-hover:text-black transition-all duration-300"
                                                 >
-                                                    SYNTHESIZE <Activity className="w-3 h-3" />
+                                                    AI ANALYSIS <Activity className="w-3 h-3" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -352,7 +352,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                         {sortedPlayers.length === 0 && (
                             <div className="p-20 text-center border-t border-surface-border">
                                 <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Unit Database Empty // No Statistics Resolved</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Team Stats Empty // No Data Available</p>
                             </div>
                         )}
                     </div>

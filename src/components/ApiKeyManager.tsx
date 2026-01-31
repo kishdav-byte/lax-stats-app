@@ -13,7 +13,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
 
     const handleSaveKey = async () => {
         if (!apiKey.trim()) {
-            setError('PROTOCOL ERROR: NULL KEY REJECTED.');
+            setError('Problem: API Key is required.');
             return;
         }
         setIsLoading(true);
@@ -23,7 +23,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
             onApiKeySet();
         } catch (e: any) {
             console.error("Failed to save API key:", e);
-            setError(e.message || 'SYSTEM_FAILURE_OCCURRED.');
+            setError(e.message || 'A problem occurred.');
             setIsLoading(false);
         }
     };
@@ -38,34 +38,34 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
                     <div className="relative z-10 text-center mb-12">
                         <div className="inline-flex items-center gap-4 mb-4">
                             <div className="h-px bg-brand w-8"></div>
-                            <p className="text-[10px] font-mono tracking-[0.4em] text-brand uppercase">System Initialization</p>
+                            <p className="text-[10px] font-mono tracking-[0.4em] text-brand uppercase">AI Setup</p>
                             <div className="h-px bg-brand w-8"></div>
                         </div>
                         <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                            NEURAL <span className="text-brand">GATEWAY</span>
+                            AI <span className="text-brand">SETUP</span>
                         </h1>
                         <p className="mt-6 text-[11px] font-mono text-gray-500 uppercase tracking-widest max-w-md mx-auto leading-relaxed">
-                            Welcome, Authorized User. To synchronize Gemini AI protocols and enable advanced diagnostics, provide your secure API cipher.
+                            Welcome! To get your AI features working, please provide your Google Gemini API Key.
                         </p>
                     </div>
 
                     <div className="bg-surface-card border border-surface-border p-8 mb-10 relative group">
                         <div className="flex items-center gap-3 mb-6">
                             <Info className="w-4 h-4 text-brand" />
-                            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-[0.2em]">PROCUREMENT_PROCEDURES:</h2>
+                            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-[0.2em]">HOW TO GET A KEY:</h2>
                         </div>
                         <ol className="list-none text-[10px] font-mono text-gray-400 space-y-4 uppercase tracking-widest">
                             <li className="flex gap-4">
-                                <span className="text-brand font-black">01 //</span> Access Google AI Studio terminal.
+                                <span className="text-brand font-black">01 //</span> Visit Google AI Studio.
                             </li>
                             <li className="flex gap-4">
-                                <span className="text-brand font-black">02 //</span> Execute "GET API KEY" command.
+                                <span className="text-brand font-black">02 //</span> Click on "Get API key".
                             </li>
                             <li className="flex gap-4">
-                                <span className="text-brand font-black">03 //</span> Initialize project-specific cipher.
+                                <span className="text-brand font-black">03 //</span> Create a new API key.
                             </li>
                             <li className="flex gap-4">
-                                <span className="text-brand font-black">04 //</span> Capture string and inject into the field below.
+                                <span className="text-brand font-black">04 //</span> Copy the key and paste it below.
                             </li>
                         </ol>
                         <a
@@ -81,14 +81,14 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
                     <div className="space-y-6">
                         <div className="space-y-3">
                             <label htmlFor="api-key" className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">
-                                <Key className="w-3 h-3" /> GEMINI_CIPHER_STRING
+                                <Key className="w-3 h-3" /> GEMINI API KEY
                             </label>
                             <input
                                 id="api-key"
                                 type="password"
                                 value={apiKey}
                                 onChange={(e) => setApiKeyInput(e.target.value)}
-                                placeholder="PASTE_ENCRYPTED_STRING..."
+                                placeholder="PASTE API KEY HERE..."
                                 className="w-full cyber-input text-lg tracking-widest"
                             />
                         </div>
@@ -106,15 +106,15 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
                             className="cyber-button w-full py-5 text-xl flex items-center justify-center gap-4 group"
                         >
                             {isLoading ? (
-                                <>SYNCHRONIZING... <Activity className="w-6 h-6 animate-spin" /></>
+                                <>SAVING... <Activity className="w-6 h-6 animate-spin" /></>
                             ) : (
-                                <>SAVE_&_CONTINUE <Activity className="w-6 h-6 group-hover:scale-110 transition-transform" /></>
+                                <>SAVE & CONTINUE <Activity className="w-6 h-6 group-hover:scale-110 transition-transform" /></>
                             )}
                         </button>
                     </div>
 
                     <p className="text-[8px] font-mono text-gray-700 mt-10 text-center uppercase tracking-[0.5em] opacity-50">
-                        Signal_is_Encrypted // Local_Memory_Only
+                        Secure Connection // Saved Locally Only
                     </p>
                 </div>
             </div>

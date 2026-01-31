@@ -33,7 +33,7 @@ const Notifications: React.FC<NotificationsProps> = ({ currentUser, requests, te
 
             <div className="flex items-center gap-4 mb-6">
                 <ShieldAlert className="w-5 h-5 text-brand animate-pulse" />
-                <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter">System <span className="text-brand">Alerts</span></h3>
+                <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter">Team <span className="text-brand">Requests</span></h3>
                 <div className="flex-grow h-[1px] bg-brand/30"></div>
                 <p className="text-[10px] font-mono text-brand uppercase tracking-widest">{relevantRequests.length} Pending Actions</p>
             </div>
@@ -49,7 +49,7 @@ const Notifications: React.FC<NotificationsProps> = ({ currentUser, requests, te
                         <div key={req.id} className="bg-black/40 border border-surface-border p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:border-brand/50">
                             <div>
                                 <p className="text-[11px] font-mono text-gray-300 uppercase tracking-wider leading-relaxed">
-                                    Entity <span className="text-brand font-bold">{requestingUser.username}</span> requests node assignment to unit <span className="text-white font-bold italic">{team.name.toUpperCase()}</span> as <span className="text-brand">#{req.playerJersey}</span> ({req.playerPosition || 'RSTR_NODE'}).
+                                    Player <span className="text-brand font-bold">{requestingUser.username}</span> wants to join team <span className="text-white font-bold italic">{team.name.toUpperCase()}</span> as <span className="text-brand">#{req.playerJersey}</span> ({req.playerPosition || 'PLAYER'}).
                                 </p>
                             </div>
                             {canTakeAction && (
@@ -58,7 +58,7 @@ const Notifications: React.FC<NotificationsProps> = ({ currentUser, requests, te
                                         onClick={() => onUpdateRequestStatus(req.id, RequestStatus.APPROVED)}
                                         className="text-green-500 hover:text-green-400 text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center gap-2 px-3 py-1 border border-green-500/20 hover:bg-green-500/10 transition-all"
                                     >
-                                        AUTHORIZE <Check className="w-3 h-3" />
+                                        APPROVE <Check className="w-3 h-3" />
                                     </button>
                                     <button
                                         onClick={() => onUpdateRequestStatus(req.id, RequestStatus.DENIED)}

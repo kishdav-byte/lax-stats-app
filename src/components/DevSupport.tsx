@@ -19,7 +19,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
 
     const handleAnalyze = async () => {
         if (!question.trim()) {
-            setError('PROTOCOL ERROR: INPUT DESCRIPTOR REQUIRED.');
+            setError('Problem: Please enter a question.');
             return;
         }
         setIsLoading(true);
@@ -29,7 +29,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
             const result = await analyzeCodeProblem(question, fileContents[selectedFile], selectedFile);
             setAnalysis(result);
         } catch (e: any) {
-            setError(e.message || "ANOMALY DETECTED IN LOGIC STREAM.");
+            setError(e.message || "A problem occurred with the AI analysis.");
         } finally {
             setIsLoading(false);
         }
@@ -41,14 +41,14 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Core Logic Synthesis</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">AI Code Assistant</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         DEVELOPER <span className="text-brand">AI SUPPORT</span>
                     </h1>
                 </div>
                 <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                    RETURN TO COMMAND
+                    BACK TO DASHBOARD
                 </button>
             </div>
 
@@ -57,16 +57,16 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                     <div className="bg-black p-8 border border-surface-border">
                         <div className="flex items-center gap-4 mb-6">
                             <Terminal className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">SIGNAL // <span className="text-brand">INPUT</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">ASK A <span className="text-brand">QUESTION</span></h2>
                         </div>
 
                         <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-8 leading-relaxed">
-                            Initialize AI-powered heuristic analysis of the application source code. Select target data node and define interrogation parameters.
+                            Use AI to help explain or find issues in the code. Select a file and ask a question about it.
                         </p>
 
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label htmlFor="file-select" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">TARGET_NODE_PATH</label>
+                                <label htmlFor="file-select" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">SELECT FILE</label>
                                 <select
                                     id="file-select"
                                     value={selectedFile}
@@ -80,7 +80,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="question" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">INTERROGATION_STRING</label>
+                                <label htmlFor="question" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">YOUR QUESTION</label>
                                 <textarea
                                     id="question"
                                     rows={4}
@@ -97,9 +97,9 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                                 className="cyber-button w-full py-4 flex items-center justify-center gap-3 group disabled:opacity-50"
                             >
                                 {isLoading ? (
-                                    <>SYNTHESIZING... <Activity className="w-5 h-5 animate-spin" /></>
+                                    <>ANALYZING... <Activity className="w-5 h-5 animate-spin" /></>
                                 ) : (
-                                    <>INITIALIZE_ANALYSIS <Sparkles className="w-5 h-5 group-hover:animate-pulse" /></>
+                                    <>START ANALYSIS <Sparkles className="w-5 h-5 group-hover:animate-pulse" /></>
                                 )}
                             </button>
                         </div>
@@ -119,7 +119,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                             <div className="bg-black p-8 border border-surface-border relative">
                                 <div className="flex items-center gap-4 mb-6">
                                     <Cpu className="w-5 h-5 text-brand" />
-                                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">AI // <span className="text-brand">OUTPUT</span></h2>
+                                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">AI <span className="text-brand">RESPONSE</span></h2>
                                     <div className="flex-grow"></div>
                                     <div className="text-[9px] font-mono text-brand border border-brand/30 px-2 py-0.5 tracking-[0.2em]">VERIFIED</div>
                                 </div>
@@ -130,7 +130,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                                 </div>
 
                                 <div className="mt-12 pt-6 border-t border-surface-border/30 flex justify-between items-center opacity-30">
-                                    <span className="text-[8px] font-mono uppercase tracking-[0.3em]">Neural_Synthesis_Complete</span>
+                                    <span className="text-[8px] font-mono uppercase tracking-[0.3em]">Analysis Complete</span>
                                     <span className="text-[8px] font-mono uppercase tracking-[0.3em]">{new Date().toLocaleTimeString()}</span>
                                 </div>
                             </div>
@@ -139,7 +139,7 @@ const DevSupport: React.FC<DevSupportProps> = ({ onReturnToDashboard }) => {
                         <div className="h-full min-h-[400px] border border-dashed border-surface-border flex flex-col items-center justify-center p-12 text-center opacity-20">
                             <Cpu className="w-16 h-16 text-white mb-6" />
                             <p className="text-[10px] font-mono uppercase tracking-[0.4em] max-w-xs leading-relaxed">
-                                Awaiting data stream initiation. Initialize interrogation to populate synthesis matrix.
+                                Awaiting your question. Start the analysis to see the AI response.
                             </p>
                             <div className="mt-8 flex gap-2">
                                 {[...Array(3)].map((_, i) => (
