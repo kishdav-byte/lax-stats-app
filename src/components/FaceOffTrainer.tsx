@@ -265,10 +265,16 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         let delay = 0;
         const timeouts: number[] = [];
 
-        const timing = soundEffects.drillTiming?.faceOff || { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
+        const defaultTiming = { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
+        const timing = soundEffects.drillTiming?.faceOff || defaultTiming;
+
+        // Extra defensive check for nested properties in case drillTiming exists but faceOff is empty
+        const preStartDelay = timing.preStartDelay ?? defaultTiming.preStartDelay;
+        const whistleDelayType = timing.whistleDelayType ?? defaultTiming.whistleDelayType;
+        const whistleFixedDelay = timing.whistleFixedDelay ?? defaultTiming.whistleFixedDelay;
 
         // 1. Pre-Sequence Delay (Custom Post-Start)
-        delay += (timing.preStartDelay || 0) * 1000;
+        delay += preStartDelay * 1000;
 
         // 2. Countdown Sequence (5-4-3-2-1)
         for (let i = 5; i > 0; i--) {
@@ -286,11 +292,11 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
         // 5. Whistle Trigger Interval (Post-"Set")
         let whistleDelayMs = 2000;
-        if (timing.whistleDelayType === 'random') {
+        if (whistleDelayType === 'random') {
             const randomOptions = [1000, 1500, 2000, 3000, 3500];
             whistleDelayMs = randomOptions[Math.floor(Math.random() * randomOptions.length)];
         } else {
-            whistleDelayMs = (timing.whistleFixedDelay || 2) * 1000;
+            whistleDelayMs = (whistleFixedDelay || 2) * 1000;
         }
 
         delay += whistleDelayMs;
@@ -339,9 +345,10 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             return;
         }
 
+        const interRepDelay = soundEffects.drillTiming?.faceOff?.interRepDelay ?? 5;
         const timeoutId = setTimeout(() => {
             handleStartDrill();
-        }, (soundEffects.drillTiming?.faceOff.interRepDelay || 5) * 1000);
+        }, interRepDelay * 1000);
 
         return () => clearTimeout(timeoutId);
 

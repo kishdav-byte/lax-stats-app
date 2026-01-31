@@ -143,7 +143,7 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
     };
 
     const timing = soundEffects.drillTiming || defaultTiming;
-    const currentDrillTiming = timing[activeDrillTab];
+    const currentDrillTiming = timing[activeDrillTab] || defaultTiming[activeDrillTab];
 
     const updateCurrentDrill = (updates: Partial<typeof currentDrillTiming>) => {
         onUpdateDrillTiming({
