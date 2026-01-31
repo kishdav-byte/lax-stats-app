@@ -69,7 +69,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Entity Deep Dive</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Player Profile</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         {player.name} <span className="text-brand">#{player.jerseyNumber}</span>
@@ -79,16 +79,16 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                     </p>
                 </div>
                 <button onClick={onClose} className="cyber-button-outline py-2 px-6 flex items-center gap-2">
-                    <ChevronLeft className="w-4 h-4" /> REVERT_TO_ROSTER
+                    <ChevronLeft className="w-4 h-4" /> BACK TO TEAM
                 </button>
             </div>
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <StatCard label="Deployments" value={playerStatsData.gamesPlayed.length} icon={<Activity className="w-5 h-5" />} />
-                <StatCard label="Primary Scores (G)" value={playerStatsData.totalStats[StatType.GOAL] || 0} icon={<Target className="w-5 h-5" />} />
-                <StatCard label="Linkages (A)" value={playerStatsData.totalStats[StatType.ASSIST] || 0} icon={<TrendingUp className="w-5 h-5" />} />
-                <StatCard label="Total Impact (P)" value={playerStatsData.points} icon={<Zap className="w-5 h-5" />} />
+                <StatCard label="Games Played" value={playerStatsData.gamesPlayed.length} icon={<Activity className="w-5 h-5" />} />
+                <StatCard label="Goals" value={playerStatsData.totalStats[StatType.GOAL] || 0} icon={<Target className="w-5 h-5" />} />
+                <StatCard label="Assists" value={playerStatsData.totalStats[StatType.ASSIST] || 0} icon={<TrendingUp className="w-5 h-5" />} />
+                <StatCard label="Total Points" value={playerStatsData.points} icon={<Zap className="w-5 h-5" />} />
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
@@ -96,7 +96,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                 <div className="lg:col-span-2">
                     <div className="flex items-center gap-4 mb-8">
                         <TrendingUp className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Performance <span className="text-brand">Matrix</span></h2>
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Full Season <span className="text-brand">Stats</span></h2>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </div>
 
@@ -114,7 +114,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                 <div>
                     <div className="flex items-center gap-4 mb-8">
                         <Activity className="w-5 h-5 text-brand" />
-                        <h2 className="text-lg font-display font-bold text-white italic uppercase tracking-widest">Sequence <span className="text-brand">Logs</span></h2>
+                        <h2 className="text-lg font-display font-bold text-white italic uppercase tracking-widest">Game <span className="text-brand">History</span></h2>
                     </div>
 
                     <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
@@ -132,7 +132,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                                         </div>
                                         <div className="text-right">
                                             <p className="text-lg font-display font-black text-brand italic leading-none">{goals + assists}</p>
-                                            <p className="text-[8px] font-mono text-gray-600 uppercase">Impact (P)</p>
+                                            <p className="text-[8px] font-mono text-gray-600 uppercase">Points</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-4 border-t border-surface-border pt-2">
@@ -151,7 +151,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                             );
                         }) : (
                             <div className="cyber-card p-12 text-center opacity-50 grayscale">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No Logged Data</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No training sessions found</p>
                             </div>
                         )}
                     </div>

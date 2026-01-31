@@ -23,7 +23,7 @@ const TrainingHistory: React.FC<TrainingHistoryProps> = ({ sessions, onDeleteSes
     const getSummary = (session: TrainingSession) => {
         if (session.drillType === DrillType.FACE_OFF) {
             const times = session.results.reactionTimes || [];
-            if (times.length === 0) return "DATA_UNAVAILABLE";
+            if (times.length === 0) return "No results";
             const best = Math.min(...times);
             const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
             return `${times.length} REPS // BEST: ${best}ms // AVG: ${avg}ms`;
@@ -36,7 +36,7 @@ const TrainingHistory: React.FC<TrainingHistoryProps> = ({ sessions, onDeleteSes
                 return `${shots.length} SHOTS // PLACEMENT_DRILL`;
             }
         }
-        return "UNKNOWN_PROTOCOL";
+        return "Unknown Session";
     };
 
     return (
@@ -52,7 +52,7 @@ const TrainingHistory: React.FC<TrainingHistoryProps> = ({ sessions, onDeleteSes
             {sortedSessions.length === 0 ? (
                 <div className="cyber-card p-12 text-center opacity-50 border-dashed">
                     <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Historical Performance Data Detected</p>
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No training sessions found</p>
                 </div>
             ) : (
                 <div className="grid gap-3">
@@ -76,7 +76,7 @@ const TrainingHistory: React.FC<TrainingHistoryProps> = ({ sessions, onDeleteSes
                                 </div>
                                 <button
                                     onClick={() => {
-                                        if (window.confirm("CONFIRM DATA PURGE?")) {
+                                        if (window.confirm("Delete this session?")) {
                                             onDeleteSession(session.id);
                                         }
                                     }}

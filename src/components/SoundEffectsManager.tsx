@@ -45,11 +45,11 @@ const playBase64Audio = (base64Audio: string) => {
             })
             .catch(e => {
                 console.error("Error with decoding audio data", e)
-                alert("PROTOCOL ERROR: AUDIO DECODE FAILURE. VERIFY DATA INTEGRITY.");
+                alert("Problem: Failed to decode audio file.");
             });
     } catch (e) {
         console.error("Error playing audio", e);
-        alert("PROTOCOL ERROR: PLAYBACK FAILURE.");
+        alert("Problem: Failed to play audio.");
     }
 };
 
@@ -70,7 +70,7 @@ const SoundEffectRow: React.FC<{
                 onUpdate(name, base64);
             } catch (error) {
                 console.error("Error converting file to Base64:", error);
-                alert("PROTOCOL ERROR: FILE CONVERSION FAILURE.");
+                alert("Problem: Failed to read file.");
             }
         }
     };
@@ -89,10 +89,10 @@ const SoundEffectRow: React.FC<{
                     {soundData ? (
                         <div className="flex items-center gap-2 justify-center sm:justify-start">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <p className="text-[10px] font-mono text-green-500 uppercase tracking-widest">Custom signature loaded</p>
+                            <p className="text-[10px] font-mono text-green-500 uppercase tracking-widest">Custom sound loaded</p>
                         </div>
                     ) : (
-                        <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest italic">Using synthesized default tone</p>
+                        <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest italic">Using default sound</p>
                     )}
                 </div>
 
@@ -107,7 +107,7 @@ const SoundEffectRow: React.FC<{
                     <button
                         onClick={() => fileInputRef.current?.click()}
                         className="cyber-button-outline py-2 px-4 group/btn"
-                        title="Upload New Signature"
+                        title="Upload sound"
                     >
                         <Upload className="w-4 h-4" />
                     </button>
@@ -122,7 +122,7 @@ const SoundEffectRow: React.FC<{
                         onClick={() => onUpdate(name, undefined)}
                         disabled={!soundData}
                         className="p-2 text-gray-700 hover:text-red-500 transition-colors disabled:opacity-0"
-                        title="Purge Custom Data"
+                        title="Reset to default"
                     >
                         <RefreshCcw className="w-4 h-4" />
                     </button>
@@ -140,14 +140,14 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Acoustic Signal Array</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Audio Settings</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         SOUND <span className="text-brand">EFFECTS</span>
                     </h1>
                 </div>
                 <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                    RETURN TO COMMAND
+                    BACK TO DASHBOARD
                 </button>
             </div>
 
@@ -155,12 +155,12 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                 <div className="bg-black p-8 border border-surface-border">
                     <div className="flex items-center gap-4 mb-8">
                         <Music className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">DATA // <span className="text-brand">UPLOAD_PORT</span></h2>
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">UPLOAD <span className="text-brand">SOUNDS</span></h2>
                     </div>
 
                     <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-10 leading-relaxed max-w-3xl">
-                        Inject custom acoustic signatures for operative training modules. Supported data formats: MP3, WAV, OGG.
-                        In the absence of custom signatures, the system reverts to algorithmic default tones.
+                        Upload custom sounds for training drills. Supported formats: MP3, WAV, OGG.
+                        If no custom sounds are uploaded, the system will use defaults.
                     </p>
 
                     <div className="grid gap-4">
@@ -187,7 +187,7 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                     <div className="mt-12 pt-8 border-t border-surface-border/30 flex items-center justify-center gap-8 opacity-20 group hover:opacity-100 transition-opacity">
                         <div className="flex items-center gap-2">
                             <Activity className="w-4 h-4 text-brand animate-pulse" />
-                            <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Signal_Monitoring_Active</span>
+                            <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Ready</span>
                         </div>
                     </div>
                 </div>
