@@ -100,6 +100,7 @@ export interface User {
     followedPlayerIds?: string[]; // For parents, players they are watching
     status?: 'active' | 'blocked';
     bestClampSpeed?: number; // Best reaction time in ms
+    lastLogin?: string; // ISO string from Supabase
 }
 
 export enum RequestStatus {

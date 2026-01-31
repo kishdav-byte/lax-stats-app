@@ -160,6 +160,12 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                             </div>
                         </div>
                     )}
+
+                    <div className="pt-2">
+                        <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest leading-relaxed">
+                            Last Authentication: {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'No recorded activity'}
+                        </p>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-6 pt-6">
@@ -274,6 +280,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
                                     <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">ROLE</th>
                                     <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">STATUS</th>
                                     <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">TEAM</th>
+                                    <th className="p-4 px-6 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">LAST LOGIN</th>
                                     <th className="p-4 px-6 text-right text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">ACTIONS</th>
                                 </tr>
                             </thead>
@@ -302,6 +309,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
                                                     </span>
                                                 )) : <span className="text-[8px] font-mono text-gray-700 uppercase">NONE_LINKED</span>}
                                             </div>
+                                        </td>
+                                        <td className="p-4 px-6">
+                                            <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest whitespace-nowrap">
+                                                {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'NEVER'}
+                                            </span>
                                         </td>
                                         <td className="p-4 px-6">
                                             {user.role !== Role.ADMIN && (

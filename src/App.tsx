@@ -94,7 +94,11 @@ const App: React.FC = () => {
                         ...userData,
                         id: sbUser.id,
                         email: sbUser.email || userData.email || '',
+                        lastLogin: sbUser.last_sign_in_at,
                     } as User;
+
+                    // Update profile with last login info
+                    storageService.saveUser(appUser);
 
                     // Auto-upgrade to Admin for specific email (case-insensitive)
                     // Auto-upgrade to Admin for specific email removed to respect selected registration roles.
@@ -120,6 +124,7 @@ const App: React.FC = () => {
                         role: Role.FAN, // Default to Fan instead of Coach if profile is missing
                         status: 'active',
                         password: '', // Not stored in DB, but required by type
+                        lastLogin: sbUser.last_sign_in_at,
                     };
 
                     try {
