@@ -53,6 +53,8 @@ const App: React.FC = () => {
             // We keep these as one-time fetches for now, or could upgrade them too.
             // For now, let's just fix the critical sync items: Teams and Games.
             const initialData = await storageService.fetchInitialData();
+            if (initialData.teams) setTeams(initialData.teams);
+            if (initialData.games) setGames(initialData.games);
             if (initialData.users) setUsers(initialData.users);
             if (initialData.accessRequests) setAccessRequests(initialData.accessRequests);
             if (initialData.drillAssignments) setDrillAssignments(initialData.drillAssignments);
@@ -289,7 +291,7 @@ const App: React.FC = () => {
     };
 
     const handleInviteUser = (newUser: Omit<User, 'id' | 'email'>) => {
-        const userWithId = { ...newUser, id: `user_${Date.now()} `, email: `${newUser.username.toLowerCase()} @example.com`, status: 'active' as const };
+        const userWithId = { ...newUser, id: `user_${Date.now()}`, email: `${newUser.username.toLowerCase()}@example.com`, status: 'active' as const };
         const fullUser = userWithId as User;
         setUsers([...users, fullUser]);
         storageService.saveUser(fullUser);
@@ -323,7 +325,7 @@ const App: React.FC = () => {
     };
 
     const handleAddTeam = async (teamName: string) => {
-        const newTeam: Team = { id: `team_${Date.now()} `, name: teamName, roster: [] };
+        const newTeam: Team = { id: `team_${Date.now()}`, name: teamName, roster: [] };
 
         let currentTeams = [...teams];
         const sampleTeam = currentTeams.find(t => t.id === 'sample_team_id');
@@ -363,11 +365,13 @@ const App: React.FC = () => {
             // For now, we rely on the subscription to update the local 'teams' state
         }
 
+        setTeams(prev => [...prev, newTeam]);
         await storageService.saveTeam(newTeam);
     };
 
 
     const handleUpdateTeam = async (updatedTeam: Team) => {
+        setTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
         await storageService.saveTeam(updatedTeam);
     };
 
@@ -385,14 +389,14 @@ const App: React.FC = () => {
         if (awayTeamInfo.id) {
             awayTeam = teams.find(t => t.id === awayTeamInfo.id);
         } else if (awayTeamInfo.name) {
-            const newOpponentTeam: Team = { id: `team_${Date.now()} `, name: awayTeamInfo.name, roster: [] };
+            const newOpponentTeam: Team = { id: `team_${Date.now()}`, name: awayTeamInfo.name, roster: [] };
             await storageService.saveTeam(newOpponentTeam);
             awayTeam = newOpponentTeam;
         }
 
         if (homeTeam && awayTeam) {
             const newGame: Game = {
-                id: `game_${Date.now()} `,
+                id: `game_${Date.now()}`,
                 homeTeam,
                 awayTeam,
                 scheduledTime,
@@ -473,7 +477,7 @@ const App: React.FC = () => {
     const handlePlayerJoinRequest = (teamId: string, playerJersey: string, playerPosition: string) => {
         if (!currentUser || currentUser.role !== Role.PLAYER) return;
         const newRequest: AccessRequest = {
-            id: `req_${Date.now()} `,
+            id: `req_${Date.now()}`,
             requestingUserId: currentUser.id,
             teamId,
             playerName: currentUser.username,
@@ -504,7 +508,7 @@ const App: React.FC = () => {
                     const teamToUpdate = teams.find(t => t.id === request.teamId);
                     if (teamToUpdate) {
                         const newPlayer: Player = {
-                            id: `player_${Date.now()}_${requestingUser.id} `,
+                            id: `player_${Date.now()}_${requestingUser.id}`,
                             name: requestingUser.username,
                             jerseyNumber: request.playerJersey,
                             position: request.playerPosition || 'N/A',
@@ -527,7 +531,7 @@ const App: React.FC = () => {
     const handleAddDrillAssignment = (playerId: string, drillType: DrillType, notes: string) => {
         if (!currentUser) return;
         const newAssignment: DrillAssignment = {
-            id: `drill_${Date.now()} `,
+            id: `drill_${Date.now()}`,
             assigningCoachId: currentUser.id,
             playerId,
             drillType,
@@ -586,7 +590,7 @@ const App: React.FC = () => {
     const handleAddFeedback = (type: FeedbackType, message: string) => {
         if (!currentUser) return;
         const newFeedback: Feedback = {
-            id: `feedback_${Date.now()} `,
+            id: `feedback_${Date.now()}`,
             userId: currentUser.id,
             username: currentUser.username,
             userRole: currentUser.role,
@@ -616,7 +620,7 @@ const App: React.FC = () => {
         }
 
         const newSession: TrainingSession = {
-            id: `session_${Date.now()} `,
+            id: `session_${Date.now()}`,
             userId: currentUser.id,
             drillType,
             date: new Date().toISOString(),
