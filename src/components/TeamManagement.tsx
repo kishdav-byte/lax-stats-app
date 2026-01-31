@@ -166,6 +166,89 @@ const AssignDrillModal: React.FC<AssignDrillModalProps> = ({ player, onClose, on
     );
 };
 
+interface AddExistingPlayerModalProps {
+    team: Team;
+    availableUsers: User[];
+    onClose: () => void;
+    onAdd: (user: User, jerseyNumber: string, position: string) => void;
+}
+
+const AddExistingPlayerModal: React.FC<AddExistingPlayerModalProps> = ({ team, availableUsers, onClose, onAdd }) => {
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [jerseyNumber, setJerseyNumber] = useState('');
+    const [position, setPosition] = useState('');
+
+    const handleSubmit = () => {
+        const user = availableUsers.find(u => u.id === selectedUserId);
+        if (user && jerseyNumber.trim() && position) {
+            onAdd(user, jerseyNumber.trim(), position);
+        } else {
+            alert("Complete all identification fields.");
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="cyber-card p-8 max-w-md w-full space-y-8 bg-black border-brand/50">
+                <div className="flex items-center gap-4">
+                    <div className="h-px bg-brand w-8"></div>
+                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Link Existing Entity</p>
+                </div>
+
+                <h2 className="text-2xl font-display font-black uppercase italic">Add Player // {team.name}</h2>
+
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Select User Account</label>
+                        <select
+                            value={selectedUserId}
+                            onChange={e => setSelectedUserId(e.target.value)}
+                            className="w-full cyber-input appearance-none text-xs"
+                        >
+                            <option value="" className="bg-black">SELECT PLAYER...</option>
+                            {availableUsers.map(u => (
+                                <option key={u.id} value={u.id} className="bg-black">{u.username} ({u.email})</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Jersey #</label>
+                            <input
+                                type="text"
+                                placeholder="00"
+                                value={jerseyNumber}
+                                onChange={e => setJerseyNumber(e.target.value)}
+                                className="w-full cyber-input text-xs"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Position</label>
+                            <select
+                                value={position}
+                                onChange={e => setPosition(e.target.value)}
+                                className="w-full cyber-input appearance-none text-xs"
+                            >
+                                <option value="" className="bg-black">SELECT...</option>
+                                {['Attack', 'Midfield', 'Defense', 'Goalie', 'LSM', 'Face Off Specialist'].map(p => (
+                                    <option key={p} value={p} className="bg-black">{p.toUpperCase()}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-6 pt-4">
+                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={handleSubmit} className="cyber-button px-8 flex items-center gap-2">
+                        ATTACH <UserPlus className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 interface TeamManagementProps {
     teams: Team[];
@@ -191,6 +274,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
     const [newPlayerNumber, setNewPlayerNumber] = useState('');
     const [newPlayerPosition, setNewPlayerPosition] = useState('');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
     const [isAssignDrillModalOpen, setIsAssignDrillModalOpen] = useState(false);
     const [playerToAssign, setPlayerToAssign] = useState<Player | null>(null);
 
@@ -261,6 +345,32 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
         setPlayerToAssign(null);
     };
 
+    const handleAddExistingPlayer = (user: User, jerseyNumber: string, position: string) => {
+        if (selectedTeam) {
+            const newPlayer: Player = {
+                id: `player_${Date.now()}_${user.id}`,
+                name: user.username,
+                jerseyNumber,
+                position,
+                userId: user.id
+            };
+
+            const updatedTeam = {
+                ...selectedTeam,
+                roster: [...selectedTeam.roster, newPlayer]
+            };
+
+            onUpdateTeam(updatedTeam);
+            setSelectedTeam(updatedTeam);
+            setIsAddExistingModalOpen(false);
+        }
+    };
+
+    const availablePlayersForSelection = users.filter(u =>
+        u.role === Role.PLAYER &&
+        !selectedTeam?.roster.some(p => p.userId === u.id)
+    );
+
 
     return (
         <>
@@ -269,6 +379,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                     team={selectedTeam}
                     onClose={() => setIsImportModalOpen(false)}
                     onRosterImport={handleRosterImport}
+                />
+            )}
+            {isAddExistingModalOpen && selectedTeam && (
+                <AddExistingPlayerModal
+                    team={selectedTeam}
+                    availableUsers={availablePlayersForSelection}
+                    onClose={() => setIsAddExistingModalOpen(false)}
+                    onAdd={handleAddExistingPlayer}
                 />
             )}
             {isAssignDrillModalOpen && playerToAssign && (
@@ -382,10 +500,20 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                 )}
 
                                 <div>
-                                    <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-gray-500 mb-6 flex items-center gap-4">
-                                        Manual Entry
-                                        <div className="h-px bg-surface-border flex-grow"></div>
-                                    </h3>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-gray-500 flex items-center gap-4 flex-grow">
+                                            Roster Entry
+                                            <div className="h-px bg-surface-border flex-grow"></div>
+                                        </h3>
+                                        {currentUser.role === Role.ADMIN && (
+                                            <button
+                                                onClick={() => setIsAddExistingModalOpen(true)}
+                                                className="ml-4 text-[10px] font-mono text-brand border border-brand/30 px-3 py-1 hover:bg-brand/10 transition-all flex items-center gap-2"
+                                            >
+                                                <Users className="w-3 h-3" /> ADD EXISTING PLAYER
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-surface-card p-6 border border-surface-border">
                                         <div className="sm:col-span-1">
                                             <input type="text" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="NAME" className="w-full cyber-input text-xs" />
@@ -399,12 +527,12 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                                 onChange={(e) => setNewPlayerPosition(e.target.value)}
                                                 className="w-full cyber-input text-xs appearance-none"
                                             >
-                                                <option value="" className="bg-black">SELECT ROLE</option>
+                                                <option value="" className="bg-black">SELECT POSITION</option>
                                                 {lacrossePositions.map(pos => <option key={pos} value={pos} className="bg-black">{pos.toUpperCase()}</option>)}
                                             </select>
                                         </div>
                                         <button onClick={handleAddPlayer} className="cyber-button text-xs py-2 px-4 shadow-[0_0_15px_rgba(255,87,34,0.3)]">
-                                            ADD PLAYER
+                                            ADD MANUAL
                                         </button>
                                     </div>
                                 </div>
