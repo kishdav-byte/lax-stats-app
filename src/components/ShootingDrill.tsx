@@ -155,6 +155,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     const [error, setError] = useState<string | null>(null);
     const [isAiVisionEnabled, setIsAiVisionEnabled] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [activeTargetZone, setActiveTargetZone] = useState<number | null>(null);
 
     const [overlay, setOverlay] = useState({ x: 50, y: 50, width: 200, height: 150 });
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -231,7 +232,10 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                 handleSessionEnd();
             } else {
                 const interRepDelay = soundEffects.drillTiming?.shooting?.interRepDelay ?? 3;
-                sequenceTimeoutRef.current.push(window.setTimeout(startDrill, interRepDelay * 1000));
+                sequenceTimeoutRef.current.push(window.setTimeout(() => {
+                    setActiveTargetZone(null);
+                    startDrill();
+                }, interRepDelay * 1000));
             }
         } else {
             setDrillState('log_shot');
@@ -299,15 +303,16 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         let delay = 0;
         const timeouts: number[] = [];
 
-        const defaultTiming = { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
+        const defaultTiming = { startDelay: 1, commandDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
         const timing = soundEffects.drillTiming?.shooting || defaultTiming;
 
-        const preStartDelay = timing.preStartDelay ?? defaultTiming.preStartDelay;
+        const startDelay = timing.startDelay ?? defaultTiming.startDelay;
+        const commandDelay = timing.commandDelay ?? defaultTiming.commandDelay;
         const whistleDelayType = timing.whistleDelayType ?? defaultTiming.whistleDelayType;
         const whistleFixedDelay = timing.whistleFixedDelay ?? defaultTiming.whistleFixedDelay;
 
-        // 1. Pre-Sequence Delay
-        delay += preStartDelay * 1000;
+        // 1. Post-Start Delay
+        delay += startDelay * 1000;
 
         // 2. Countdown Sequence (3-2-1)
         for (let i = 3; i > 0; i--) {
@@ -326,7 +331,24 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             playSound('set');
         }, delay));
 
-        // 4. Whistle Trigger Interval (Post-"Set")
+        // 4. Command Transition (Set -> Target)
+        delay += commandDelay * 1000;
+
+        // 5. Target Selection & Sound
+        const targetZones: SoundEffectName[] = [
+            'target_top_left', 'target_top_center', 'target_top_right',
+            'target_mid_left', 'target_mid_center', 'target_mid_right',
+            'target_bottom_left', 'target_bottom_center', 'target_bottom_right'
+        ];
+        const zoneIndex = Math.floor(Math.random() * 9);
+        const randomZoneSound = targetZones[zoneIndex];
+
+        timeouts.push(window.setTimeout(() => {
+            setActiveTargetZone(zoneIndex);
+            playSound(randomZoneSound);
+        }, delay));
+
+        // 6. Whistle Delay (Target -> Whistle)
         let whistleDelayMs = 2000;
         if (whistleDelayType === 'random') {
             const randomOptions = [1000, 1500, 2000, 3000, 3500];
@@ -337,7 +359,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
         delay += whistleDelayMs;
 
-        // 5. Whistle Trigger
+        // 7. Whistle Trigger
         timeouts.push(window.setTimeout(() => {
             setDrillState('measuring');
             playSound('whistle');
@@ -377,7 +399,10 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             handleSessionEnd();
         } else {
             const interRepDelay = soundEffects.drillTiming?.shooting?.interRepDelay ?? 3;
-            sequenceTimeoutRef.current.push(window.setTimeout(startDrill, interRepDelay * 1000));
+            sequenceTimeoutRef.current.push(window.setTimeout(() => {
+                setActiveTargetZone(null);
+                startDrill();
+            }, interRepDelay * 1000));
         }
     }
 
@@ -733,6 +758,23 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                                 </div>
                             )}
                         </div>
+
+                        {/* Target HUD Marker */}
+                        {activeTargetZone !== null && (
+                            <div
+                                className="absolute border-4 border-brand/50 bg-brand/10 animate-pulse pointer-events-none"
+                                style={{
+                                    left: overlay.x + (activeTargetZone % 3) * (overlay.width / 3),
+                                    top: overlay.y + Math.floor(activeTargetZone / 3) * (overlay.height / 3),
+                                    width: overlay.width / 3,
+                                    height: overlay.height / 3
+                                }}
+                            >
+                                <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                                    <Target className="w-12 h-12 text-brand" />
+                                </div>
+                            </div>
+                        )}
 
                         {drillState === 'log_shot' && (
                             <div

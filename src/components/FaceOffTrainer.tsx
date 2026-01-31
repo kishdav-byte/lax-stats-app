@@ -265,16 +265,16 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         let delay = 0;
         const timeouts: number[] = [];
 
-        const defaultTiming = { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
+        const defaultTiming = { startDelay: 1, commandDelay: 0.75, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 };
         const timing = soundEffects.drillTiming?.faceOff || defaultTiming;
 
-        // Extra defensive check for nested properties in case drillTiming exists but faceOff is empty
-        const preStartDelay = timing.preStartDelay ?? defaultTiming.preStartDelay;
+        const startDelay = timing.startDelay ?? defaultTiming.startDelay;
+        const commandDelay = timing.commandDelay ?? defaultTiming.commandDelay;
         const whistleDelayType = timing.whistleDelayType ?? defaultTiming.whistleDelayType;
         const whistleFixedDelay = timing.whistleFixedDelay ?? defaultTiming.whistleFixedDelay;
 
-        // 1. Pre-Sequence Delay (Custom Post-Start)
-        delay += preStartDelay * 1000;
+        // 1. Post-Start Delay
+        delay += startDelay * 1000;
 
         // 2. Countdown Sequence (5-4-3-2-1)
         for (let i = 5; i > 0; i--) {
@@ -283,14 +283,16 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             delay += 1000;
         }
 
-        // 3. "Down" Command (Transition to Set)
+        // 3. "Down" Command
         timeouts.push(window.setTimeout(() => { setCountdown(0); setDrillState('set'); playSound('down'); }, delay));
-        delay += 750;
 
-        // 4. "Set" Command
+        // 4. Command Transition (Down -> Set)
+        delay += commandDelay * 1000;
+
+        // 5. "Set" Command
         timeouts.push(window.setTimeout(() => { playSound('set'); }, delay));
 
-        // 5. Whistle Trigger Interval (Post-"Set")
+        // 6. Whistle Reaction Interval (Post-"Set")
         let whistleDelayMs = 2000;
         if (whistleDelayType === 'random') {
             const randomOptions = [1000, 1500, 2000, 3000, 3500];
@@ -301,7 +303,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
 
         delay += whistleDelayMs;
 
-        // 6. Whistle (Trigger Measurement)
+        // 7. Whistle (Trigger Measurement)
         timeouts.push(window.setTimeout(() => {
             setDrillState('measuring');
             playSound('whistle');

@@ -144,23 +144,39 @@ export interface DrillAssignment {
     };
 }
 
-export type SoundEffectName = 'down' | 'set' | 'whistle';
+export type SoundEffectName = 'down' | 'set' | 'whistle' |
+    'target_top_left' | 'target_top_center' | 'target_top_right' |
+    'target_mid_left' | 'target_mid_center' | 'target_mid_right' |
+    'target_bottom_left' | 'target_bottom_center' | 'target_bottom_right';
 
 export interface SoundEffects {
-    down?: string; // Base64 encoded audio data
+    down?: string; // Base64 encoded
     set?: string;
     whistle?: string;
+    // Shooting target commands
+    target_top_left?: string;
+    target_top_center?: string;
+    target_top_right?: string;
+    target_mid_left?: string;
+    target_mid_center?: string;
+    target_mid_right?: string;
+    target_bottom_left?: string;
+    target_bottom_center?: string;
+    target_bottom_right?: string;
+
     drillTiming?: {
         faceOff: {
-            preStartDelay: number; // Delay before first sound
+            startDelay: number;    // 1. Post-Start Delay
+            commandDelay: number;  // 2. Command Transition (Down -> Set)
             whistleDelayType: 'fixed' | 'random';
-            whistleFixedDelay: number;
-            interRepDelay: number; // Delay between consecutive reps
+            whistleFixedDelay: number; // 3. Whistle Reaction (Set -> Whistle)
+            interRepDelay: number;
         };
         shooting: {
-            preStartDelay: number;
+            startDelay: number;    // 1. Post-Start Delay
+            commandDelay: number;  // 2. Command Transition (Countdown/Set -> Target)
             whistleDelayType: 'fixed' | 'random';
-            whistleFixedDelay: number;
+            whistleFixedDelay: number; // 3. Whistle Reaction (Target -> Whistle)
             interRepDelay: number;
         };
     };

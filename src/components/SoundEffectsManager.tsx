@@ -1,149 +1,80 @@
-import React, { useRef } from 'react';
+import React from 'react';
+import { Music, Activity } from 'lucide-react';
 import { SoundEffects, SoundEffectName } from '../types';
-import { View } from '../services/storageService';
-import { Upload, Play, RefreshCcw, Volume2, Music, Activity } from 'lucide-react';
 
 interface SoundEffectsManagerProps {
     soundEffects: SoundEffects;
     onUpdateSoundEffect: (name: SoundEffectName, data: string | undefined) => void;
     onUpdateDrillTiming: (timing: SoundEffects['drillTiming']) => void;
-    onReturnToDashboard: (view: View) => void;
+    onReturnToDashboard: (view: any) => void;
 }
-
-const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
-};
-
-const playBase64Audio = (base64Audio: string) => {
-    if (!base64Audio) return;
-    try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-        const base64Data = base64Audio.split(',')[1];
-        if (!base64Data) {
-            throw new Error("Invalid Base64 audio format.");
-        }
-        const binaryString = window.atob(base64Data);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        audioContext.decodeAudioData(bytes.buffer)
-            .then(buffer => {
-                const source = audioContext.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioContext.destination);
-                source.start(0);
-            })
-            .catch(e => {
-                console.error("Error with decoding audio data", e)
-                alert("Problem: Failed to decode audio file.");
-            });
-    } catch (e) {
-        console.error("Error playing audio", e);
-        alert("Problem: Failed to play audio.");
-    }
-};
-
 
 const SoundEffectRow: React.FC<{
     name: SoundEffectName;
     label: string;
-    soundData: string | undefined;
+    soundData?: string;
     onUpdate: (name: SoundEffectName, data: string | undefined) => void;
 }> = ({ name, label, soundData, onUpdate }) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            try {
-                const base64 = await fileToBase64(file);
-                onUpdate(name, base64);
-            } catch (error) {
-                console.error("Error converting file to Base64:", error);
-                alert("Problem: Failed to read file.");
-            }
-        }
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const result = event.target?.result as string;
+            onUpdate(name, result);
+        };
+        reader.readAsDataURL(file);
     };
 
     return (
-        <div className="bg-surface-card border border-surface-border p-4 hover:border-brand/40 transition-colors group">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-4 w-full sm:w-48">
-                    <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20 group-hover:border-brand/50 transition-colors">
-                        <Volume2 className="w-5 h-5 text-brand" />
-                    </div>
-                    <h3 className="font-display font-black text-white italic uppercase tracking-tighter text-xl">{label}</h3>
-                </div>
-
-                <div className="flex-grow text-center sm:text-left">
-                    {soundData ? (
-                        <div className="flex items-center gap-2 justify-center sm:justify-start">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <p className="text-[10px] font-mono text-green-500 uppercase tracking-widest">Custom sound loaded</p>
-                        </div>
-                    ) : (
-                        <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest italic">Using default sound</p>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <input
-                        type="file"
-                        accept="audio/*"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="cyber-button-outline py-2 px-4 group/btn"
-                        title="Upload sound"
-                    >
-                        <Upload className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => playBase64Audio(soundData!)}
-                        disabled={!soundData}
-                        className="cyber-button py-2 px-4 disabled:opacity-20 flex items-center gap-2 text-xs"
-                    >
-                        <Play className="w-3 h-3" /> TEST
-                    </button>
+        <div className="flex items-center justify-between p-4 bg-surface-card border border-surface-border hover:border-brand/30 transition-all group">
+            <div className="flex flex-col">
+                <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">{label}</span>
+                <span className="text-xs font-display font-bold text-white uppercase italic tracking-tight">
+                    {soundData ? 'CUSTOM_LOADED.WAV' : 'SYSTEM_DEFAULT.EXE'}
+                </span>
+            </div>
+            <div className="flex items-center gap-3">
+                {soundData && (
                     <button
                         onClick={() => onUpdate(name, undefined)}
-                        disabled={!soundData}
-                        className="p-2 text-gray-700 hover:text-red-500 transition-colors disabled:opacity-0"
-                        title="Reset to default"
+                        className="text-[8px] font-mono text-gray-700 hover:text-red-500 uppercase tracking-tighter"
                     >
-                        <RefreshCcw className="w-4 h-4" />
+                        RESET
                     </button>
-                </div>
+                )}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="audio/*"
+                    className="hidden"
+                />
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="cyber-button-outline px-4 py-1 text-[8px] font-mono"
+                >
+                    {soundData ? 'REPLACE' : 'UPLOAD'}
+                </button>
             </div>
         </div>
     );
 };
 
-
 const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects, onUpdateSoundEffect, onUpdateDrillTiming, onReturnToDashboard }) => {
     const [activeDrillTab, setActiveDrillTab] = React.useState<'faceOff' | 'shooting'>('faceOff');
+    const [soundCategory, setSoundCategory] = React.useState<'base' | 'targets'>('base');
 
     const defaultTiming = {
-        faceOff: { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 },
-        shooting: { preStartDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 }
+        faceOff: { startDelay: 1, commandDelay: 0.75, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 },
+        shooting: { startDelay: 1, commandDelay: 1, whistleDelayType: 'fixed' as const, whistleFixedDelay: 2, interRepDelay: 5 }
     };
 
     const timing = soundEffects.drillTiming || defaultTiming;
-    const currentDrillTiming = timing[activeDrillTab] || defaultTiming[activeDrillTab];
+    const currentDrillTiming = (timing as any)[activeDrillTab] || (defaultTiming as any)[activeDrillTab];
 
     const updateCurrentDrill = (updates: Partial<typeof currentDrillTiming>) => {
         onUpdateDrillTiming({
@@ -152,16 +83,28 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
         });
     };
 
+    const targetSounds: { name: SoundEffectName; label: string }[] = [
+        { name: 'target_top_left', label: 'Top Left' },
+        { name: 'target_top_center', label: 'Top Center' },
+        { name: 'target_top_right', label: 'Top Right' },
+        { name: 'target_mid_left', label: 'Mid Left' },
+        { name: 'target_mid_center', label: 'Center' },
+        { name: 'target_mid_right', label: 'Mid Right' },
+        { name: 'target_bottom_left', label: 'Bottom Left' },
+        { name: 'target_bottom_center', label: 'Bottom Center' },
+        { name: 'target_bottom_right', label: 'Bottom Right' },
+    ];
+
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 pb-24">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Audio Settings</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Audio Control Center</p>
                     </div>
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                        SOUND <span className="text-brand">EFFECTS</span>
+                        SOUNDS <span className="text-brand">& TIMING</span>
                     </h1>
                 </div>
                 <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
@@ -172,36 +115,44 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
             <div className="grid lg:grid-cols-2 gap-8">
                 {/* Audio Upload Card */}
                 <div className="cyber-card p-1">
-                    <div className="bg-black p-8 border border-surface-border h-full">
-                        <div className="flex items-center gap-4 mb-8">
-                            <Music className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">UPLOAD <span className="text-brand">SOUNDS</span></h2>
+                    <div className="bg-black p-8 border border-surface-border h-full flex flex-col">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <Music className="w-5 h-5 text-brand" />
+                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">AUDIO <span className="text-brand">REGISTRY</span></h2>
+                            </div>
+                            <div className="flex gap-2 p-1 bg-surface-card border border-surface-border">
+                                <button onClick={() => setSoundCategory('base')} className={`px-4 py-1 text-[8px] font-mono uppercase tracking-widest transition-all ${soundCategory === 'base' ? 'bg-brand text-black' : 'text-gray-500 hover:text-white'}`}>Base</button>
+                                <button onClick={() => setSoundCategory('targets')} className={`px-4 py-1 text-[8px] font-mono uppercase tracking-widest transition-all ${soundCategory === 'targets' ? 'bg-brand text-black' : 'text-gray-500 hover:text-white'}`}>Targets</button>
+                            </div>
                         </div>
 
                         <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-10 leading-relaxed">
-                            Upload custom sounds for training drills. Supported formats: MP3, WAV, OGG.
-                            If no custom sounds are uploaded, the system will use defaults.
+                            {soundCategory === 'base'
+                                ? "Core drill signals and verbal commands. Required for standard module flow."
+                                : "Zone-specific commands for adaptive shooting drills. If missing, system uses visual cues."}
                         </p>
 
-                        <div className="grid gap-4">
-                            <SoundEffectRow
-                                name="down"
-                                label="Down"
-                                soundData={soundEffects.down}
-                                onUpdate={onUpdateSoundEffect}
-                            />
-                            <SoundEffectRow
-                                name="set"
-                                label="Set"
-                                soundData={soundEffects.set}
-                                onUpdate={onUpdateSoundEffect}
-                            />
-                            <SoundEffectRow
-                                name="whistle"
-                                label="Whistle"
-                                soundData={soundEffects.whistle}
-                                onUpdate={onUpdateSoundEffect}
-                            />
+                        <div className="grid gap-4 flex-grow overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                            {soundCategory === 'base' ? (
+                                <>
+                                    <SoundEffectRow name="down" label="Down" soundData={soundEffects.down} onUpdate={onUpdateSoundEffect} />
+                                    <SoundEffectRow name="set" label="Set" soundData={soundEffects.set} onUpdate={onUpdateSoundEffect} />
+                                    <SoundEffectRow name="whistle" label="Whistle" soundData={soundEffects.whistle} onUpdate={onUpdateSoundEffect} />
+                                </>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {targetSounds.map(sound => (
+                                        <SoundEffectRow
+                                            key={sound.name}
+                                            name={sound.name}
+                                            label={sound.label}
+                                            soundData={(soundEffects as any)[sound.name]}
+                                            onUpdate={onUpdateSoundEffect}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -211,11 +162,11 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                     <div className="bg-black p-8 border border-surface-border h-full flex flex-col">
                         <div className="flex items-center gap-4 mb-8">
                             <Activity className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">DRILL <span className="text-brand">TIMING</span></h2>
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">3-STAGE <span className="text-brand">TIMING</span></h2>
                         </div>
 
                         {/* Drill Selector Tabs */}
-                        <div className="flex gap-2 mb-8 p-1 bg-surface-card border border-surface-border">
+                        <div className="flex gap-2 mb-12 p-1 bg-surface-card border border-surface-border">
                             <button
                                 onClick={() => setActiveDrillTab('faceOff')}
                                 className={`flex-1 py-2 text-[10px] font-mono font-bold uppercase tracking-widest transition-all ${activeDrillTab === 'faceOff' ? 'bg-brand text-black' : 'text-gray-500 hover:text-white'}`}
@@ -230,25 +181,42 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                             </button>
                         </div>
 
-                        <div className="space-y-8 flex-grow">
-                            {/* 1. Pre-Start Delay */}
+                        <div className="space-y-12 flex-grow">
+                            {/* 1. Start Delay */}
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">1. Pre-Sequence Delay (Post-Start)</p>
-                                    <p className="text-2xl font-display font-black text-white italic">{currentDrillTiming.preStartDelay}s</p>
+                                    <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">Stage 01: Post-Start Delay</p>
+                                    <p className="text-2xl font-display font-black text-white italic">{currentDrillTiming.startDelay}s</p>
                                 </div>
                                 <input
                                     type="range" min="0" max="10" step="0.5"
-                                    value={currentDrillTiming.preStartDelay}
-                                    onChange={(e) => updateCurrentDrill({ preStartDelay: parseFloat(e.target.value) })}
+                                    value={currentDrillTiming.startDelay}
+                                    onChange={(e) => updateCurrentDrill({ startDelay: parseFloat(e.target.value) })}
                                     className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
                                 />
-                                <p className="text-[8px] font-mono text-gray-600 uppercase">Wait time after pressing START before first audio signal.</p>
+                                <p className="text-[8px] font-mono text-gray-600 uppercase">Wait time from pressing START to first command.</p>
                             </div>
 
-                            {/* 2. Whistle Timing */}
+                            {/* 2. Transition Delay */}
+                            <div className="space-y-3 pt-4 border-t border-surface-border/30">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">Stage 02: Command Transition</p>
+                                    <p className="text-2xl font-display font-black text-white italic">{currentDrillTiming.commandDelay}s</p>
+                                </div>
+                                <input
+                                    type="range" min="0.5" max="5" step="0.25"
+                                    value={currentDrillTiming.commandDelay}
+                                    onChange={(e) => updateCurrentDrill({ commandDelay: parseFloat(e.target.value) })}
+                                    className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
+                                />
+                                <p className="text-[8px] font-mono text-gray-600 uppercase">
+                                    {activeDrillTab === 'faceOff' ? "Interval between 'Down' and 'Set' commands." : "Interval between 'Set' and 'Target Command'."}
+                                </p>
+                            </div>
+
+                            {/* 3. Whistle Timing */}
                             <div className="space-y-4 pt-4 border-t border-surface-border/30">
-                                <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">2. Whistle / Trigger Interval (Post-"Set")</p>
+                                <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">Stage 03: Whistle Reaction Interval</p>
                                 <div className="flex gap-2 mb-4">
                                     <button
                                         onClick={() => updateCurrentDrill({ whistleDelayType: 'fixed' })}
@@ -280,42 +248,25 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
                                 )}
                             </div>
 
-                            {/* 3. Inter-Rep Delay */}
-                            <div className="space-y-3 pt-4 border-t border-surface-border/30">
+                            {/* 4. Inter-Rep Delay */}
+                            <div className="space-y-3 pt-4 border-t border-brand/10">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.2em]">3. Inter-Rep Recovery (Multi-Reps)</p>
+                                    <p className="text-[9px] font-mono text-brand/50 uppercase tracking-[0.2em]">Inter-Rep Recovery</p>
                                     <p className="text-2xl font-display font-black text-white italic">{currentDrillTiming.interRepDelay}s</p>
                                 </div>
                                 <input
-                                    type="range" min="1" max="15" step="1"
+                                    type="range" min="1" max="30" step="1"
                                     value={currentDrillTiming.interRepDelay}
                                     onChange={(e) => updateCurrentDrill({ interRepDelay: parseFloat(e.target.value) })}
-                                    className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-brand h-1 bg-surface-border rounded-lg appearance-none cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
                                 />
-                                <p className="text-[8px] font-mono text-gray-600 uppercase">Buffer time between consecutive reps for set-up.</p>
                             </div>
-                        </div>
-
-                        <div className="mt-8 pt-6 border-t border-surface-border/30 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></div>
-                                <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Live Sync Active</span>
-                            </div>
-                            <span className="text-[8px] font-mono text-gray-700 uppercase italic">Applied to: {activeDrillTab.toUpperCase()}</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div className="mt-8 pt-8 border-t border-surface-border/30 flex items-center justify-center gap-8 opacity-20 group hover:opacity-100 transition-opacity">
-                <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-brand animate-pulse" />
-                    <span className="text-[8px] font-mono uppercase tracking-[0.4em]">Proprietary Training Logic // v2.0</span>
                 </div>
             </div>
         </div>
     );
 };
-
 
 export default SoundEffectsManager;
