@@ -97,11 +97,8 @@ const App: React.FC = () => {
                     } as User;
 
                     // Auto-upgrade to Admin for specific email (case-insensitive)
-                    if (appUser.email.toLowerCase() === 'kishdav@yahoo.com' && appUser.role !== Role.ADMIN) {
-                        console.log("Auto-upgrading user to Admin:", appUser.email);
-                        appUser.role = Role.ADMIN;
-                        storageService.saveUser(appUser);
-                    }
+                    // Auto-upgrade to Admin for specific email removed to respect selected registration roles.
+                    // Admins can use the "Role Simulation" feature to test different views.
 
                     setCurrentUser(appUser);
 
@@ -120,7 +117,7 @@ const App: React.FC = () => {
                         id: sbUser.id,
                         email: sbUser.email || '',
                         username: sbUser.user_metadata?.full_name || 'User',
-                        role: Role.COACH, // Default to Coach for now so they can see things
+                        role: Role.FAN, // Default to Fan instead of Coach if profile is missing
                         status: 'active',
                         password: '', // Not stored in DB, but required by type
                     };
@@ -238,7 +235,7 @@ const App: React.FC = () => {
                 username,
                 email,
                 password: '', // Don't store password
-                role: email === 'kishdav@yahoo.com' ? Role.ADMIN : role,
+                role: role,
                 status: 'active',
             };
 
