@@ -145,9 +145,23 @@ export const deleteGame = async (gameId: string) => {
 };
 
 export const saveUser = async (user: User) => {
-    const { password, ...userProfile } = user;
-    const { error } = await supabase.from('profiles').upsert(userProfile);
-    if (error) throw error;
+    const { password, lastLogin, ...userProfile } = user;
+
+    // Attempt save with lastLogin first
+    const { error: firstError } = await supabase
+        .from('profiles')
+        .upsert({ ...userProfile, lastLogin });
+
+    // If it fails because the column is missing, retry without it
+    if (firstError && (firstError.message?.includes('lastLogin') || firstError.code === 'PGRST204')) {
+        console.warn("Retrying saveUser without lastLogin column...");
+        const { error: secondError } = await supabase
+            .from('profiles')
+            .upsert(userProfile);
+        if (secondError) throw secondError;
+    } else if (firstError) {
+        throw firstError;
+    }
 };
 
 export const deleteUser = async (userId: string) => {
