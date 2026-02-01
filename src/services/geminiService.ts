@@ -15,6 +15,17 @@ export interface ExtractedGame {
     scheduledTime: string; // ISO string
 }
 
+// Helper to get model with specific API version
+const getModel = (genAI: GoogleGenerativeAI, modelName: string, isJson: boolean = false) => {
+    return genAI.getGenerativeModel(
+        {
+            model: modelName,
+            ...(isJson ? { generationConfig: { responseMimeType: "application/json" } } : {})
+        },
+        { apiVersion: 'v1' } // Force v1 for stable model access
+    );
+};
+
 const formatGameDataForPrompt = (game: Game): string => {
     let prompt = `Analyze the following lacrosse game data and provide a concise, exciting game summary. Also, name a "Player of the Game" with a brief justification.\n\n`;
 
@@ -46,7 +57,7 @@ const formatGameDataForPrompt = (game: Game): string => {
 export const generateGameSummary = async (game: Game): Promise<string> => {
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = getModel(genAI, "gemini-1.5-flash");
         const prompt = formatGameDataForPrompt(game);
 
         const result = await model.generateContent(prompt);
@@ -65,12 +76,7 @@ export const generateScheduleFromText = async (pastedText: string): Promise<Extr
 
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json",
-            }
-        });
+        const model = getModel(genAI, "gemini-1.5-flash", true);
         const currentYear = new Date().getFullYear();
 
         const prompt = `Analyze the following text from a sports schedule (e.g., MaxPreps) and extract game information. 
@@ -94,7 +100,6 @@ Extract the schedule and return it as a JSON array of objects with the following
         const response = await result.response;
         let jsonText = response.text().trim();
 
-        // Robustness: Strip potential markdown markers
         if (jsonText.startsWith('```')) {
             jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
         }
@@ -104,11 +109,9 @@ Extract the schedule and return it as a JSON array of objects with the following
     } catch (error: any) {
         console.error("Error generating schedule:", error);
         let errorMessage = error.message || "The AI failed to process the request.";
-
         if (error instanceof SyntaxError) {
             errorMessage = "The AI returned an invalid JSON format. Try adjusting the pasted text.";
         }
-
         throw new Error(errorMessage);
     }
 };
@@ -120,12 +123,7 @@ export const generateRosterFromText = async (pastedText: string): Promise<Omit<P
 
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json",
-            }
-        });
+        const model = getModel(genAI, "gemini-1.5-flash", true);
 
         const prompt = `Analyze the following text from a lacrosse team's website roster and extract the player information. Identify each player's name, jersey number, and position. The position might be abbreviated (e.g., A, M, D, G, LSM, FOGO). Do your best to standardize the position to: Attack, Midfield, Defense, Goalie, LSM, or Face Off Specialist.
 
@@ -161,7 +159,7 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
 
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const model = getModel(genAI, "gemini-1.5-pro");
 
         const prompt = `You are a world-class senior frontend engineer with deep expertise in React, TypeScript, and modern UI/UX design. An administrator of this application is asking for help with the codebase.
 
@@ -190,7 +188,7 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
 export const analyzePlayerPerformance = async (playerData: PlayerAnalysisData): Promise<string> => {
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const model = getModel(genAI, "gemini-1.5-pro");
 
         let statsString = Object.entries(playerData.stats)
             .map(([stat, value]) => `- ${stat}: ${value}`)
@@ -224,7 +222,7 @@ Provide a concise analysis of this player's strengths and weaknesses. Offer 2-3 
 export const analyzeShotPlacement = async (base64Image: string): Promise<number | null> => {
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = getModel(genAI, "gemini-1.5-flash");
 
         const prompt = `
 Analyze this high-speed frame from a lacrosse shooting drill. 
