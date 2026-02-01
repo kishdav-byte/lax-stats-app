@@ -1,8 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Game, Player, StatType } from '../types';
 import { getApiKey } from './apiKeyService';
 
-// FIX: Add PlayerAnalysisData interface to support the analytics feature.
 export interface PlayerAnalysisData {
     name: string;
     position: string;
@@ -46,21 +45,18 @@ const formatGameDataForPrompt = (game: Game): string => {
 
 export const generateGameSummary = async (game: Game): Promise<string> => {
     try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const genAI = new GoogleGenerativeAI(getApiKey());
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = formatGameDataForPrompt(game);
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: prompt,
-        });
-
-        return response.text || "";
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text() || "";
     } catch (error) {
         console.error("Error generating game summary:", error);
         return "Could not generate AI summary. Please check your API key and connection.";
     }
 };
-
 
 export const generateScheduleFromText = async (pastedText: string): Promise<ExtractedGame[]> => {
     if (!pastedText.trim()) {
@@ -68,7 +64,13 @@ export const generateScheduleFromText = async (pastedText: string): Promise<Extr
     }
 
     try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const genAI = new GoogleGenerativeAI(getApiKey());
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
+        });
         const currentYear = new Date().getFullYear();
 
         const prompt = `Analyze the following text from a sports schedule (e.g., MaxPreps) and extract game information. 
@@ -88,27 +90,16 @@ Extract the schedule and return it as a JSON array of objects with the following
 - scheduledTime: ISO 8601 string (e.g. "2024-03-15T19:15:00")
 `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-                responseMimeType: "application/json",
-            },
-        });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let jsonText = response.text().trim();
 
-        if (!response || !response.text) {
-            throw new Error("The AI returned an empty response. This might be due to safety filters or a connection issue.");
-        }
-
-        let jsonText = response.text.trim();
-
-        // Robustness: Strip potential markdown markers if the model ignored responseMimeType
+        // Robustness: Strip potential markdown markers
         if (jsonText.startsWith('```')) {
             jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
         }
 
-        const parsedSchedule: ExtractedGame[] = JSON.parse(jsonText);
-        return parsedSchedule;
+        return JSON.parse(jsonText);
 
     } catch (error: any) {
         console.error("Error generating schedule:", error);
@@ -116,10 +107,6 @@ Extract the schedule and return it as a JSON array of objects with the following
 
         if (error instanceof SyntaxError) {
             errorMessage = "The AI returned an invalid JSON format. Try adjusting the pasted text.";
-        } else if (errorMessage.includes("API_KEY_INVALID")) {
-            errorMessage = "The Gemini API Key is invalid. Please check your settings.";
-        } else if (errorMessage.includes("quota")) {
-            errorMessage = "AI Quota exceeded. Please try again later.";
         }
 
         throw new Error(errorMessage);
@@ -132,7 +119,13 @@ export const generateRosterFromText = async (pastedText: string): Promise<Omit<P
     }
 
     try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const genAI = new GoogleGenerativeAI(getApiKey());
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
+        });
 
         const prompt = `Analyze the following text from a lacrosse team's website roster and extract the player information. Identify each player's name, jersey number, and position. The position might be abbreviated (e.g., A, M, D, G, LSM, FOGO). Do your best to standardize the position to: Attack, Midfield, Defense, Goalie, LSM, or Face Off Specialist.
 
@@ -144,34 +137,19 @@ ${pastedText}
 Extract the roster and return it as a JSON array of objects with: name (string), jerseyNumber (string), position (string).
 `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-                responseMimeType: "application/json",
-            },
-        });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let jsonText = response.text().trim();
 
-        if (!response || !response.text) {
-            throw new Error("No data returned from AI.");
-        }
-
-        let jsonText = response.text.trim();
         if (jsonText.startsWith('```')) {
             jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
         }
 
-        const parsedRoster: Omit<Player, 'id'>[] = JSON.parse(jsonText);
-        return parsedRoster;
+        return JSON.parse(jsonText);
 
     } catch (error: any) {
         console.error("Error generating roster:", error);
         let errorMessage = error.message || "The AI failed to process the request.";
-
-        if (error instanceof SyntaxError) {
-            errorMessage = "Invalid JSON format from AI. Try again.";
-        }
-
         throw new Error(errorMessage);
     }
 };
@@ -182,7 +160,8 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
     }
 
     try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const genAI = new GoogleGenerativeAI(getApiKey());
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         const prompt = `You are a world-class senior frontend engineer with deep expertise in React, TypeScript, and modern UI/UX design. An administrator of this application is asking for help with the codebase.
 
@@ -198,12 +177,9 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
 
     Please analyze the user's question and the provided code. Provide a clear, expert-level explanation of the issue or concept. If applicable, suggest specific improvements or bug fixes, including corrected code snippets. Structure your response in well-formatted markdown.`;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-pro', // Using a more powerful model for code analysis
-            contents: prompt,
-        });
-
-        return response.text || "";
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text() || "";
 
     } catch (error) {
         console.error("Error analyzing code:", error);
@@ -211,10 +187,10 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
     }
 };
 
-// FIX: Add analyzePlayerPerformance function to support the analytics feature.
 export const analyzePlayerPerformance = async (playerData: PlayerAnalysisData): Promise<string> => {
     try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const genAI = new GoogleGenerativeAI(getApiKey());
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         let statsString = Object.entries(playerData.stats)
             .map(([stat, value]) => `- ${stat}: ${value}`)
@@ -236,20 +212,19 @@ ${statsString}
 Provide a concise analysis of this player's strengths and weaknesses. Offer 2-3 specific, actionable suggestions for improvement. Structure your response in well-formatted markdown. Be encouraging but realistic in your feedback.
 `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-pro',
-            contents: prompt,
-        });
-
-        return response.text || "";
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text() || "";
     } catch (error) {
         console.error("Error analyzing player performance:", error);
         return "An error occurred while communicating with the AI. Please check your API key and connection.";
     }
 };
+
 export const analyzeShotPlacement = async (base64Image: string): Promise<number | null> => {
     try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const genAI = new GoogleGenerativeAI(getApiKey());
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
 Analyze this high-speed frame from a lacrosse shooting drill. 
@@ -265,26 +240,17 @@ Return ONLY the zone number as a single integer (0-8).
 If the ball is not visible, return -1.
 `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: "image/jpeg",
-                                data: base64Image.split(',')[1] // Remove prefix
-                            }
-                        }
-                    ]
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    mimeType: "image/jpeg",
+                    data: base64Image.split(',')[1]
                 }
-            ]
-        });
-
-        const zoneText = response.text?.trim() || "";
-        console.log("AI_VISION_DEBUG: Zone raw text ->", zoneText);
+            }
+        ]);
+        const response = await result.response;
+        const zoneText = response.text().trim();
         const zone = parseInt(zoneText, 10);
 
         if (isNaN(zone) || zone < 0 || zone > 8) {
