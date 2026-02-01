@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { Game, Player, StatType } from '../types';
 import { getApiKey } from './apiKeyService';
 
@@ -83,50 +83,45 @@ ${pastedText}
 """
 
 Extract the schedule and return it as a JSON array of objects with the following properties:
-- opponentName: The name of the opposing team.
-- isHome: Boolean, true if it's a home game (vs), false if it's away (@).
-- scheduledTime: ISO 8601 string of the game date and time.
+- opponentName: string
+- isHome: boolean
+- scheduledTime: ISO 8601 string (e.g. "2024-03-15T19:15:00")
 `;
 
         const response = await ai.models.generateContent({
             model: 'gemini-1.5-flash',
-            contents: prompt,
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
                 responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            opponentName: {
-                                type: Type.STRING,
-                                description: 'The name of the opponent.',
-                            },
-                            isHome: {
-                                type: Type.BOOLEAN,
-                                description: 'True if home game, false if away.',
-                            },
-                            scheduledTime: {
-                                type: Type.STRING,
-                                description: 'ISO 8601 formatted date and time.',
-                            },
-                        },
-                        required: ["opponentName", "isHome", "scheduledTime"],
-                    },
-                },
             },
         });
 
-        const jsonText = (response.text || "").trim();
+        if (!response || !response.text) {
+            throw new Error("The AI returned an empty response. This might be due to safety filters or a connection issue.");
+        }
+
+        let jsonText = response.text.trim();
+
+        // Robustness: Strip potential markdown markers if the model ignored responseMimeType
+        if (jsonText.startsWith('```')) {
+            jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
+        }
+
         const parsedSchedule: ExtractedGame[] = JSON.parse(jsonText);
         return parsedSchedule;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating schedule:", error);
-        let errorMessage = "Could not generate schedule from the provided text. The AI failed to process the request.";
+        let errorMessage = error.message || "The AI failed to process the request.";
+
         if (error instanceof SyntaxError) {
-            errorMessage = "The AI returned an invalid format. Please try again or adjust the pasted text.";
+            errorMessage = "The AI returned an invalid JSON format. Try adjusting the pasted text.";
+        } else if (errorMessage.includes("API_KEY_INVALID")) {
+            errorMessage = "The Gemini API Key is invalid. Please check your settings.";
+        } else if (errorMessage.includes("quota")) {
+            errorMessage = "AI Quota exceeded. Please try again later.";
         }
+
         throw new Error(errorMessage);
     }
 };
@@ -139,55 +134,44 @@ export const generateRosterFromText = async (pastedText: string): Promise<Omit<P
     try {
         const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
-        const prompt = `Analyze the following text from a lacrosse team's website roster and extract the player information. Identify each player's name, jersey number, and position. The position might be abbreviated (e.g., A, M, D, G, LSM, FOGO). Do your best to standardize the position.
+        const prompt = `Analyze the following text from a lacrosse team's website roster and extract the player information. Identify each player's name, jersey number, and position. The position might be abbreviated (e.g., A, M, D, G, LSM, FOGO). Do your best to standardize the position to: Attack, Midfield, Defense, Goalie, LSM, or Face Off Specialist.
 
 Pasted Text:
 """
 ${pastedText}
 """
 
-Extract the roster and return it as a JSON array.
+Extract the roster and return it as a JSON array of objects with: name (string), jerseyNumber (string), position (string).
 `;
 
         const response = await ai.models.generateContent({
             model: 'gemini-1.5-flash',
-            contents: prompt,
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
                 responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            name: {
-                                type: Type.STRING,
-                                description: 'The full name of the player.',
-                            },
-                            jerseyNumber: {
-                                type: Type.STRING,
-                                description: 'The player\'s jersey number.',
-                            },
-                            position: {
-                                type: Type.STRING,
-                                description: 'The player\'s position (e.g., Attack, Midfield, Defense, Goalie).',
-                            },
-                        },
-                        required: ["name", "jerseyNumber", "position"],
-                    },
-                },
             },
         });
 
-        const jsonText = (response.text || "").trim();
+        if (!response || !response.text) {
+            throw new Error("No data returned from AI.");
+        }
+
+        let jsonText = response.text.trim();
+        if (jsonText.startsWith('```')) {
+            jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
+        }
+
         const parsedRoster: Omit<Player, 'id'>[] = JSON.parse(jsonText);
         return parsedRoster;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating roster:", error);
-        let errorMessage = "Could not generate roster from the provided text. The AI failed to process the request.";
+        let errorMessage = error.message || "The AI failed to process the request.";
+
         if (error instanceof SyntaxError) {
-            errorMessage = "The AI returned an invalid format. Please try again or adjust the pasted text.";
+            errorMessage = "Invalid JSON format from AI. Try again.";
         }
+
         throw new Error(errorMessage);
     }
 };
