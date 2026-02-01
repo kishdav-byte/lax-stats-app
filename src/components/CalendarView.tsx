@@ -9,14 +9,7 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewReport }) => {
-    const [currentDate, setCurrentDate] = useState(() => {
-        // Start the calendar at the first upcoming game if possible, otherwise today
-        const upcoming = games
-            .filter(g => g.status === 'scheduled')
-            .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
-
-        return upcoming.length > 0 ? new Date(upcoming[0].scheduledTime) : new Date();
-    });
+    const [currentDate, setCurrentDate] = useState(new Date());
 
     const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -83,10 +76,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
     }
 
     for (let day = 1; day <= totalDays; day++) {
-        const dayGames = monthGames.filter(g => {
-            const key = getGameDateKey(g.scheduledTime);
-            return key === `${year}-${month + 1}-${day}`;
-        });
+        const dayGames = monthGames
+            .filter(g => {
+                const key = getGameDateKey(g.scheduledTime);
+                return key === `${year}-${month + 1}-${day}`;
+            })
+            .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
         const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
 
@@ -119,7 +114,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
                             }}
                             title={`${game.homeTeam.name} vs ${game.awayTeam.name}`}
                         >
-                            {game.homeTeam.name.split(' ')[0]} v {game.awayTeam.name.split(' ')[0]}
+                            <span className="opacity-70">{game.homeTeam.name.split(' ')[0]}</span>
+                            <span className="text-brand/50 px-1">v</span>
+                            <span>{game.awayTeam.name.split(' ')[0]}</span>
                         </div>
                     ))}
                 </div>
