@@ -25,47 +25,64 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = ({ team, onClose, onSubmit }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <form onSubmit={handleSubmit} className="cyber-card p-8 max-w-md w-full space-y-6 bg-black border-brand/50">
-                <div className="flex items-center gap-4 mb-2">
-                    <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Join Team Request</p>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-hidden">
+            <form onSubmit={handleSubmit} className="cyber-card w-full max-w-md max-h-[90vh] flex flex-col bg-black border-brand/50 shadow-[0_0_50px_rgba(255,87,34,0.15)]">
+                {/* Header */}
+                <div className="p-6 sm:p-8 border-b border-surface-border shrink-0">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="h-px bg-brand w-8"></div>
+                        <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase shrink-0">Network Request</p>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-display font-black text-white italic uppercase tracking-tighter">
+                        JOIN OPS <span className="text-brand">//</span> {team.name}
+                    </h2>
                 </div>
 
-                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">
-                    JOIN // <span className="text-brand">{team.name}</span>
-                </h2>
+                {/* Content */}
+                <div className="p-6 sm:p-8 flex-grow overflow-y-auto custom-scrollbar space-y-8">
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1 font-bold">Designated Jersey #</label>
+                            <input
+                                type="text"
+                                value={jersey}
+                                onChange={e => setJersey(e.target.value)}
+                                className="w-full cyber-input text-sm py-3 px-4"
+                                placeholder="E.G. 22"
+                                required
+                            />
+                        </div>
 
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Desired Jersey #</label>
-                        <input
-                            type="text"
-                            value={jersey}
-                            onChange={e => setJersey(e.target.value)}
-                            className="w-full cyber-input text-sm"
-                            placeholder="e.g. 22"
-                            required
-                        />
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1 font-bold">Tactical Position</label>
+                            <div className="relative">
+                                <select
+                                    value={position}
+                                    onChange={(e) => setPosition(e.target.value)}
+                                    className="w-full cyber-input text-sm appearance-none py-3 px-4 pr-10"
+                                    required
+                                >
+                                    <option value="" className="bg-black">SELECT CORE POSITION</option>
+                                    {lacrossePositions.map(pos => <option key={pos} value={pos} className="bg-black">{pos.toUpperCase()}</option>)}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand/50">
+                                    <ArrowRight className="w-4 h-4 rotate-90" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Primary Assignment (Position)</label>
-                        <select
-                            value={position}
-                            onChange={(e) => setPosition(e.target.value)}
-                            className="w-full cyber-input text-sm appearance-none"
-                            required
-                        >
-                            <option value="" className="bg-black">SELECT POSITION</option>
-                            {lacrossePositions.map(pos => <option key={pos} value={pos} className="bg-black">{pos.toUpperCase()}</option>)}
-                        </select>
+                    <div className="p-4 bg-brand/5 border border-brand/20 rounded-sm">
+                        <p className="text-[9px] font-mono text-brand/70 uppercase leading-relaxed text-center">Your request will be transmitted to the coaching staff for verification and network inclusion.</p>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-6 pt-6">
-                    <button type="button" onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
-                    <button type="submit" className="cyber-button py-2 px-8">SUBMIT_REQUEST</button>
+                {/* Footer */}
+                <div className="p-6 sm:p-8 border-t border-surface-border bg-black/50 shrink-0 flex items-center justify-between gap-6">
+                    <button type="button" onClick={onClose} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-600 hover:text-white transition-colors">Abort</button>
+                    <button type="submit" className="cyber-button px-10 py-3 font-display font-bold italic tracking-widest text-xs">
+                        SEND_REQUEST
+                    </button>
                 </div>
             </form>
         </div>
@@ -109,63 +126,59 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
     };
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 pb-12">
             {isJoinModalOpen && selectedTeam && (
                 <JoinTeamModal
-                    team={selectedTeam}
+                    team={selectedTeam as Team}
                     onClose={() => setIsJoinModalOpen(false)}
                     onSubmit={onJoinRequest}
                 />
             )}
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div>
-                    <div className="flex items-center gap-4 mb-2">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-4 mb-1">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Player View</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Combatant Logs</p>
                     </div>
-                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                        PLAYER <span className="text-brand">DASHBOARD</span>
+                    <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
+                        PLAYER <span className="text-brand">BASE</span>
                     </h1>
+                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Session ID: {currentUser.id.slice(0, 8)}</p>
                 </div>
-                <div className="flex items-center gap-4 py-2 px-4 bg-surface-card border border-surface-border">
-                    <Activity className="w-4 h-4 text-brand animate-pulse" />
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Player Online: {currentUser.username}</span>
+                <div className="flex items-center gap-6 py-4 px-6 bg-brand/5 border-l-2 border-brand/40 group hover:bg-brand/10 transition-all">
+                    <div className="relative">
+                        <Activity className="w-5 h-5 text-brand animate-pulse" />
+                        <div className="absolute inset-0 bg-brand/20 blur-md rounded-full"></div>
+                    </div>
+                    <div>
+                        <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Signal Locked</p>
+                        <p className="text-xs font-display font-bold text-white uppercase tracking-wider">{currentUser.username}</p>
+                    </div>
                 </div>
             </div>
 
             {/* Top Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="cyber-card p-6 border-l-2 border-l-brand">
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">My Teams</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-4xl font-display font-black text-white italic">{myTeams.length}</span>
-                        <Users className="w-8 h-8 text-brand opacity-20" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                    { label: 'Network Assets', value: myTeams.length, sub: 'Units Joined', icon: Users },
+                    { label: 'Tactical Drills', value: myAssignedDrills.length, sub: 'Target Objectives', icon: Crosshair },
+                    { label: 'Deployment Feed', value: upcomingGames.length, sub: 'Active Missions', icon: Calendar },
+                    { label: 'Reaction PR', value: currentUser.bestClampSpeed ? `${currentUser.bestClampSpeed}ms` : '---', sub: 'Peak Velocity', icon: Activity, accent: true }
+                ].map((stat, i) => (
+                    <div key={i} className={`cyber-card p-8 flex flex-col justify-between min-h-[160px] group hover:border-brand/50 transition-all ${stat.accent ? 'bg-brand/5 border-brand/30' : ''}`}>
+                        <div className="flex justify-between items-start">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold group-hover:text-brand transition-colors">{stat.label}</p>
+                            <stat.icon className={`w-5 h-5 text-brand opacity-20 group-hover:opacity-100 transition-all ${stat.accent ? 'opacity-40 animate-pulse' : ''}`} />
+                        </div>
+                        <div>
+                            <span className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter">
+                                {stat.value}
+                            </span>
+                            <p className="text-gray-600 text-[10px] uppercase font-mono tracking-[0.2em] mt-1 group-hover:text-gray-400 transition-colors uppercase">{stat.sub}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">Pending Tactical Drills</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-4xl font-display font-black text-white italic">{myAssignedDrills.length}</span>
-                        <Crosshair className="w-8 h-8 text-brand opacity-20" />
-                    </div>
-                </div>
-                <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">Upcoming Games</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-4xl font-display font-black text-white italic">{upcomingGames.length}</span>
-                        <Calendar className="w-8 h-8 text-brand opacity-20" />
-                    </div>
-                </div>
-                <div className="cyber-card p-6 border-l-2 border-brand/50 bg-brand/5">
-                    <p className="text-[10px] font-mono text-brand uppercase tracking-widest mb-1">Best Clamp Speed (PR)</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-4xl font-display font-black text-white italic">
-                            {currentUser.bestClampSpeed ? `${currentUser.bestClampSpeed}ms` : '---'}
-                        </span>
-                        <Activity className="w-8 h-8 text-brand opacity-40 animate-pulse" />
-                    </div>
-                </div>
+                ))}
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">

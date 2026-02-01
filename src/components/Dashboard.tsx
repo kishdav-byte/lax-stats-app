@@ -18,172 +18,181 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
     const activeGame = games.find(g => g.id === activeGameId);
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 pb-12">
             {/* Header Section */}
             <div className="relative">
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-center gap-4 mb-3">
                     <div className="h-px bg-brand w-12"></div>
-                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">App Overview</p>
+                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Command Center</p>
                 </div>
-                <h1 className="text-5xl md:text-6xl font-display font-black tracking-tighter text-white">
+                <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
                     DASH<span className="text-brand">BOARD</span>
                 </h1>
-                <p className="text-gray-500 font-mono text-xs uppercase tracking-widest mt-2">Intelligent // Athletic // Systems</p>
+                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-3 opacity-60">Intelligent // Athletic // Systems // V4.2</p>
             </div>
 
             {/* Live Game Alert */}
             {activeGame && (
-                <div className="cyber-card p-1 border-brand/50 bg-brand/5">
-                    <div className="bg-black p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-4">
+                <div className="cyber-card p-1 border-brand/50 bg-brand/5 animate-pulse">
+                    <div className="bg-black p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex items-center gap-6">
                             <div className="relative">
-                                <div className="absolute inset-0 bg-brand blur-md animate-pulse rounded-full"></div>
-                                <Activity className="relative w-8 h-8 text-brand" />
+                                <div className="absolute inset-0 bg-brand blur-xl opacity-30 rounded-full"></div>
+                                <Activity className="relative w-10 h-10 text-brand" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-display font-bold text-white uppercase italic">Live Game Active</h2>
-                                <p className="text-brand font-mono text-[10px] uppercase tracking-widest">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
+                                <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">Deployment Active</h2>
+                                <p className="text-brand font-mono text-xs uppercase tracking-[0.2em] mt-1 font-bold">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
                             </div>
                         </div>
                         <button
                             onClick={() => onViewChange('game')}
-                            className="cyber-button w-full md:w-auto flex items-center justify-center gap-2"
+                            className="cyber-button w-full md:w-auto px-12 py-4 flex items-center justify-center gap-3 font-display font-bold italic tracking-widest text-sm"
                         >
-                            RESUME GAME <ChevronRight className="w-4 h-4" />
+                            RESUME OPS <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
             )}
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">Scheduled Games</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-5xl font-display font-black text-white">{upcomingGames.length}</span>
-                        <Calendar className="w-8 h-8 text-brand opacity-20" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                    { label: 'Scheduled Games', value: upcomingGames.length, sub: 'Ready for Kickoff', icon: Calendar },
+                    { label: 'Completed Sets', value: finishedGames.length, sub: 'Performance Logged', icon: Binary },
+                    { label: 'System Status', value: 'ONLINE', sub: 'Secure & Synchronized', icon: ShieldCheck }
+                ].map((metric, i) => (
+                    <div key={i} className="cyber-card p-8 flex flex-col justify-between min-h-[160px] group hover:border-brand transition-all">
+                        <div className="flex justify-between items-start">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold group-hover:text-brand transition-colors">{metric.label}</p>
+                            <metric.icon className="w-5 h-5 text-brand opacity-20 group-hover:opacity-100 transition-all" />
+                        </div>
+                        <div>
+                            <span className={`text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter ${typeof metric.value === 'string' ? 'text-2xl md:text-3xl' : ''}`}>
+                                {metric.value}
+                            </span>
+                            <p className="text-gray-600 text-[10px] uppercase font-mono tracking-[0.2em] mt-2 group-hover:text-gray-400 transition-colors">{metric.sub}</p>
+                        </div>
                     </div>
-                    <p className="text-gray-600 text-[10px] uppercase mt-2">Ready to Start</p>
-                </div>
-                <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">Finished Games</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-5xl font-display font-black text-white">{finishedGames.length}</span>
-                        <Binary className="w-8 h-8 text-brand opacity-20" />
-                    </div>
-                    <p className="text-gray-600 text-[10px] uppercase mt-2">Total Statistics Recorded</p>
-                </div>
-                <div className="cyber-card p-6">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1">System Status</p>
-                    <div className="flex items-end justify-between">
-                        <span className="text-5xl font-display font-black text-white">ONLINE</span>
-                        <ShieldCheck className="w-8 h-8 text-brand opacity-20" />
-                    </div>
-                    <p className="text-gray-600 text-[10px] uppercase mt-2">Active & Secure</p>
-                </div>
+                ))}
             </div>
 
             {/* Main Navigation Modules */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div
-                    className="cyber-card p-8 group cursor-pointer hover:bg-brand/5 transition-colors"
-                    onClick={() => onViewChange('teams')}
-                >
-                    <Users className="w-10 h-10 text-brand mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-display font-bold text-white mb-2 italic">Teams & Rosters</h3>
-                    <p className="text-gray-400 text-sm font-sans mb-6">Manage players, team structures, and view profiles.</p>
-                    <div className="flex items-center gap-2 text-brand font-mono text-[10px] uppercase tracking-widest">
-                        Open <ChevronRight className="w-3 h-3" />
-                    </div>
-                </div>
-
-                <div
-                    className="cyber-card p-8 group cursor-pointer hover:bg-brand/5 transition-colors"
-                    onClick={() => onViewChange('schedule')}
-                >
-                    <Calendar className="w-10 h-10 text-brand mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-display font-bold text-white mb-2 italic">Game Schedule</h3>
-                    <p className="text-gray-400 text-sm font-sans mb-6">Schedule and manage upcoming games for the season.</p>
-                    <div className="flex items-center gap-2 text-brand font-mono text-[10px] uppercase tracking-widest">
-                        Open <ChevronRight className="w-3 h-3" />
-                    </div>
-                </div>
-
-                {userRole === Role.ADMIN && (
+            <div>
+                <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-gray-600 mb-8 flex items-center gap-6">
+                    Core Protocols
+                    <div className="h-px bg-surface-border flex-grow"></div>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div
-                        className="cyber-card p-8 group cursor-pointer hover:bg-brand/5 transition-colors"
-                        onClick={() => onViewChange('soundEffects')}
+                        className="cyber-card p-10 group cursor-pointer hover:bg-brand/5 border-surface-border/50 hover:border-brand/40 transition-all duration-500"
+                        onClick={() => onViewChange('teams')}
                     >
-                        <Volume2 className="w-10 h-10 text-brand mb-4 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-xl font-display font-bold text-white mb-2 italic">Sound Effects</h3>
-                        <p className="text-gray-400 text-sm font-sans mb-6">Manage custom sounds for training and game drills.</p>
-                        <div className="flex items-center gap-2 text-brand font-mono text-[10px] uppercase tracking-widest">
-                            Open <ChevronRight className="w-3 h-3" />
+                        <div className="w-12 h-12 rounded-full border border-brand/20 flex items-center justify-center mb-6 group-hover:border-brand/60 group-hover:scale-110 transition-all">
+                            <Users className="w-6 h-6 text-brand" />
+                        </div>
+                        <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Tactical Assets</h3>
+                        <p className="text-gray-500 text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">Personnel management, roster extraction & bio profiling.</p>
+                        <div className="flex items-center gap-3 text-brand font-mono text-[10px] uppercase tracking-[0.3em] font-bold group-hover:translate-x-2 transition-transform">
+                            Access Module <ChevronRight className="w-3 h-3" />
                         </div>
                     </div>
-                )}
+
+                    <div
+                        className="cyber-card p-10 group cursor-pointer hover:bg-brand/5 border-surface-border/50 hover:border-brand/40 transition-all duration-500"
+                        onClick={() => onViewChange('schedule')}
+                    >
+                        <div className="w-12 h-12 rounded-full border border-brand/20 flex items-center justify-center mb-6 group-hover:border-brand/60 group-hover:scale-110 transition-all">
+                            <Calendar className="w-6 h-6 text-brand" />
+                        </div>
+                        <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Engagement Log</h3>
+                        <p className="text-gray-500 text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">Mission scheduling, event sequencing & orbital planning.</p>
+                        <div className="flex items-center gap-3 text-brand font-mono text-[10px] uppercase tracking-[0.3em] font-bold group-hover:translate-x-2 transition-transform">
+                            Access Module <ChevronRight className="w-3 h-3" />
+                        </div>
+                    </div>
+
+                    {userRole === Role.ADMIN && (
+                        <div
+                            className="cyber-card p-10 group cursor-pointer hover:bg-brand/5 border-surface-border/50 hover:border-brand/40 transition-all duration-500"
+                            onClick={() => onViewChange('soundEffects')}
+                        >
+                            <div className="w-12 h-12 rounded-full border border-brand/20 flex items-center justify-center mb-6 group-hover:border-brand/60 group-hover:scale-110 transition-all">
+                                <Volume2 className="w-6 h-6 text-brand" />
+                            </div>
+                            <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Neural Audio</h3>
+                            <p className="text-gray-500 text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">Audio feedback frequency management & whistle triggers.</p>
+                            <div className="flex items-center gap-3 text-brand font-mono text-[10px] uppercase tracking-[0.3em] font-bold group-hover:translate-x-2 transition-transform">
+                                Access Module <ChevronRight className="w-3 h-3" />
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Lists Section */}
             <div className="grid lg:grid-cols-2 gap-12 pt-8">
                 {/* Upcoming */}
-                <div>
-                    <h2 className="text-2xl font-display font-black text-white italic mb-6 flex items-center gap-4">
+                <div className="space-y-8">
+                    <h2 className="text-2xl font-display font-black text-white italic flex items-center gap-6">
                         UPCOMING <span className="text-brand">GAMES</span>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </h2>
                     {upcomingGames.length > 0 ? (
                         <div className="space-y-4">
                             {upcomingGames.slice(0, 3).map(game => (
-                                <div key={game.id} className="cyber-card p-6 flex items-center justify-between group">
-                                    <div>
-                                        <p className="font-display font-bold text-lg text-white group-hover:text-brand transition-colors italic uppercase">{game.homeTeam.name} // {game.awayTeam.name}</p>
-                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Game Time: {new Date(game.scheduledTime).toLocaleString()}</p>
+                                <div key={game.id} className="cyber-card p-6 flex flex-col md:flex-row items-center justify-between group hover:border-brand/30 transition-all gap-4">
+                                    <div className="w-full">
+                                        <p className="font-display font-black text-xl text-white group-hover:text-brand transition-colors italic uppercase tracking-tighter">{game.homeTeam.name} <span className="text-brand/50 px-2">//</span> {game.awayTeam.name}</p>
+                                        <div className="flex items-center gap-4 mt-2">
+                                            <div className="h-1 w-1 bg-brand rounded-full animate-pulse"></div>
+                                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em]">T-MINUS: {new Date(game.scheduledTime).toLocaleString()}</p>
+                                        </div>
                                     </div>
-                                    <button onClick={() => onStartGame(game.id)} className="cyber-button py-1 px-4 text-xs">
-                                        START
+                                    <button onClick={() => onStartGame(game.id)} className="cyber-button w-full md:w-auto py-3 px-8 text-[10px] font-display font-bold italic tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.15)]">
+                                        ENGAGE UNIT
                                     </button>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="cyber-card p-12 text-center opacity-50 grayscale">
-                            <Binary className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                            <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No games scheduled</p>
+                        <div className="cyber-card p-12 text-center border-dashed border-surface-border grayscale flex flex-col items-center justify-center min-h-[300px]">
+                            <Binary className="w-12 h-12 mb-6 opacity-20 text-brand" />
+                            <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500">Scanning for next deployment...</p>
                         </div>
                     )}
                 </div>
 
                 {/* Finished */}
-                <div>
-                    <h2 className="text-2xl font-display font-black text-white italic mb-6 flex items-center gap-4">
-                        GAME <span className="text-brand">HISTORY</span>
+                <div className="space-y-8">
+                    <h2 className="text-2xl font-display font-black text-white italic flex items-center gap-6">
+                        LEGACY <span className="text-brand">REPORTS</span>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </h2>
                     {finishedGames.length > 0 ? (
                         <div className="space-y-4">
                             {finishedGames.slice(0, 3).map(game => (
-                                <div key={game.id} className="cyber-card p-6 flex items-center justify-between group border-l-2 border-l-brand">
-                                    <div>
-                                        <div className="flex items-baseline gap-3">
-                                            <p className="font-display font-bold text-lg text-white uppercase italic">{game.homeTeam.name} // {game.awayTeam.name}</p>
-                                            <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
+                                <div key={game.id} className="cyber-card p-6 flex flex-col md:flex-row items-center justify-between group border-l-2 border-brand hover:bg-brand/5 transition-all gap-4">
+                                    <div className="w-full">
+                                        <div className="flex flex-wrap items-baseline gap-4 mb-2">
+                                            <p className="font-display font-black text-xl text-white uppercase italic tracking-tighter">{game.homeTeam.name} <span className="text-brand/50 px-1">/</span> {game.awayTeam.name}</p>
+                                            <span className="font-display font-black text-brand italic tracking-tight text-lg underline underline-offset-4 decoration-brand/30">{game.score.home}-{game.score.away}</span>
                                         </div>
-                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Played: {new Date(game.scheduledTime).toLocaleDateString()}</p>
+                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] font-bold">Session Closed: {new Date(game.scheduledTime).toLocaleDateString()}</p>
                                     </div>
                                     <button
                                         onClick={() => onViewReport(game)}
-                                        className="cyber-button-outline py-1 px-4 text-xs"
+                                        className="cyber-button-outline w-full md:w-auto py-3 px-8 text-[10px] font-display font-bold italic tracking-widest whitespace-nowrap hover:bg-white/5 transition-all"
                                     >
-                                        VIEW REPORT
+                                        INTEL BRIEF
                                     </button>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="cyber-card p-12 text-center opacity-50 grayscale">
-                            <Binary className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                            <p className="text-[10px] font-mono uppercase tracking-[0.3em]">Game history is empty</p>
+                        <div className="cyber-card p-12 text-center border-dashed border-surface-border grayscale flex flex-col items-center justify-center min-h-[300px]">
+                            <Binary className="w-12 h-12 mb-6 opacity-20 text-brand" />
+                            <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500">Archive database empty</p>
                         </div>
                     )}
                 </div>

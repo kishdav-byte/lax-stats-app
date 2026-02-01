@@ -10,6 +10,12 @@ export interface PlayerAnalysisData {
     stats: { [key in StatType]?: number };
 }
 
+export interface ExtractedGame {
+    opponentName: string;
+    isHome: boolean;
+    scheduledTime: string; // ISO string
+}
+
 const formatGameDataForPrompt = (game: Game): string => {
     let prompt = `Analyze the following lacrosse game data and provide a concise, exciting game summary. Also, name a "Player of the Game" with a brief justification.\n\n`;
 
@@ -55,6 +61,75 @@ export const generateGameSummary = async (game: Game): Promise<string> => {
     }
 };
 
+
+export const generateScheduleFromText = async (pastedText: string): Promise<ExtractedGame[]> => {
+    if (!pastedText.trim()) {
+        throw new Error("Pasted text cannot be empty.");
+    }
+
+    try {
+        const ai = new GoogleGenAI({ apiKey: getApiKey() });
+        const currentYear = new Date().getFullYear();
+
+        const prompt = `Analyze the following text from a sports schedule (e.g., MaxPreps) and extract game information. 
+Identify each game's date, time, opponent, and whether it's a home or away game.
+Look for "@" indicating away or "vs" indicating home.
+For the date and time, convert them into a valid ISO 8601 string. Assume the year is ${currentYear} unless specified otherwise.
+If no time is provided, assume 00:00:00.
+
+Pasted Text:
+"""
+${pastedText}
+"""
+
+Extract the schedule and return it as a JSON array of objects with the following properties:
+- opponentName: The name of the opposing team.
+- isHome: Boolean, true if it's a home game (vs), false if it's away (@).
+- scheduledTime: ISO 8601 string of the game date and time.
+`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.0-flash', // Using 2.0-flash for efficiency
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            opponentName: {
+                                type: Type.STRING,
+                                description: 'The name of the opponent.',
+                            },
+                            isHome: {
+                                type: Type.BOOLEAN,
+                                description: 'True if home game, false if away.',
+                            },
+                            scheduledTime: {
+                                type: Type.STRING,
+                                description: 'ISO 8601 formatted date and time.',
+                            },
+                        },
+                        required: ["opponentName", "isHome", "scheduledTime"],
+                    },
+                },
+            },
+        });
+
+        const jsonText = (response.text || "").trim();
+        const parsedSchedule: ExtractedGame[] = JSON.parse(jsonText);
+        return parsedSchedule;
+
+    } catch (error) {
+        console.error("Error generating schedule:", error);
+        let errorMessage = "Could not generate schedule from the provided text. The AI failed to process the request.";
+        if (error instanceof SyntaxError) {
+            errorMessage = "The AI returned an invalid format. Please try again or adjust the pasted text.";
+        }
+        throw new Error(errorMessage);
+    }
+};
 
 export const generateRosterFromText = async (pastedText: string): Promise<Omit<Player, 'id'>[]> => {
     if (!pastedText.trim()) {

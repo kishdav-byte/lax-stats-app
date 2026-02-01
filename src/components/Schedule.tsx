@@ -1,6 +1,126 @@
 import React, { useState } from 'react';
 import { Game, Team } from '../types';
-import { Calendar, Binary, Trash2, Play, TableProperties } from 'lucide-react';
+import { Calendar, Binary, Trash2, Play, TableProperties, Search, Upload } from 'lucide-react';
+import { generateScheduleFromText, ExtractedGame } from '../services/geminiService';
+
+interface ImportScheduleModalProps {
+    onClose: () => void;
+    onScheduleImport: (extractedGames: ExtractedGame[]) => void;
+}
+
+const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ onClose, onScheduleImport }) => {
+    const [pastedContent, setPastedContent] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedGames, setGeneratedGames] = useState<ExtractedGame[] | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleGenerate = async () => {
+        setIsGenerating(true);
+        setError(null);
+        setGeneratedGames(null);
+        try {
+            const result = await generateScheduleFromText(pastedContent);
+            setGeneratedGames(result);
+        } catch (e: any) {
+            setError(e.message || "An unknown error occurred.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleConfirmImport = () => {
+        if (generatedGames) {
+            onScheduleImport(generatedGames);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-hidden">
+            <div className="cyber-card w-full max-w-3xl max-h-[90vh] flex flex-col border-brand/50 bg-black shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div className="p-6 sm:p-8 border-b border-surface-border shrink-0">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="h-px bg-brand w-8"></div>
+                        <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase shrink-0">Automated Intake</p>
+                        <div className="h-px bg-surface-border flex-grow"></div>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-display font-black uppercase italic tracking-tighter text-white">
+                        IMPORT SCHEDULE <span className="text-brand">//</span> AI SYNC
+                    </h2>
+                    <p className="text-gray-500 mt-2 text-[10px] font-mono uppercase tracking-widest">Target schedule website for automated extraction.</p>
+                </div>
+
+                <div className="p-6 sm:p-8 flex-grow overflow-y-auto custom-scrollbar space-y-8">
+                    <div className="space-y-4">
+                        <textarea
+                            value={pastedContent}
+                            onChange={(e) => setPastedContent(e.target.value)}
+                            placeholder="PASTE RAW SCHEDULE TEXT FROM MAXPREPS OR OTHER SITE HERE..."
+                            className="w-full h-48 cyber-input font-mono text-xs leading-relaxed resize-none p-4"
+                            disabled={isGenerating}
+                        />
+                        <div className="flex justify-end gap-6 items-center">
+                            <button onClick={onClose} disabled={isGenerating} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-white transition-colors">Abort</button>
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isGenerating || !pastedContent.trim()}
+                                className="cyber-button py-3 px-10 flex items-center gap-3 font-display font-bold italic"
+                            >
+                                {isGenerating ? 'DECRYPTING DATA...' : (
+                                    <>EXTRACT GAMES <Search className="w-4 h-4" /></>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="p-4 bg-red-900/10 border-l-2 border-red-500">
+                            <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest leading-relaxed">Extraction Error: {error}</p>
+                        </div>
+                    )}
+
+                    {generatedGames && (
+                        <div className="pt-8 border-t border-surface-border">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-display font-black uppercase italic text-white flex items-center gap-3">
+                                    <Binary className="w-5 h-5 text-brand" />
+                                    {generatedGames.length} Games Found
+                                </h3>
+                                <div className="h-px bg-surface-border flex-grow mx-8 hidden sm:block"></div>
+                            </div>
+
+                            <div className="space-y-2">
+                                {generatedGames.map((g: ExtractedGame, i: number) => (
+                                    <div key={i} className="grid grid-cols-12 items-center text-[10px] font-mono p-3 bg-white/5 border border-surface-border hover:border-brand/30 transition-colors group">
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <span className="text-brand font-bold opacity-60 uppercase italic">{g.isHome ? 'VS' : '@'}</span>
+                                        </div>
+                                        <div className="col-span-10 sm:col-span-7">
+                                            <span className="text-white font-bold uppercase tracking-tight">{g.opponentName}</span>
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-4 text-left sm:text-right mt-1 sm:mt-0">
+                                            <span className="text-gray-500 uppercase tracking-widest text-[9px] bg-black px-2 py-0.5 border border-surface-border">{new Date(g.scheduledTime).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {generatedGames && (
+                    <div className="p-6 sm:p-8 bg-brand/5 border-t border-brand/20 shrink-0">
+                        <button
+                            onClick={handleConfirmImport}
+                            className="cyber-button w-full py-4 text-sm font-display font-black italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.2)]"
+                        >
+                            COMMIT {generatedGames.length} IDENTIFIED SESSIONS TO TIMELINE
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 interface ScheduleProps {
     teams: Team[];
@@ -16,6 +136,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
     const [homeTeamId, setHomeTeamId] = useState('');
     const [awayTeamName, setAwayTeamName] = useState('');
     const [gameDate, setGameDate] = useState('');
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const handleAddGame = () => {
         const trimmedAwayName = awayTeamName.trim();
@@ -39,54 +160,95 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
         }
     };
 
+    const handleScheduleImport = (extractedGames: ExtractedGame[]) => {
+        if (!homeTeamId) {
+            alert("Select a Home Team first to associate these games with.");
+            setIsImportModalOpen(false);
+            return;
+        }
+
+        extractedGames.forEach(g => {
+            const existingAwayTeam = teams.find(t => t.name.toLowerCase() === g.opponentName.toLowerCase());
+            const awayTeamInfo = existingAwayTeam ? { id: existingAwayTeam.id } : { name: g.opponentName };
+
+            // Note: In a real app we might want to check for duplicates
+            onAddGame(homeTeamId, awayTeamInfo, g.scheduledTime);
+        });
+
+        setIsImportModalOpen(false);
+    };
+
     const scheduledGames = games.filter(g => g.status === 'scheduled').sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
     const finishedGames = games.filter(g => g.status === 'finished').sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
 
 
     return (
-        <div className="space-y-12">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div>
-                    <div className="flex items-center gap-4 mb-2">
+        <div className="space-y-12 pb-12">
+            {isImportModalOpen && (
+                <ImportScheduleModal
+                    onClose={() => setIsImportModalOpen(false)}
+                    onScheduleImport={handleScheduleImport}
+                />
+            )}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-4 mb-1">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Manage Games</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Timeline Control</p>
                     </div>
-                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                        GAME <span className="text-brand">SCHEDULE</span>
+                    <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
+                        GAME <span className="text-brand">CHRONOS</span>
                     </h1>
+                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Sequencing Scheduled Events</p>
                 </div>
-                <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                    BACK TO DASHBOARD
+                <button
+                    onClick={() => onReturnToDashboard('dashboard')}
+                    className="cyber-button-outline w-full md:w-auto px-10 py-4 font-display font-bold italic tracking-widest text-xs uppercase hover:bg-white/5 transition-all"
+                >
+                    RETURN TO COMMAND
                 </button>
             </div>
 
             {teams.length > 0 ? (
-                <div className="cyber-card p-8">
-                    <h2 className="text-lg font-display font-bold mb-8 uppercase italic">Schedule New Game</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                        <div className="space-y-2">
-                            <label htmlFor="homeTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Home Team</label>
-                            <select
-                                id="homeTeam"
-                                value={homeTeamId}
-                                onChange={e => setHomeTeamId(e.target.value)}
-                                className="w-full cyber-input appearance-none"
-                            >
-                                <option value="" className="bg-black">SELECT HOME TEAM</option>
-                                {teams.map(t => <option key={t.id} value={t.id} className="bg-black">{t.name.toUpperCase()}</option>)}
-                            </select>
+                <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
+                    <div className="flex items-center gap-6 mb-10">
+                        <Calendar className="w-5 h-5 text-brand" />
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Queue <span className="text-brand">Deployment</span></h2>
+                        <div className="h-px bg-surface-border flex-grow"></div>
+                        <button
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2"
+                        >
+                            IMPORT / MERGE <Upload className="w-3 h-3" />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+                        <div className="space-y-3">
+                            <label htmlFor="homeTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Home Designation</label>
+                            <div className="relative">
+                                <select
+                                    id="homeTeam"
+                                    value={homeTeamId}
+                                    onChange={e => setHomeTeamId(e.target.value)}
+                                    className="w-full cyber-input appearance-none py-3 px-4 text-sm"
+                                >
+                                    <option value="" className="bg-black">SELECT HOME TEAM</option>
+                                    {teams.map(t => <option key={t.id} value={t.id} className="bg-black">{t.name.toUpperCase()}</option>)}
+                                </select>
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label htmlFor="awayTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Away Team / Opponent</label>
+                        <div className="space-y-3">
+                            <label htmlFor="awayTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Away Designation</label>
                             <div className="relative">
                                 <input
                                     id="awayTeam"
                                     type="text"
                                     value={awayTeamName}
                                     onChange={e => setAwayTeamName(e.target.value)}
-                                    placeholder="OPPONENT NAME..."
-                                    className="w-full cyber-input"
+                                    placeholder="SEARCH OR ENTER NAME..."
+                                    className="w-full cyber-input py-3 px-4 text-sm"
                                     list="teams-list"
                                 />
                                 <datalist id="teams-list">
@@ -95,25 +257,25 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label htmlFor="gameDate" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">Game Time</label>
+                        <div className="space-y-3">
+                            <label htmlFor="gameDate" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Sync Timestamp</label>
                             <input
                                 type="datetime-local"
                                 id="gameDate"
                                 value={gameDate}
                                 onChange={e => setGameDate(e.target.value)}
-                                className="w-full cyber-input"
+                                className="w-full cyber-input py-3 px-4 text-sm"
                             />
                         </div>
                     </div>
-                    <button onClick={handleAddGame} className="mt-8 cyber-button w-full md:w-auto px-12 flex items-center justify-center gap-3">
-                        ADD GAME <Calendar className="w-4 h-4" />
+                    <button onClick={handleAddGame} className="mt-10 cyber-button w-full md:w-auto px-16 py-4 flex items-center justify-center gap-4 text-sm font-display font-bold italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.15)]">
+                        COMMIT SESSION <Calendar className="w-4 h-4" />
                     </button>
                 </div>
             ) : (
-                <div className="cyber-card p-12 text-center border-dashed border-surface-border grayscale">
-                    <TableProperties className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Notice: Create teams before scheduling games.</p>
+                <div className="cyber-card p-16 text-center border-dashed border-surface-border grayscale flex flex-col items-center justify-center min-h-[300px]">
+                    <TableProperties className="w-12 h-12 mb-6 opacity-20 text-brand" />
+                    <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 leading-loose">Insufficient Data // Create tactical units (teams) before scheduling engagements.</p>
                 </div>
             )}
 

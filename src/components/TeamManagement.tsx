@@ -40,63 +40,91 @@ const ImportRosterModal: React.FC<ImportRosterModalProps> = ({ team, onClose, on
     };
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="cyber-card p-8 max-w-2xl w-full border-brand/50 bg-black">
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Import Roster</p>
-                </div>
-
-                <h2 className="text-2xl font-display font-black mb-2 uppercase italic">Import Roster // {team.name}</h2>
-                <p className="text-gray-500 mb-8 text-[10px] font-mono uppercase tracking-widest">Target team website for automated extraction.</p>
-
-                <textarea
-                    value={pastedContent}
-                    onChange={(e) => setPastedContent(e.target.value)}
-                    placeholder="PASTE RAW ROSTER TEXT HERE..."
-                    className="w-full h-48 cyber-input font-mono text-xs mb-6"
-                    disabled={isGenerating}
-                />
-
-                <div className="flex justify-end gap-4">
-                    <button onClick={onClose} disabled={isGenerating} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
-                    <button
-                        onClick={handleGenerate}
-                        disabled={isGenerating || !pastedContent.trim()}
-                        className="cyber-button py-2 px-8 flex items-center gap-2"
-                    >
-                        {isGenerating ? 'ANALYZING...' : (
-                            <>EXTRACT DATA <Search className="w-4 h-4" /></>
-                        )}
-                    </button>
-                </div>
-
-                {error && (
-                    <div className="mt-6 p-4 bg-red-900/10 border-l-2 border-red-500">
-                        <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest">Extraction Error: {error}</p>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-hidden">
+            <div className="cyber-card w-full max-w-3xl max-h-[90vh] flex flex-col border-brand/50 bg-black shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                {/* Header Section */}
+                <div className="p-6 sm:p-8 border-b border-surface-border shrink-0">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="h-px bg-brand w-8"></div>
+                        <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase shrink-0">Automated Intake</p>
+                        <div className="h-px bg-surface-border flex-grow"></div>
                     </div>
-                )}
+                    <h2 className="text-2xl sm:text-3xl font-display font-black uppercase italic tracking-tighter text-white">
+                        IMPORT ROSTER <span className="text-brand">//</span> {team.name}
+                    </h2>
+                    <p className="text-gray-500 mt-2 text-[10px] font-mono uppercase tracking-widest">Target team website for automated extraction.</p>
+                </div>
 
-                {generatedRoster && (
-                    <div className="mt-8 pt-8 border-t border-surface-border animate-in fade-in duration-500">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-display font-bold uppercase italic">{generatedRoster.length} Players Found</h3>
-                            <Binary className="w-5 h-5 text-brand opacity-20" />
-                        </div>
-                        <div className="max-h-48 overflow-y-auto custom-scrollbar bg-surface-card p-4 space-y-2 border border-surface-border">
-                            {generatedRoster.map((p, i) => (
-                                <div key={i} className="flex justify-between items-center text-[10px] font-mono p-2 bg-black border border-surface-border">
-                                    <span className="font-bold text-brand">IDENT: #{p.jerseyNumber}</span>
-                                    <span className="text-white">{p.name}</span>
-                                    <span className="text-gray-500 uppercase">{p.position}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="mt-8 text-center">
-                            <button onClick={handleConfirmImport} className="cyber-button w-full">
-                                COMMIT {generatedRoster.length} ENTITIES TO DATABASE
+                {/* Content Section - Scrollable */}
+                <div className="p-6 sm:p-8 flex-grow overflow-y-auto custom-scrollbar space-y-8">
+                    <div className="space-y-4">
+                        <textarea
+                            value={pastedContent}
+                            onChange={(e) => setPastedContent(e.target.value)}
+                            placeholder="PASTE RAW ROSTER TEXT FROM WEBSITE HERE..."
+                            className="w-full h-48 cyber-input font-mono text-xs leading-relaxed resize-none p-4"
+                            disabled={isGenerating}
+                        />
+                        <div className="flex justify-end gap-6 items-center">
+                            <button onClick={onClose} disabled={isGenerating} className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 hover:text-white transition-colors">Abort</button>
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isGenerating || !pastedContent.trim()}
+                                className="cyber-button py-3 px-10 flex items-center gap-3 font-display font-bold italic"
+                            >
+                                {isGenerating ? 'DECRYPTING DATA...' : (
+                                    <>EXTRACT ENTITIES <Search className="w-4 h-4" /></>
+                                )}
                             </button>
                         </div>
+                    </div>
+
+                    {error && (
+                        <div className="p-4 bg-red-900/10 border-l-2 border-red-500 animate-in fade-in slide-in-from-left-2 duration-300">
+                            <p className="text-red-400 text-[10px] font-mono uppercase tracking-widest leading-relaxed">Extraction Error: {error}</p>
+                        </div>
+                    )}
+
+                    {generatedRoster && (
+                        <div className="pt-8 border-t border-surface-border animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center justify-between mb-6">
+                                <div>
+                                    <h3 className="text-xl font-display font-black uppercase italic text-white flex items-center gap-3">
+                                        <Binary className="w-5 h-5 text-brand" />
+                                        {generatedRoster.length} Players Found
+                                    </h3>
+                                </div>
+                                <div className="h-px bg-surface-border flex-grow mx-8 hidden sm:block"></div>
+                            </div>
+
+                            <div className="space-y-2">
+                                {generatedRoster.map((p, i) => (
+                                    <div key={i} className="grid grid-cols-12 items-center text-[10px] font-mono p-3 bg-white/5 border border-surface-border hover:border-brand/30 transition-colors group">
+                                        <div className="col-span-3 sm:col-span-2">
+                                            <span className="text-brand font-bold opacity-60 group-hover:opacity-100 italic">#{p.jerseyNumber}</span>
+                                        </div>
+                                        <div className="col-span-9 sm:col-span-6">
+                                            <span className="text-white font-bold uppercase tracking-tight">{p.name}</span>
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-4 text-right mt-2 sm:mt-0">
+                                            <span className="text-gray-500 uppercase tracking-widest text-[9px] bg-black px-2 py-0.5 border border-surface-border">{p.position}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer Section */}
+                {generatedRoster && (
+                    <div className="p-6 sm:p-8 bg-brand/5 border-t border-brand/20 shrink-0">
+                        <button
+                            onClick={handleConfirmImport}
+                            className="cyber-button w-full py-4 text-sm font-display font-black italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.2)]"
+                        >
+                            COMMIT {generatedRoster.length} IDENTIFIED ENTITIES TO DATABASE
+                        </button>
                     </div>
                 )}
             </div>
@@ -123,42 +151,49 @@ const AssignDrillModal: React.FC<AssignDrillModalProps> = ({ player, onClose, on
     };
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="cyber-card p-8 max-w-md w-full space-y-8 bg-black">
-                <div className="flex items-center gap-4">
-                    <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Drill Assignment</p>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-hidden">
+            <div className="cyber-card w-full max-w-lg max-h-[90vh] flex flex-col bg-black border-brand/30">
+                <div className="p-6 sm:p-8 border-b border-surface-border shrink-0">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="h-px bg-brand w-8"></div>
+                        <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Development Protocol</p>
+                    </div>
+                    <h2 className="text-2xl font-display font-black uppercase italic text-white">
+                        ASSIGN DRILL <span className="text-brand">//</span> {player.name}
+                    </h2>
                 </div>
 
-                <h2 className="text-2xl font-display font-black uppercase italic">Player // {player.name}</h2>
-
-                <div className="space-y-6">
-                    <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Drill Type</label>
-                        <select
-                            value={drillType}
-                            onChange={e => setDrillType(e.target.value as DrillType)}
-                            className="w-full cyber-input appearance-none"
-                        >
-                            {Object.values(DrillType).map(type => <option key={type} value={type} className="bg-black">{type.toUpperCase().replace('_', ' ')}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Coaching Notes</label>
-                        <textarea
-                            value={notes}
-                            onChange={e => setNotes(e.target.value)}
-                            placeholder="SET TARGET METRICS OR DRILL GOALS..."
-                            rows={3}
-                            className="w-full cyber-input font-mono text-xs"
-                        />
+                <div className="p-6 sm:p-8 flex-grow overflow-y-auto custom-scrollbar space-y-8">
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 mb-2 italic">Select Objective</label>
+                            <select
+                                value={drillType}
+                                onChange={e => setDrillType(e.target.value as DrillType)}
+                                className="w-full cyber-input appearance-none py-3"
+                            >
+                                {Object.values(DrillType).map(type => (
+                                    <option key={type} value={type} className="bg-black">{type.toUpperCase().replace('_', ' ')}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 mb-2 italic">Coaching Parameters</label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="SET TARGET METRICS (E.G. SUB 0.20s REACTION)..."
+                                rows={4}
+                                className="w-full cyber-input font-mono text-xs p-4 leading-relaxed"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-6 pt-4">
-                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
-                    <button onClick={handleSubmit} className="cyber-button px-8 flex items-center gap-2">
-                        START <Activity className="w-4 h-4" />
+                <div className="p-6 sm:p-8 border-t border-surface-border bg-black/40 shrink-0 flex items-center justify-between">
+                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-white transition-colors">Terminate</button>
+                    <button onClick={handleSubmit} className="cyber-button px-12 py-3 flex items-center gap-3 font-display font-bold italic">
+                        DEPLOY ASSIGNMENT <Activity className="w-4 h-4" />
                     </button>
                 </div>
             </div>
@@ -188,60 +223,65 @@ const AddExistingPlayerModal: React.FC<AddExistingPlayerModalProps> = ({ team, a
     };
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="cyber-card p-8 max-w-md w-full space-y-8 bg-black border-brand/50">
-                <div className="flex items-center gap-4">
-                    <div className="h-px bg-brand w-8"></div>
-                    <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Link Existing Entity</p>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-hidden">
+            <div className="cyber-card w-full max-w-md max-h-[90vh] flex flex-col bg-black border-brand/30">
+                <div className="p-6 sm:p-8 border-b border-surface-border shrink-0">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="h-px bg-brand w-8"></div>
+                        <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Network Association</p>
+                    </div>
+                    <h2 className="text-2xl font-display font-black uppercase italic text-white">
+                        LINK PLAYER <span className="text-brand">//</span> {team.name}
+                    </h2>
                 </div>
 
-                <h2 className="text-2xl font-display font-black uppercase italic">Add Player // {team.name}</h2>
-
-                <div className="space-y-6">
-                    <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Select User Account</label>
-                        <select
-                            value={selectedUserId}
-                            onChange={e => setSelectedUserId(e.target.value)}
-                            className="w-full cyber-input appearance-none text-xs"
-                        >
-                            <option value="" className="bg-black">SELECT PLAYER...</option>
-                            {availableUsers.map(u => (
-                                <option key={u.id} value={u.id} className="bg-black">{u.username} ({u.email})</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 sm:p-8 flex-grow overflow-y-auto custom-scrollbar space-y-8">
+                    <div className="space-y-6">
                         <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Jersey #</label>
-                            <input
-                                type="text"
-                                placeholder="00"
-                                value={jerseyNumber}
-                                onChange={e => setJerseyNumber(e.target.value)}
-                                className="w-full cyber-input text-xs"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 mb-2">Position</label>
+                            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 mb-2 italic">Search Database</label>
                             <select
-                                value={position}
-                                onChange={e => setPosition(e.target.value)}
-                                className="w-full cyber-input appearance-none text-xs"
+                                value={selectedUserId}
+                                onChange={e => setSelectedUserId(e.target.value)}
+                                className="w-full cyber-input appearance-none py-3 text-xs"
                             >
-                                <option value="" className="bg-black">SELECT...</option>
-                                {['Attack', 'Midfield', 'Defense', 'Goalie', 'LSM', 'Face Off Specialist'].map(p => (
-                                    <option key={p} value={p} className="bg-black">{p.toUpperCase()}</option>
+                                <option value="" className="bg-black">SELECT CORE IDENTITY...</option>
+                                {availableUsers.map(u => (
+                                    <option key={u.id} value={u.id} className="bg-black">{u.username} ({u.email})</option>
                                 ))}
                             </select>
                         </div>
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 mb-2 italic">Jersey #</label>
+                                <input
+                                    type="text"
+                                    placeholder="00"
+                                    value={jerseyNumber}
+                                    onChange={e => setJerseyNumber(e.target.value)}
+                                    className="w-full cyber-input text-xs py-3 px-4"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500 mb-2 italic">Role / Pos</label>
+                                <select
+                                    value={position}
+                                    onChange={e => setPosition(e.target.value)}
+                                    className="w-full cyber-input appearance-none text-xs py-3"
+                                >
+                                    <option value="" className="bg-black">SELECT...</option>
+                                    {['Attack', 'Midfield', 'Defense', 'Goalie', 'LSM', 'Face Off Specialist'].map(p => (
+                                        <option key={p} value={p} className="bg-black">{p.toUpperCase()}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-6 pt-4">
-                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Cancel</button>
-                    <button onClick={handleSubmit} className="cyber-button px-8 flex items-center gap-2">
-                        ATTACH <UserPlus className="w-4 h-4" />
+                <div className="p-6 sm:p-8 border-t border-surface-border bg-black/40 shrink-0 flex items-center justify-between">
+                    <button onClick={onClose} className="text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-white transition-colors">Abort</button>
+                    <button onClick={handleSubmit} className="cyber-button px-10 py-3 flex items-center gap-3 font-display font-bold italic">
+                        ATTACH IDENTITY <UserPlus className="w-4 h-4" />
                     </button>
                 </div>
             </div>
@@ -407,34 +447,43 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                     onAssign={handleAssignDrill}
                 />
             )}
-            <div className="space-y-12">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                    <div>
-                        <div className="flex items-center gap-4 mb-2">
+            <div className="space-y-12 pb-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-4 mb-1">
                             <div className="h-px bg-brand w-12"></div>
-                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Personnel Management</p>
+                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Personnel Registry</p>
                         </div>
-                        <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                            TEAM <span className="text-brand">ROSTERS</span>
+                        <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
+                            UNIT <span className="text-brand">ASSETS</span>
                         </h1>
+                        <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Organizing Active Networks</p>
                     </div>
-                    <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                        BACK TO DASHBOARD
+                    <button
+                        onClick={() => onReturnToDashboard('dashboard')}
+                        className="cyber-button-outline w-full md:w-auto px-10 py-4 font-display font-bold italic tracking-widest text-xs uppercase hover:bg-white/5 transition-all"
+                    >
+                        RETURN TO COMMAND
                     </button>
                 </div>
 
-                <div className="cyber-card p-8">
-                    <h2 className="text-lg font-display font-bold mb-4 uppercase italic">Add New Team</h2>
-                    <div className="flex flex-col sm:flex-row gap-4">
+                <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
+                    <div className="flex items-center gap-6 mb-8">
+                        <UserPlus className="w-5 h-5 text-brand" />
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Initialize <span className="text-brand">New Unit</span></h2>
+                        <div className="h-px bg-surface-border flex-grow"></div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-6">
                         <input
                             type="text"
                             value={newTeamName}
                             onChange={(e) => setNewTeamName(e.target.value)}
-                            placeholder="Enter team name..."
-                            className="flex-grow cyber-input"
+                            placeholder="DESIGNATION NAME (E.G. VARSITY ELITE)..."
+                            className="flex-grow cyber-input py-3 px-4 text-sm font-mono tracking-widest uppercase"
                         />
-                        <button onClick={handleAddTeam} className="cyber-button flex items-center justify-center gap-2">
-                            ADD TEAM <UserPlus className="w-4 h-4" />
+                        <button onClick={handleAddTeam} className="cyber-button px-12 py-3 flex items-center justify-center gap-4 font-display font-bold italic tracking-widest text-sm shadow-[0_0_15px_rgba(255,87,34,0.1)]">
+                            CREATE UNIT <UserPlus className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -633,7 +682,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                         )}
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 };

@@ -220,46 +220,52 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
     };
 
     return (
-        <div className="space-y-12">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div>
-                    <div className="flex items-center gap-4 mb-2">
+        <div className="space-y-12 pb-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-4 mb-1">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">User Access</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Access Protocol</p>
                     </div>
-                    <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                        USER <span className="text-brand">REGISTRY</span>
+                    <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
+                        MASTER <span className="text-brand">REGISTRY</span>
                     </h1>
+                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Administrative Override Active</p>
                 </div>
-                <button onClick={() => onReturnToDashboard('dashboard')} className="cyber-button-outline py-2 px-6">
-                    BACK TO DASHBOARD
+                <button
+                    onClick={() => onReturnToDashboard('dashboard')}
+                    className="cyber-button-outline w-full md:w-auto px-10 py-4 font-display font-bold italic tracking-widest text-xs uppercase hover:bg-white/5 transition-all"
+                >
+                    RETURN TO COMMAND
                 </button>
             </div>
 
-            <div className="cyber-card p-8">
-                <form onSubmit={handleInvite} className="space-y-8">
-                    <div>
-                        <h2 className="text-lg font-display font-bold uppercase italic mb-2">Create New User</h2>
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Register a new user in the system.</p>
+            <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
+                <form onSubmit={handleInvite} className="space-y-10">
+                    <div className="flex items-center gap-6">
+                        <UserPlus className="w-5 h-5 text-brand" />
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Register <span className="text-brand">New Identity</span></h2>
+                        <div className="h-px bg-surface-border flex-grow"></div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
-                            <input type="text" placeholder="IDENTITY_IDENT" value={username} onChange={e => setUsername(e.target.value)} className="w-full cyber-input" required />
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest ml-1 font-bold">Display Name</label>
+                            <input type="text" placeholder="IDENTITY_IDENT" value={username} onChange={e => setUsername(e.target.value)} className="w-full cyber-input py-3 px-4 text-sm" required />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Password</label>
-                            <input type="password" placeholder="KEY_AUTH" value={password} onChange={e => setPassword(e.target.value)} className="w-full cyber-input" required />
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest ml-1 font-bold">Access Key</label>
+                            <input type="password" placeholder="KEY_AUTH" value={password} onChange={e => setPassword(e.target.value)} className="w-full cyber-input py-3 px-4 text-sm" required />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest ml-1">Account Role</label>
-                            <select value={role} onChange={e => setRole(e.target.value as Role)} className="w-full cyber-input appearance-none">
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest ml-1 font-bold">Permission Class</label>
+                            <select value={role} onChange={e => setRole(e.target.value as Role)} className="w-full cyber-input appearance-none py-3 px-4 text-sm">
                                 {Object.values(Role).map(r => <option key={r} value={r} className="bg-black">{r.toUpperCase()}</option>)}
                             </select>
                         </div>
                     </div>
-                    <button type="submit" className="cyber-button px-12 flex items-center gap-3">
-                        CREATE USER <UserPlus className="w-4 h-4" />
+                    <button type="submit" className="cyber-button px-16 py-4 flex items-center justify-center gap-4 text-sm font-display font-bold italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.15)]">
+                        ENROLL USER <UserPlus className="w-4 h-4" />
                     </button>
                 </form>
             </div>
