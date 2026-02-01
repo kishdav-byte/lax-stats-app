@@ -732,6 +732,7 @@ const App: React.FC = () => {
                     onAddDrillAssignment={handleAddDrillAssignment}
                     currentUser={currentUser}
                     onViewPlayerProfile={handleViewPlayerProfile}
+                    onUpdateUser={handleUpdateUser}
                 />;
             case 'schedule':
                 return <Schedule teams={teams} games={games} onAddGame={handleAddGame} onStartGame={startGame} onDeleteGame={handleDeleteGame} onReturnToDashboard={() => setCurrentView('dashboard')} onViewReport={handleViewReport} />;

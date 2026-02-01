@@ -263,11 +263,12 @@ interface TeamManagementProps {
     onAddDrillAssignment: (playerId: string, drillType: DrillType, notes: string) => void;
     currentUser: User;
     onViewPlayerProfile: (player: Player, team: Team) => void;
+    onUpdateUser: (user: User) => void;
 }
 
 const lacrossePositions = ['Attack', 'Midfield', 'Defense', 'Goalie', 'LSM', 'Face Off Specialist'];
 
-const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpdateTeam, onDeleteTeam, onReturnToDashboard, accessRequests, users, onUpdateRequestStatus, drillAssignments, onAddDrillAssignment, currentUser, onViewPlayerProfile }) => {
+const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpdateTeam, onDeleteTeam, onReturnToDashboard, accessRequests, users, onUpdateRequestStatus, drillAssignments, onAddDrillAssignment, currentUser, onViewPlayerProfile, onUpdateUser }) => {
     const [newTeamName, setNewTeamName] = useState('');
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [newPlayerName, setNewPlayerName] = useState('');
@@ -362,6 +363,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
 
             onUpdateTeam(updatedTeam);
             setSelectedTeam(updatedTeam);
+
+            // Link the user to the team in their profile if not already linked
+            const updatedTeamIds = [...(user.teamIds || [])];
+            if (!updatedTeamIds.includes(selectedTeam.id)) {
+                updatedTeamIds.push(selectedTeam.id);
+                onUpdateUser({ ...user, teamIds: updatedTeamIds });
+            }
+
             setIsAddExistingModalOpen(false);
         }
     };
