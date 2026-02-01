@@ -50,7 +50,7 @@ export const generateGameSummary = async (game: Game): Promise<string> => {
         const prompt = formatGameDataForPrompt(game);
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
         });
 
@@ -89,7 +89,7 @@ Extract the schedule and return it as a JSON array of objects with the following
 `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash', // Using 2.0-flash for efficiency
+            model: 'gemini-1.5-flash',
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -150,7 +150,7 @@ Extract the roster and return it as a JSON array.
 `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -215,7 +215,7 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
     Please analyze the user's question and the provided code. Provide a clear, expert-level explanation of the issue or concept. If applicable, suggest specific improvements or bug fixes, including corrected code snippets. Structure your response in well-formatted markdown.`;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-pro', // Using a more powerful model for code analysis
+            model: 'gemini-1.5-pro', // Using a more powerful model for code analysis
             contents: prompt,
         });
 
@@ -253,7 +253,7 @@ Provide a concise analysis of this player's strengths and weaknesses. Offer 2-3 
 `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-pro',
+            model: 'gemini-1.5-pro',
             contents: prompt,
         });
 
