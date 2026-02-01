@@ -42,6 +42,7 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
     const [countdown, setCountdown] = useState(0);
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
     const timeRemainingRef = useRef(timeRemaining);
     timeRemainingRef.current = timeRemaining;
@@ -123,7 +124,13 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
             if (mediaStreamRef.current) {
                 stopCamera();
             }
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT } });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: VIDEO_WIDTH,
+                    height: VIDEO_HEIGHT,
+                    facingMode: facingMode
+                }
+            });
             mediaStreamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -331,7 +338,14 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
         setError(null);
         await setupCamera();
         runDrillSequence();
-    }, [runDrillSequence]);
+    }, [runDrillSequence, facingMode]);
+
+    const toggleCamera = () => {
+        setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+        if (drillState !== 'idle' && drillState !== 'result' && drillState !== 'error') {
+            setupCamera();
+        }
+    };
 
     useEffect(() => {
         if (sessionState !== 'running' || drillState !== 'result') {
@@ -586,9 +600,20 @@ const FaceOffTrainer: React.FC<FaceOffTrainerProps> = ({ onReturnToDashboard, ac
                             autoPlay
                             playsInline
                             muted
-                            className={`w-full h-full object-cover transform scaleX(-1) grayscale brightness-75 contrast-125 transition-all duration-1000 ${drillState === 'measuring' ? 'grayscale-0 brightness-100 contrast-150' : ''}`}
+                            className={`w-full h-full object-cover transform ${facingMode === 'user' ? 'scaleX(-1)' : ''} grayscale brightness-75 contrast-125 transition-all duration-1000 ${drillState === 'measuring' ? 'grayscale-0 brightness-100 contrast-150' : ''}`}
                         ></video>
                         <canvas ref={canvasRef} className="hidden"></canvas>
+
+                        {/* Camera Toggle Button */}
+                        <div className="absolute top-4 right-4 z-10">
+                            <button
+                                onClick={toggleCamera}
+                                className="bg-black/40 hover:bg-black/80 backdrop-blur-sm border border-brand/30 p-2 text-brand transition-all flex items-center gap-2"
+                            >
+                                <RefreshCcw className="w-3 h-3" />
+                                <span className="text-[8px] font-mono uppercase tracking-widest">{facingMode === 'user' ? 'Front' : 'Rear'} Cam</span>
+                            </button>
+                        </div>
 
                         {/* Static Overlay Decoration */}
                         <div className="absolute inset-0 border-[40px] border-black/20 pointer-events-none"></div>

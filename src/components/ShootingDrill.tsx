@@ -156,6 +156,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     const [isAiVisionEnabled, setIsAiVisionEnabled] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [activeTargetZone, setActiveTargetZone] = useState<number | null>(null);
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
     const [overlay, setOverlay] = useState({ x: 50, y: 50, width: 200, height: 150 });
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -391,6 +392,32 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         runDrillSequence();
     }
 
+    const toggleCamera = async () => {
+        const newMode = facingMode === 'user' ? 'environment' : 'user';
+        setFacingMode(newMode);
+
+        // Re-setup camera with the new mode
+        try {
+            if (mediaStreamRef.current) {
+                stopCamera();
+            }
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: VIDEO_WIDTH,
+                    height: VIDEO_HEIGHT,
+                    facingMode: newMode
+                }
+            });
+            mediaStreamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (err) {
+            console.error("Error toggling camera:", err);
+            setError("CAMERA_CAPTURE_UNAVAILABLE. CHECK PERMISSIONS.");
+        }
+    };
+
     function handleLogShotPlacement(zone: number) {
         const newHistory = [...shotHistory, zone];
         setShotHistory(newHistory);
@@ -411,7 +438,13 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             if (mediaStreamRef.current) {
                 stopCamera();
             }
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT } });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: VIDEO_WIDTH,
+                    height: VIDEO_HEIGHT,
+                    facingMode: facingMode
+                }
+            });
             mediaStreamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -636,8 +669,19 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                 <div className="flex-grow flex flex-col items-center justify-center space-y-8 pb-12">
                     <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
                         <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
-                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover grayscale brightness-50 opacity-100"></video>
+                            <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${facingMode === 'user' ? 'scaleX(-1)' : ''} grayscale brightness-50 opacity-100`}></video>
                             <DraggableResizableOverlay overlay={overlay} setOverlay={setOverlay} />
+
+                            {/* Camera Toggle Button during calibration */}
+                            <div className="absolute top-4 right-4 z-10">
+                                <button
+                                    onClick={toggleCamera}
+                                    className="bg-black/40 hover:bg-black/80 backdrop-blur-sm border border-brand/30 p-2 text-brand transition-all flex items-center gap-2"
+                                >
+                                    <RefreshCcw className="w-3 h-3" />
+                                    <span className="text-[8px] font-mono uppercase tracking-widest">{facingMode === 'user' ? 'Front' : 'Rear'} Cam</span>
+                                </button>
+                            </div>
                         </div>
                         <div className="absolute -bottom-8 left-0 right-0 text-center">
                             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Position the camera and align the grid with the goal.</p>
@@ -729,8 +773,19 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             <div className="flex-grow flex flex-col items-center justify-center space-y-8">
                 <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
                     <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
-                        <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover transition-all duration-1000 ${drillState === 'measuring' ? 'brightness-100' : 'brightness-50 grayscale'}`}></video>
+                        <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover transition-all duration-1000 ${facingMode === 'user' ? 'scaleX(-1)' : ''} ${drillState === 'measuring' ? 'brightness-100' : 'brightness-50 grayscale'}`}></video>
                         <canvas ref={canvasRef} className="hidden"></canvas>
+
+                        {/* Camera Toggle Button while active */}
+                        <div className="absolute top-4 right-4 z-10">
+                            <button
+                                onClick={toggleCamera}
+                                className="bg-black/40 hover:bg-black/80 backdrop-blur-sm border border-brand/30 p-2 text-brand transition-all flex items-center gap-2"
+                            >
+                                <RefreshCcw className="w-3 h-3" />
+                                <span className="text-[8px] font-mono uppercase tracking-widest">{facingMode === 'user' ? 'Front' : 'Rear'} Cam</span>
+                            </button>
+                        </div>
 
                         {/* HUD Overlay */}
                         <div className="absolute inset-0 pointer-events-none border border-brand/20"></div>
