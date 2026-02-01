@@ -47,36 +47,66 @@ const callAI = async (prompt: string, isJson: boolean = false, isImage: boolean 
 
     // --- Gemini Path ---
     const genAI = new GoogleGenerativeAI(key);
-    const modelName = "gemini-2.0-flash"; // Fixed to the one we verified is available
 
-    try {
-        // Most recent SDK version (0.24.1) supports passing the config in the second object
-        // but let's try a more universal way if that fails.
-        const model = genAI.getGenerativeModel({
-            model: modelName,
-            ...(isJson ? { generationConfig: { responseMimeType: "application/json" } } : {})
-        }, { apiVersion: 'v1beta' });
+    // We use models that we've verified appear in the 'list-models' diagnostic for your key.
+    const attempts = [
+        { model: "gemini-2.0-flash", version: "v1" },
+        { model: "gemini-2.5-flash", version: "v1" },
+        { model: "gemini-1.5-flash", version: "v1" },
+        { model: "gemini-pro-latest", version: "v1beta" } // Final fallback
+    ];
 
-        let result;
-        if (isImage && imageData) {
-            result = await model.generateContent([
-                prompt,
-                { inlineData: { mimeType: "image/jpeg", data: imageData } }
-            ]);
-        } else {
-            result = await model.generateContent(prompt);
+    let lastError: any = null;
+
+    for (const attempt of attempts) {
+        try {
+            const model = genAI.getGenerativeModel(
+                {
+                    model: attempt.model,
+                    ...(isJson ? { generationConfig: { responseMimeType: "application/json" } } : {})
+                },
+                { apiVersion: attempt.version }
+            );
+
+            let result;
+            if (isImage && imageData) {
+                result = await model.generateContent([
+                    prompt,
+                    { inlineData: { mimeType: "image/jpeg", data: imageData } }
+                ]);
+            } else {
+                result = await model.generateContent(prompt);
+            }
+
+            const response = await result.response;
+            return response.text();
+        } catch (e: any) {
+            console.warn(`Gemini attempt failed (${attempt.model} on ${attempt.version}):`, e.message);
+            lastError = e;
+
+            // Critical: If the key is leaked, stop and surface this immediately.
+            if (e.message?.includes('leaked')) {
+                throw new Error("CRITICAL: Your Gemini API Key has been flagged as LEAKED by Google and disabled. You must generate a new API key in Google AI Studio.");
+            }
+
+            // If it's a model not found (404), continue to next attempt
+            if (e.message?.includes('404')) continue;
+
+            // If it's a version/config error, try again without JSON mode but keep same model
+            if (e.message?.includes('RESPONSEMIMETYPE') || e.message?.includes('400')) {
+                try {
+                    const fallbackModel = genAI.getGenerativeModel({ model: attempt.model }, { apiVersion: attempt.version });
+                    const fbResult = await fallbackModel.generateContent(prompt + "\n\n(IMPORTANT: Return ONLY raw JSON array)");
+                    return (await fbResult.response).text();
+                } catch (innerE) {
+                    continue;
+                }
+            }
+            continue;
         }
-
-        const response = await result.response;
-        return response.text();
-    } catch (e: any) {
-        console.warn(`Gemini primary failed, trying fallback...`, e.message);
-        // Fallback: No JSON mode, different model
-        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const result = await fallbackModel.generateContent(prompt + "\n\n(Return ONLY JSON)");
-        const response = await result.response;
-        return response.text();
     }
+
+    throw lastError || new Error("AI services currently unavailable.");
 };
 
 export const generateGameSummary = async (game: Game): Promise<string> => {
