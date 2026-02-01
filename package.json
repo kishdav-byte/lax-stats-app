@@ -13,6 +13,7 @@
     "@google/generative-ai": "0.24.1",
     "@supabase/supabase-js": "^2.91.0",
     "lucide-react": "^0.344.0",
+    "openai": "^4.104.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^3.5.1"

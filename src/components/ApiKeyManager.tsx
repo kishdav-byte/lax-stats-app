@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import { setApiKey } from '../services/apiKeyService';
-import { Shield, Key, ExternalLink, Activity, Info } from 'lucide-react';
+import { Shield, Key, Activity, Info } from 'lucide-react';
 
 interface ApiKeyManagerProps {
     onApiKeySet: () => void;
@@ -38,57 +38,43 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
                     <div className="relative z-10 text-center mb-12">
                         <div className="inline-flex items-center gap-4 mb-4">
                             <div className="h-px bg-brand w-8"></div>
-                            <p className="text-[10px] font-mono tracking-[0.4em] text-brand uppercase">AI Setup</p>
+                            <p className="text-[10px] font-mono tracking-[0.4em] text-brand uppercase">AI Engine Setup</p>
                             <div className="h-px bg-brand w-8"></div>
                         </div>
                         <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                            AI <span className="text-brand">SETUP</span>
+                            AI <span className="text-brand">PORTAL</span>
                         </h1>
-                        <p className="mt-6 text-[11px] font-mono text-gray-500 uppercase tracking-widest max-w-md mx-auto leading-relaxed">
-                            Welcome! To get your AI features working, please provide your Google Gemini API Key.
+                        <p className="mt-6 text-[11px] font-mono text-gray-400 uppercase tracking-widest max-w-md mx-auto leading-relaxed">
+                            Connect your preferred AI engine. We support both <span className="text-white">OpenAI (sk-...)</span> and <span className="text-white">Google Gemini (AIza...)</span>.
                         </p>
                     </div>
 
                     <div className="bg-surface-card border border-surface-border p-8 mb-10 relative group">
                         <div className="flex items-center gap-3 mb-6">
                             <Info className="w-4 h-4 text-brand" />
-                            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-[0.2em]">HOW TO GET A KEY:</h2>
+                            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-[0.2em]">CONNECTION GUIDE:</h2>
                         </div>
                         <ol className="list-none text-[10px] font-mono text-gray-400 space-y-4 uppercase tracking-widest">
                             <li className="flex gap-4">
-                                <span className="text-brand font-black">01 //</span> Visit Google AI Studio.
+                                <span className="text-brand font-black">OPENAI //</span> Visit platform.openai.com/api-keys to get your Secret Key.
                             </li>
                             <li className="flex gap-4">
-                                <span className="text-brand font-black">02 //</span> Click on "Get API key".
-                            </li>
-                            <li className="flex gap-4">
-                                <span className="text-brand font-black">03 //</span> Create a new API key.
-                            </li>
-                            <li className="flex gap-4">
-                                <span className="text-brand font-black">04 //</span> Copy the key and paste it below.
+                                <span className="text-brand font-black">GEMINI //</span> Visit aistudio.google.com to generate your API Key.
                             </li>
                         </ol>
-                        <a
-                            href="https://aistudio.google.com/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-8 cyber-button-outline w-full sm:w-auto py-3 px-8 flex items-center justify-center gap-3 group/link"
-                        >
-                            ACCESS STUDIO <ExternalLink className="w-4 h-4 group-hover/link:text-brand transition-colors" />
-                        </a>
                     </div>
 
                     <div className="space-y-6">
                         <div className="space-y-3">
                             <label htmlFor="api-key" className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1">
-                                <Key className="w-3 h-3" /> GEMINI API KEY
+                                <Key className="w-3 h-3" /> UNIFIED API KEY
                             </label>
                             <input
                                 id="api-key"
                                 type="password"
                                 value={apiKey}
-                                onChange={(e) => setApiKeyInput(e.target.value)}
-                                placeholder="PASTE API KEY HERE..."
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setApiKeyInput(e.target.value)}
+                                placeholder="PASTE SK-... OR AIZA... KEY HERE"
                                 className="w-full cyber-input text-lg tracking-widest"
                             />
                         </div>
@@ -106,15 +92,15 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
                             className="cyber-button w-full py-5 text-xl flex items-center justify-center gap-4 group"
                         >
                             {isLoading ? (
-                                <>SAVING... <Activity className="w-6 h-6 animate-spin" /></>
+                                <>SYNCING... <Activity className="w-6 h-6 animate-spin" /></>
                             ) : (
-                                <>SAVE & CONTINUE <Activity className="w-6 h-6 group-hover:scale-110 transition-transform" /></>
+                                <>AUTHORIZE ACCESS <Activity className="w-6 h-6 group-hover:scale-110 transition-transform" /></>
                             )}
                         </button>
                     </div>
 
                     <p className="text-[8px] font-mono text-gray-700 mt-10 text-center uppercase tracking-[0.5em] opacity-50">
-                        Secure Connection // Saved Locally Only
+                        End-to-End Encrypted // Stored Locally
                     </p>
                 </div>
             </div>
@@ -123,4 +109,3 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeySet }) => {
 };
 
 export default ApiKeyManager;
-
