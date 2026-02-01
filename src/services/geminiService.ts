@@ -15,17 +15,6 @@ export interface ExtractedGame {
     scheduledTime: string; // ISO string
 }
 
-// Helper to get model with specific API version
-const getModel = (genAI: GoogleGenerativeAI, modelName: string, isJson: boolean = false) => {
-    return genAI.getGenerativeModel(
-        {
-            model: modelName,
-            ...(isJson ? { generationConfig: { responseMimeType: "application/json" } } : {})
-        },
-        { apiVersion: 'v1' } // Force v1 for stable model access
-    );
-};
-
 const formatGameDataForPrompt = (game: Game): string => {
     let prompt = `Analyze the following lacrosse game data and provide a concise, exciting game summary. Also, name a "Player of the Game" with a brief justification.\n\n`;
 
@@ -57,7 +46,7 @@ const formatGameDataForPrompt = (game: Game): string => {
 export const generateGameSummary = async (game: Game): Promise<string> => {
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getModel(genAI, "gemini-1.5-flash");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = formatGameDataForPrompt(game);
 
         const result = await model.generateContent(prompt);
@@ -76,7 +65,8 @@ export const generateScheduleFromText = async (pastedText: string): Promise<Extr
 
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getModel(genAI, "gemini-1.5-flash", true);
+        // Using default model initialization without restrictive JSON config to maximize compatibility
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const currentYear = new Date().getFullYear();
 
         const prompt = `Analyze the following text from a sports schedule (e.g., MaxPreps) and extract game information. 
@@ -85,23 +75,32 @@ Look for "@" indicating away or "vs" indicating home.
 For the date and time, convert them into a valid ISO 8601 string. Assume the year is ${currentYear} unless specified otherwise.
 If no time is provided, assume 00:00:00.
 
+IMPORTANT: Return ONLY a valid JSON array of objects. No intro text, no markdown code blocks.
+The objects must have:
+- opponentName: string
+- isHome: boolean
+- scheduledTime: ISO 8601 string (e.g. "2024-03-15T19:15:00")
+
 Pasted Text:
 """
 ${pastedText}
 """
-
-Extract the schedule and return it as a JSON array of objects with the following properties:
-- opponentName: string
-- isHome: boolean
-- scheduledTime: ISO 8601 string (e.g. "2024-03-15T19:15:00")
 `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let jsonText = response.text().trim();
 
-        if (jsonText.startsWith('```')) {
-            jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
+        // Robustness: Strip potential markdown markers that the model might include
+        if (jsonText.includes('```')) {
+            jsonText = jsonText.replace(/```json\s*|```\s*/g, '').trim();
+        }
+
+        // Take everything from the first '[' to the last ']' to be extra safe
+        const startIndex = jsonText.indexOf('[');
+        const endIndex = jsonText.lastIndexOf(']');
+        if (startIndex !== -1 && endIndex !== -1) {
+            jsonText = jsonText.substring(startIndex, endIndex + 1);
         }
 
         return JSON.parse(jsonText);
@@ -110,7 +109,7 @@ Extract the schedule and return it as a JSON array of objects with the following
         console.error("Error generating schedule:", error);
         let errorMessage = error.message || "The AI failed to process the request.";
         if (error instanceof SyntaxError) {
-            errorMessage = "The AI returned an invalid JSON format. Try adjusting the pasted text.";
+            errorMessage = "The AI returned an invalid format. Try adjusting the pasted text.";
         }
         throw new Error(errorMessage);
     }
@@ -123,24 +122,31 @@ export const generateRosterFromText = async (pastedText: string): Promise<Omit<P
 
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getModel(genAI, "gemini-1.5-flash", true);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `Analyze the following text from a lacrosse team's website roster and extract the player information. Identify each player's name, jersey number, and position. The position might be abbreviated (e.g., A, M, D, G, LSM, FOGO). Do your best to standardize the position to: Attack, Midfield, Defense, Goalie, LSM, or Face Off Specialist.
+
+IMPORTANT: Return ONLY a valid JSON array of objects. No intro text, no markdown code blocks.
+The objects must have: name (string), jerseyNumber (string), position (string).
 
 Pasted Text:
 """
 ${pastedText}
 """
-
-Extract the roster and return it as a JSON array of objects with: name (string), jerseyNumber (string), position (string).
 `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let jsonText = response.text().trim();
 
-        if (jsonText.startsWith('```')) {
-            jsonText = jsonText.replace(/^```json\s*|```\s*$/g, '').trim();
+        if (jsonText.includes('```')) {
+            jsonText = jsonText.replace(/```json\s*|```\s*/g, '').trim();
+        }
+
+        const startIndex = jsonText.indexOf('[');
+        const endIndex = jsonText.lastIndexOf(']');
+        if (startIndex !== -1 && endIndex !== -1) {
+            jsonText = jsonText.substring(startIndex, endIndex + 1);
         }
 
         return JSON.parse(jsonText);
@@ -159,7 +165,7 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
 
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getModel(genAI, "gemini-1.5-pro");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         const prompt = `You are a world-class senior frontend engineer with deep expertise in React, TypeScript, and modern UI/UX design. An administrator of this application is asking for help with the codebase.
 
@@ -188,7 +194,7 @@ export const analyzeCodeProblem = async (question: string, code: string, fileNam
 export const analyzePlayerPerformance = async (playerData: PlayerAnalysisData): Promise<string> => {
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getModel(genAI, "gemini-1.5-pro");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         let statsString = Object.entries(playerData.stats)
             .map(([stat, value]) => `- ${stat}: ${value}`)
@@ -222,7 +228,7 @@ Provide a concise analysis of this player's strengths and weaknesses. Offer 2-3 
 export const analyzeShotPlacement = async (base64Image: string): Promise<number | null> => {
     try {
         const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getModel(genAI, "gemini-1.5-flash");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
 Analyze this high-speed frame from a lacrosse shooting drill. 
