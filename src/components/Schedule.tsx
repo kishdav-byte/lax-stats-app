@@ -182,12 +182,25 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
         setIsImportModalOpen(false);
     };
 
+    const now = new Date();
     const filteredGames = managedTeamId
         ? games.filter(g => g.homeTeam.id === managedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id === managedTeamId))
         : games;
 
-    const scheduledGames = filteredGames.filter(g => g.status === 'scheduled').sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
-    const finishedGames = filteredGames.filter(g => g.status === 'finished').sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
+    // Upcoming: Future scheduled games, earliest first
+    const scheduledGames = filteredGames
+        .filter(g => g.status === 'scheduled' && new Date(g.scheduledTime) >= now)
+        .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+
+    // Completed: Any finished game, latest first
+    const finishedGames = filteredGames
+        .filter(g => g.status === 'finished')
+        .sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
+
+    // Past Pending: Games scheduled in the past but never started, latest first
+    const pastPendingGames = filteredGames
+        .filter(g => g.status === 'scheduled' && new Date(g.scheduledTime) < now)
+        .sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
 
 
     return (
@@ -213,9 +226,8 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                         )}
                     </div>
                     <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
-                        GAME <span className="text-brand">CHRONOS</span>
+                        GAME <span className="text-brand">SCHEDULE</span>
                     </h1>
-                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Sequencing Scheduled Events</p>
                 </div>
                 <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
                     <div className="flex bg-surface-card border border-surface-border p-1 rounded-sm">
@@ -252,8 +264,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                     {teams.length > 0 ? (
                         <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
                             <div className="flex items-center gap-6 mb-10">
-                                <Calendar className="w-5 h-5 text-brand" />
-                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Queue <span className="text-brand">Deployment</span></h2>
+                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">GAME <span className="text-brand">SCHEDULE</span></h2>
                                 <div className="h-px bg-surface-border flex-grow"></div>
                                 <button
                                     onClick={() => setIsImportModalOpen(true)}
@@ -361,35 +372,45 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                             </div>
                         </div>
 
-                        {/* Completed */}
+                        {/* Completed / Past Pending */}
                         <div>
                             <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
                                 COMPLETED <span className="text-brand">GAMES</span>
                                 <div className="h-px bg-surface-border flex-grow"></div>
                             </h2>
                             <div className="space-y-4">
-                                {finishedGames.map(game => (
-                                    <div key={game.id} className="cyber-card p-1 border-brand/20">
+                                {[...pastPendingGames, ...finishedGames].map(game => (
+                                    <div key={game.id} className={`cyber-card p-1 ${game.status === 'scheduled' ? 'border-red-500/30' : 'border-brand/20'}`}>
                                         <div className="bg-black p-6 flex items-center justify-between">
                                             <div>
                                                 <div className="flex items-baseline gap-3 mb-1">
                                                     <p className="font-display font-bold text-lg text-white uppercase italic tracking-tight">{game.homeTeam.name} // {game.awayTeam.name}</p>
-                                                    <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
+                                                    {game.status === 'finished' ? (
+                                                        <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
+                                                    ) : (
+                                                        <span className="text-[8px] font-mono text-red-500 uppercase tracking-widest border border-red-500/20 px-2 bg-red-500/5">Missed/Pending</span>
+                                                    )}
                                                 </div>
                                                 <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
-                                                    Played: {new Date(game.scheduledTime).toLocaleDateString()}
+                                                    {game.status === 'finished' ? 'Played:' : 'Scheduled:'} {new Date(game.scheduledTime).toLocaleDateString()}
                                                 </p>
                                             </div>
-                                            <button
-                                                onClick={() => onViewReport(game)}
-                                                className="cyber-button-outline py-1 px-4 text-[10px]"
-                                            >
-                                                GAME REPORT
-                                            </button>
+                                            {game.status === 'finished' ? (
+                                                <button
+                                                    onClick={() => onViewReport(game)}
+                                                    className="cyber-button-outline py-1 px-4 text-[10px]"
+                                                >
+                                                    GAME REPORT
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => onStartGame(game.id)} className="cyber-button py-2 px-6 flex items-center gap-2 group/btn">
+                                                    START <Play className="w-3 h-3 group-hover/btn:fill-black" />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
-                                {finishedGames.length === 0 && (
+                                {finishedGames.length === 0 && pastPendingGames.length === 0 && (
                                     <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
                                         <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
                                         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">History Empty</p>

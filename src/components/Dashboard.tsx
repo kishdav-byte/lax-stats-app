@@ -17,18 +17,20 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onViewChange, activeGameId, onViewReport, userRole, managedTeamId, onManagedTeamChange }) => {
     // Filter games by managed team if selected
+    const now = new Date();
+    // Filter games by managed team if selected
     const filteredGames = managedTeamId
         ? games.filter(g => g.homeTeam.id === managedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id === managedTeamId))
         : games;
 
-    // Sort upcoming: Earliest first (closest to now)
+    // Sort upcoming: Earliest first (closest to now, future only)
     const upcomingGames = filteredGames
-        .filter(g => g.status === 'scheduled')
+        .filter(g => g.status === 'scheduled' && new Date(g.scheduledTime) >= now)
         .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
-    // Sort finished: Latest first (shown at the top of reports)
+    // Sort finished: Latest first (include past scheduled that never started)
     const finishedGames = filteredGames
-        .filter(g => g.status === 'finished')
+        .filter(g => g.status === 'finished' || (g.status === 'scheduled' && new Date(g.scheduledTime) < now))
         .sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
 
     const activeGame = games.find(g => g.id === activeGameId);

@@ -151,7 +151,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
                         <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter leading-none flex items-baseline gap-3">
                             {monthName} <span className="text-brand">{year}</span>
                         </h2>
-                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em] mt-1">Orbit Cycle // Scheduled Events</p>
+                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em] mt-1">GAME SCHEDULE</p>
                     </div>
 
                     <button
