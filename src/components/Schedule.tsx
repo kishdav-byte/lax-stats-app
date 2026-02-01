@@ -113,7 +113,7 @@ const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ onClose, onSc
                             onClick={handleConfirmImport}
                             className="cyber-button w-full py-4 text-sm font-display font-black italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.2)]"
                         >
-                            COMMIT {generatedGames.length} IDENTIFIED SESSIONS TO TIMELINE
+                            SAVE {generatedGames.length} IDENTIFIED GAMES TO TIMELINE
                         </button>
                     </div>
                 )}
@@ -269,7 +269,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                         </div>
                     </div>
                     <button onClick={handleAddGame} className="mt-10 cyber-button w-full md:w-auto px-16 py-4 flex items-center justify-center gap-4 text-sm font-display font-bold italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.15)]">
-                        COMMIT SESSION <Calendar className="w-4 h-4" />
+                        SAVE GAME <Calendar className="w-4 h-4" />
                     </button>
                 </div>
             ) : (
