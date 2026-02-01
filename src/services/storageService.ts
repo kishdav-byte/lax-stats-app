@@ -1,7 +1,7 @@
 import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback, TrainingSession } from '../types';
 import { supabase } from '../supabaseClient';
 
-export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile';
+export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile' | 'globalSettings';
 
 export interface AppDatabase {
     teams: Team[];
@@ -191,6 +191,20 @@ export const fetchSoundEffects = async (): Promise<SoundEffects> => {
         .eq('id', 'sound_effects')
         .single();
     return data?.data?.effects || {};
+};
+
+export const saveAppSetting = async (id: string, data: any) => {
+    const { error } = await supabase.from('settings').upsert({ id, data });
+    if (error) throw error;
+};
+
+export const fetchAppSetting = async (id: string): Promise<any> => {
+    const { data } = await supabase
+        .from('settings')
+        .select('data')
+        .eq('id', id)
+        .single();
+    return data?.data || null;
 };
 
 export const saveTrainingSession = async (session: TrainingSession) => {
