@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Team, Player, AccessRequest, User, RequestStatus, DrillAssignment, DrillType, DrillStatus, Role } from '../types';
 import { generateRosterFromText } from '../services/geminiService';
-import { Users, UserPlus, Upload, Shield, ChevronRight, Binary, Trash2, Search, Activity } from 'lucide-react';
+import { Users, UserPlus, Upload, Shield, Binary, Trash2, Search, Activity } from 'lucide-react';
 
 interface ImportRosterModalProps {
     team: Team;
@@ -270,7 +270,7 @@ const lacrossePositions = ['Attack', 'Midfield', 'Defense', 'Goalie', 'LSM', 'Fa
 
 const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpdateTeam, onDeleteTeam, onReturnToDashboard, accessRequests, users, onUpdateRequestStatus, drillAssignments, onAddDrillAssignment, currentUser, onViewPlayerProfile, onUpdateUser }) => {
     const [newTeamName, setNewTeamName] = useState('');
-    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerNumber, setNewPlayerNumber] = useState('');
     const [newPlayerPosition, setNewPlayerPosition] = useState('');
@@ -278,6 +278,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
     const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
     const [isAssignDrillModalOpen, setIsAssignDrillModalOpen] = useState(false);
     const [playerToAssign, setPlayerToAssign] = useState<Player | null>(null);
+
+    const selectedTeam = teams.find(t => t.id === selectedTeamId) || null;
 
     const pendingRequestsForTeam = selectedTeam
         ? accessRequests.filter(
@@ -305,7 +307,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                 roster: [...selectedTeam.roster, newPlayer]
             };
             onUpdateTeam(updatedTeam);
-            setSelectedTeam(updatedTeam);
             setNewPlayerName('');
             setNewPlayerNumber('');
             setNewPlayerPosition('');
@@ -317,18 +318,20 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
             const updatedRoster = selectedTeam.roster.filter(p => p.id !== playerId);
             const updatedTeam = { ...selectedTeam, roster: updatedRoster };
             onUpdateTeam(updatedTeam);
-            setSelectedTeam(updatedTeam);
         }
     };
 
     const handleRosterImport = (newRoster: Player[]) => {
         if (selectedTeam) {
+            // MERGE: Keep existing players and add new ones (prevent duplicates by number if possible)
+            const existingNumbers = new Set(selectedTeam.roster.map(p => p.jerseyNumber));
+            const uniqueNewPlayers = newRoster.filter(p => !existingNumbers.has(p.jerseyNumber));
+
             const updatedTeam = {
                 ...selectedTeam,
-                roster: newRoster,
+                roster: [...selectedTeam.roster, ...uniqueNewPlayers],
             };
             onUpdateTeam(updatedTeam);
-            setSelectedTeam(updatedTeam);
             setIsImportModalOpen(false);
         }
     };
@@ -362,7 +365,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
             };
 
             onUpdateTeam(updatedTeam);
-            setSelectedTeam(updatedTeam);
 
             // Link the user to the team in their profile if not already linked
             const updatedTeamIds = [...(user.teamIds || [])];
@@ -448,14 +450,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                             {teams.map(team => (
                                 <button
                                     key={team.id}
-                                    onClick={() => setSelectedTeam(team)}
-                                    className={`w-full text-left p-4 rounded-none border border-surface-border transition-all flex items-center justify-between group ${selectedTeam?.id === team.id
+                                    onClick={() => setSelectedTeamId(team.id)}
+                                    className={`w-full text-left p-4 rounded-none border border-surface-border transition-all flex items-center justify-between group ${selectedTeamId === team.id
                                         ? 'bg-brand/10 border-brand text-brand'
                                         : 'bg-surface-card text-gray-400 hover:text-white hover:border-brand/50'
                                         }`}
                                 >
                                     <span className="font-display font-black uppercase tracking-tight italic">{team.name}</span>
-                                    <ChevronRight className={`w-4 h-4 transition-transform ${selectedTeam?.id === team.id ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
+                                    <Binary className={`w-4 h-4 transition-all ${selectedTeamId === team.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-20'}`} />
                                 </button>
                             ))}
                         </div>
@@ -471,9 +473,9 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                     </h2>
                                     <div className="flex gap-4">
                                         <button onClick={() => setIsImportModalOpen(true)} className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2">
-                                            IMPORT WEB <Upload className="w-3 h-3" />
+                                            IMPORT / MERGE <Upload className="w-3 h-3" />
                                         </button>
-                                        <button onClick={() => { onDeleteTeam(selectedTeam.id); setSelectedTeam(null); }} className="text-red-500 hover:text-red-400 transition-colors text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
+                                        <button onClick={() => { onDeleteTeam(selectedTeam.id); setSelectedTeamId(null); }} className="text-red-500 hover:text-red-400 transition-colors text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
                                             DELETE TEAM <Trash2 className="w-3 h-3" />
                                         </button>
                                     </div>
