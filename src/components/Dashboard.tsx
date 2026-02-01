@@ -6,7 +6,7 @@ import { Activity, Calendar, Users, Volume2, ChevronRight, Binary, ShieldCheck }
 interface DashboardProps {
     games: Game[];
     onStartGame: (gameId: string) => void;
-    onViewChange: (view: View) => void;
+    onViewChange: (view: View, preference?: any) => void;
     activeGameId: string | null;
     onViewReport: (game: Game) => void;
     userRole?: Role;
@@ -58,11 +58,15 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                    { label: 'Scheduled Games', value: upcomingGames.length, sub: 'Ready for Kickoff', icon: Calendar },
-                    { label: 'Completed Sets', value: finishedGames.length, sub: 'Performance Logged', icon: Binary },
-                    { label: 'System Status', value: 'ONLINE', sub: 'Secure & Synchronized', icon: ShieldCheck }
+                    { label: 'Scheduled Games', value: upcomingGames.length, sub: 'Ready for Kickoff', icon: Calendar, onClick: () => onViewChange('schedule', { mode: 'calendar' }) },
+                    { label: 'Completed Sets', value: finishedGames.length, sub: 'Performance Logged', icon: Binary, onClick: () => onViewChange('schedule') },
+                    { label: 'System Status', value: 'ONLINE', sub: 'Secure & Synchronized', icon: ShieldCheck, onClick: () => onViewChange('globalSettings') }
                 ].map((metric, i) => (
-                    <div key={i} className="cyber-card p-8 flex flex-col justify-between min-h-[160px] group hover:border-brand transition-all">
+                    <div
+                        key={i}
+                        className="cyber-card p-8 flex flex-col justify-between min-h-[160px] group hover:border-brand transition-all cursor-pointer"
+                        onClick={metric.onClick}
+                    >
                         <div className="flex justify-between items-start">
                             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold group-hover:text-brand transition-colors">{metric.label}</p>
                             <metric.icon className="w-5 h-5 text-brand opacity-20 group-hover:opacity-100 transition-all" />

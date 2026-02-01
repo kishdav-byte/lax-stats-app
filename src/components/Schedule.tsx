@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Game, Team } from '../types';
-import { Calendar, Binary, Trash2, Play, TableProperties, Search, Upload } from 'lucide-react';
+import { Calendar, Binary, Trash2, Play, TableProperties, Search, Upload, LayoutList } from 'lucide-react';
 import { generateScheduleFromText, ExtractedGame } from '../services/geminiService';
+import CalendarView from './CalendarView';
 
 interface ImportScheduleModalProps {
     onClose: () => void;
@@ -130,13 +131,15 @@ interface ScheduleProps {
     onDeleteGame: (gameId: string) => void;
     onReturnToDashboard: (view: 'dashboard') => void;
     onViewReport: (game: Game) => void;
+    initialViewMode?: 'timeline' | 'calendar';
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGame, onDeleteGame, onReturnToDashboard, onViewReport }) => {
+const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGame, onDeleteGame, onReturnToDashboard, onViewReport, initialViewMode }) => {
     const [homeTeamId, setHomeTeamId] = useState('');
     const [awayTeamName, setAwayTeamName] = useState('');
     const [gameDate, setGameDate] = useState('');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>(initialViewMode || 'timeline');
 
     const handleAddGame = () => {
         const trimmedAwayName = awayTeamName.trim();
@@ -201,163 +204,189 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                     </h1>
                     <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Sequencing Scheduled Events</p>
                 </div>
-                <button
-                    onClick={() => onReturnToDashboard('dashboard')}
-                    className="cyber-button-outline w-full md:w-auto px-10 py-4 font-display font-bold italic tracking-widest text-xs uppercase hover:bg-white/5 transition-all"
-                >
-                    RETURN TO COMMAND
-                </button>
-            </div>
-
-            {teams.length > 0 ? (
-                <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
-                    <div className="flex items-center gap-6 mb-10">
-                        <Calendar className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Queue <span className="text-brand">Deployment</span></h2>
-                        <div className="h-px bg-surface-border flex-grow"></div>
+                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+                    <div className="flex bg-surface-card border border-surface-border p-1 rounded-sm">
                         <button
-                            onClick={() => setIsImportModalOpen(true)}
-                            className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2"
+                            onClick={() => setViewMode('timeline')}
+                            className={`flex items-center gap-2 px-6 py-2 text-[10px] font-mono uppercase tracking-widest transition-all ${viewMode === 'timeline' ? 'bg-brand text-black font-bold' : 'text-gray-500 hover:text-white'}`}
                         >
-                            IMPORT / MERGE <Upload className="w-3 h-3" />
+                            <LayoutList className="w-3 h-3" /> Timeline
+                        </button>
+                        <button
+                            onClick={() => setViewMode('calendar')}
+                            className={`flex items-center gap-2 px-6 py-2 text-[10px] font-mono uppercase tracking-widest transition-all ${viewMode === 'calendar' ? 'bg-brand text-black font-bold' : 'text-gray-500 hover:text-white'}`}
+                        >
+                            <Calendar className="w-3 h-3" /> Calendar
                         </button>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-                        <div className="space-y-3">
-                            <label htmlFor="homeTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Home Designation</label>
-                            <div className="relative">
-                                <select
-                                    id="homeTeam"
-                                    value={homeTeamId}
-                                    onChange={e => setHomeTeamId(e.target.value)}
-                                    className="w-full cyber-input appearance-none py-3 px-4 text-sm"
-                                >
-                                    <option value="" className="bg-black">SELECT HOME TEAM</option>
-                                    {teams.map(t => <option key={t.id} value={t.id} className="bg-black">{t.name.toUpperCase()}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <label htmlFor="awayTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Away Designation</label>
-                            <div className="relative">
-                                <input
-                                    id="awayTeam"
-                                    type="text"
-                                    value={awayTeamName}
-                                    onChange={e => setAwayTeamName(e.target.value)}
-                                    placeholder="SEARCH OR ENTER NAME..."
-                                    className="w-full cyber-input py-3 px-4 text-sm"
-                                    list="teams-list"
-                                />
-                                <datalist id="teams-list">
-                                    {teams.filter(t => t.id !== homeTeamId).map(t => <option key={t.id} value={t.name} />)}
-                                </datalist>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <label htmlFor="gameDate" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Sync Timestamp</label>
-                            <input
-                                type="datetime-local"
-                                id="gameDate"
-                                value={gameDate}
-                                onChange={e => setGameDate(e.target.value)}
-                                className="w-full cyber-input py-3 px-4 text-sm"
-                            />
-                        </div>
-                    </div>
-                    <button onClick={handleAddGame} className="mt-10 cyber-button w-full md:w-auto px-16 py-4 flex items-center justify-center gap-4 text-sm font-display font-bold italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.15)]">
-                        SAVE GAME <Calendar className="w-4 h-4" />
+                    <button
+                        onClick={() => onReturnToDashboard('dashboard')}
+                        className="cyber-button-outline px-10 py-4 font-display font-bold italic tracking-widest text-xs uppercase hover:bg-white/5 transition-all"
+                    >
+                        RETURN TO COMMAND
                     </button>
                 </div>
-            ) : (
-                <div className="cyber-card p-16 text-center border-dashed border-surface-border grayscale flex flex-col items-center justify-center min-h-[300px]">
-                    <TableProperties className="w-12 h-12 mb-6 opacity-20 text-brand" />
-                    <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 leading-loose">Insufficient Data // Create tactical units (teams) before scheduling engagements.</p>
-                </div>
-            )}
-
-            <div className="grid lg:grid-cols-2 gap-12 pt-8">
-                {/* Upcoming */}
-                <div>
-                    <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
-                        UPCOMING <span className="text-brand">GAMES</span>
-                        <div className="h-px bg-surface-border flex-grow"></div>
-                    </h2>
-                    <div className="space-y-4">
-                        {scheduledGames.map(game => (
-                            <div key={game.id} className="cyber-card p-1 bg-surface-card/50">
-                                <div className="bg-black p-6 flex items-center justify-between group">
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <div className="w-1 h-1 bg-brand rounded-full animate-pulse"></div>
-                                            <p className="font-display font-bold text-lg text-white group-hover:text-brand transition-colors italic uppercase tracking-tight">
-                                                {game.homeTeam.name} // {game.awayTeam.name}
-                                            </p>
-                                        </div>
-                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1 ml-4">
-                                            Scheduled: {new Date(game.scheduledTime).toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <button onClick={() => onStartGame(game.id)} className="cyber-button py-2 px-6 flex items-center gap-2 group/btn">
-                                            START <Play className="w-3 h-3 group-hover/btn:fill-black" />
-                                        </button>
-                                        <button onClick={() => onDeleteGame(game.id)} className="text-gray-600 hover:text-red-500 transition-colors">
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {scheduledGames.length === 0 && (
-                            <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
-                                <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Pending Games</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Completed */}
-                <div>
-                    <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
-                        COMPLETED <span className="text-brand">GAMES</span>
-                        <div className="h-px bg-surface-border flex-grow"></div>
-                    </h2>
-                    <div className="space-y-4">
-                        {finishedGames.map(game => (
-                            <div key={game.id} className="cyber-card p-1 border-brand/20">
-                                <div className="bg-black p-6 flex items-center justify-between">
-                                    <div>
-                                        <div className="flex items-baseline gap-3 mb-1">
-                                            <p className="font-display font-bold text-lg text-white uppercase italic tracking-tight">{game.homeTeam.name} // {game.awayTeam.name}</p>
-                                            <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
-                                        </div>
-                                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
-                                            Played: {new Date(game.scheduledTime).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => onViewReport(game)}
-                                        className="cyber-button-outline py-1 px-4 text-[10px]"
-                                    >
-                                        GAME REPORT
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                        {finishedGames.length === 0 && (
-                            <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
-                                <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">History Empty</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
             </div>
+
+            {viewMode === 'calendar' ? (
+                <CalendarView
+                    games={games}
+                    onStartGame={onStartGame}
+                    onViewReport={onViewReport}
+                />
+            ) : (
+                <>
+                    {teams.length > 0 ? (
+                        <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
+                            <div className="flex items-center gap-6 mb-10">
+                                <Calendar className="w-5 h-5 text-brand" />
+                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Queue <span className="text-brand">Deployment</span></h2>
+                                <div className="h-px bg-surface-border flex-grow"></div>
+                                <button
+                                    onClick={() => setIsImportModalOpen(true)}
+                                    className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2"
+                                >
+                                    IMPORT / MERGE <Upload className="w-3 h-3" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+                                <div className="space-y-3">
+                                    <label htmlFor="homeTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Home Designation</label>
+                                    <div className="relative">
+                                        <select
+                                            id="homeTeam"
+                                            value={homeTeamId}
+                                            onChange={e => setHomeTeamId(e.target.value)}
+                                            className="w-full cyber-input appearance-none py-3 px-4 text-sm"
+                                        >
+                                            <option value="" className="bg-black">SELECT HOME TEAM</option>
+                                            {teams.map(t => <option key={t.id} value={t.id} className="bg-black">{t.name.toUpperCase()}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label htmlFor="awayTeam" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Away Designation</label>
+                                    <div className="relative">
+                                        <input
+                                            id="awayTeam"
+                                            type="text"
+                                            value={awayTeamName}
+                                            onChange={e => setAwayTeamName(e.target.value)}
+                                            placeholder="SEARCH OR ENTER NAME..."
+                                            className="w-full cyber-input py-3 px-4 text-sm"
+                                            list="teams-list"
+                                        />
+                                        <datalist id="teams-list">
+                                            {teams.filter(t => t.id !== homeTeamId).map(t => <option key={t.id} value={t.name} />)}
+                                        </datalist>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label htmlFor="gameDate" className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 ml-1 font-bold">Sync Timestamp</label>
+                                    <input
+                                        type="datetime-local"
+                                        id="gameDate"
+                                        value={gameDate}
+                                        onChange={e => setGameDate(e.target.value)}
+                                        className="w-full cyber-input py-3 px-4 text-sm"
+                                    />
+                                </div>
+                            </div>
+                            <button onClick={handleAddGame} className="mt-10 cyber-button w-full md:w-auto px-16 py-4 flex items-center justify-center gap-4 text-sm font-display font-bold italic tracking-widest shadow-[0_0_20px_rgba(255,87,34,0.15)]">
+                                SAVE GAME <Calendar className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="cyber-card p-16 text-center border-dashed border-surface-border grayscale flex flex-col items-center justify-center min-h-[300px]">
+                            <TableProperties className="w-12 h-12 mb-6 opacity-20 text-brand" />
+                            <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 leading-loose">Insufficient Data // Create tactical units (teams) before scheduling engagements.</p>
+                        </div>
+                    )}
+
+                    <div className="grid lg:grid-cols-2 gap-12 pt-8">
+                        {/* Upcoming */}
+                        <div>
+                            <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
+                                UPCOMING <span className="text-brand">GAMES</span>
+                                <div className="h-px bg-surface-border flex-grow"></div>
+                            </h2>
+                            <div className="space-y-4">
+                                {scheduledGames.map(game => (
+                                    <div key={game.id} className="cyber-card p-1 bg-surface-card/50">
+                                        <div className="bg-black p-6 flex items-center justify-between group">
+                                            <div>
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <div className="w-1 h-1 bg-brand rounded-full animate-pulse"></div>
+                                                    <p className="font-display font-bold text-lg text-white group-hover:text-brand transition-colors italic uppercase tracking-tight">
+                                                        {game.homeTeam.name} // {game.awayTeam.name}
+                                                    </p>
+                                                </div>
+                                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1 ml-4">
+                                                    Scheduled: {new Date(game.scheduledTime).toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-4">
+                                                <button onClick={() => onStartGame(game.id)} className="cyber-button py-2 px-6 flex items-center gap-2 group/btn">
+                                                    START <Play className="w-3 h-3 group-hover/btn:fill-black" />
+                                                </button>
+                                                <button onClick={() => onDeleteGame(game.id)} className="text-gray-600 hover:text-red-500 transition-colors">
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {scheduledGames.length === 0 && (
+                                    <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
+                                        <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
+                                        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No Pending Games</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Completed */}
+                        <div>
+                            <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
+                                COMPLETED <span className="text-brand">GAMES</span>
+                                <div className="h-px bg-surface-border flex-grow"></div>
+                            </h2>
+                            <div className="space-y-4">
+                                {finishedGames.map(game => (
+                                    <div key={game.id} className="cyber-card p-1 border-brand/20">
+                                        <div className="bg-black p-6 flex items-center justify-between">
+                                            <div>
+                                                <div className="flex items-baseline gap-3 mb-1">
+                                                    <p className="font-display font-bold text-lg text-white uppercase italic tracking-tight">{game.homeTeam.name} // {game.awayTeam.name}</p>
+                                                    <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
+                                                </div>
+                                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
+                                                    Played: {new Date(game.scheduledTime).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => onViewReport(game)}
+                                                className="cyber-button-outline py-1 px-4 text-[10px]"
+                                            >
+                                                GAME REPORT
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {finishedGames.length === 0 && (
+                                    <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
+                                        <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
+                                        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">History Empty</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

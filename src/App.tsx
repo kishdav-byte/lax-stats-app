@@ -43,6 +43,7 @@ const App: React.FC = () => {
     const [viewingPlayer, setViewingPlayer] = useState<{ player: Player; team: Team } | null>(null);
     const [loginError, setLoginError] = useState('');
     const [simulatedRole, setSimulatedRole] = useState<Role | null>(null);
+    const [viewPreference, setViewPreference] = useState<any>(null);
 
     // Load initial data from Firestore
     useEffect(() => {
@@ -214,6 +215,11 @@ const App: React.FC = () => {
             setCurrentView(defaultView);
         }
     }, [currentView, currentUser]);
+
+    const handleViewChange = (view: storageService.View, preference?: any) => {
+        setViewPreference(preference);
+        setCurrentView(view);
+    };
 
     const handleLogin = async (username: string, password: string): Promise<void> => {
         setLoginError(''); // Clear previous error
@@ -722,7 +728,16 @@ const App: React.FC = () => {
                     onUpdateUser={handleUpdateUser}
                 />;
             case 'schedule':
-                return <Schedule teams={teams} games={games} onAddGame={handleAddGame} onStartGame={startGame} onDeleteGame={handleDeleteGame} onReturnToDashboard={() => setCurrentView('dashboard')} onViewReport={handleViewReport} />;
+                return <Schedule
+                    teams={teams}
+                    games={games}
+                    onAddGame={handleAddGame}
+                    onStartGame={startGame}
+                    onDeleteGame={handleDeleteGame}
+                    onReturnToDashboard={() => setCurrentView('dashboard')}
+                    onViewReport={handleViewReport}
+                    initialViewMode={viewPreference?.mode}
+                />;
             case 'game':
                 if (activeGame) return <GameTracker game={activeGame} onUpdateGame={handleUpdateGame} onReturnToDashboard={handleReturnToDashboardFromGame} onViewReport={handleViewReport} />;
                 return null;
@@ -836,7 +851,16 @@ const App: React.FC = () => {
                 return null;
             case 'dashboard':
             default:
-                return <Dashboard games={games} onStartGame={startGame} onViewChange={setCurrentView} activeGameId={activeGameId} onViewReport={handleViewReport} userRole={currentUser?.role} />;
+                return (
+                    <Dashboard
+                        games={games}
+                        onStartGame={startGame}
+                        onViewChange={handleViewChange}
+                        activeGameId={activeGameId}
+                        onViewReport={handleViewReport}
+                        userRole={currentUser?.role}
+                    />
+                );
         }
     };
 
