@@ -258,6 +258,8 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                     games={filteredGames}
                     onStartGame={onStartGame}
                     onViewReport={onViewReport}
+                    managedTeamId={managedTeamId}
+                    teams={teams}
                 />
             ) : (
                 <>

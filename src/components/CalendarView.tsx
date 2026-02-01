@@ -6,9 +6,11 @@ interface CalendarViewProps {
     games: Game[];
     onStartGame: (gameId: string) => void;
     onViewReport: (game: Game) => void;
+    managedTeamId: string | null;
+    teams: any[];
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewReport }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewReport, managedTeamId, teams }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -26,48 +28,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
     const getGameDateKey = (dateStr: string) => {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return null;
-
-        // If the date string looks like YYYY-MM-DD (length 10 or starts with it), 
-        // we should try to parse it without timezone shifting if it's potentially UTC
-        if (dateStr.includes('T')) {
-            // It has time, usually safe to use local components
-            return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-        } else {
-            // It might be just a date string which JS parses as UTC
-            // Correct way is to split and use parts if it matches YYYY-MM-DD
-            const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (match) {
-                return `${parseInt(match[1])}-${parseInt(match[2])}-${parseInt(match[3])}`;
-            }
-            return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-        }
+        // Use local components to avoid timezone shifts in calendar display
+        return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
     };
 
     const days = [];
     const totalDays = daysInMonth(year, month);
     const startDay = firstDayOfMonth(year, month);
 
-    // Get games for the current month using robust comparison
+    // Get games for the current month using local comparisons
     const monthGames = games.filter(g => {
         const d = new Date(g.scheduledTime);
         if (isNaN(d.getTime())) return false;
-
-        // Use local year and month if it has time, otherwise look at the string
-        let gameYear, gameMonth;
-        if (g.scheduledTime.includes('T')) {
-            gameYear = d.getFullYear();
-            gameMonth = d.getMonth();
-        } else {
-            const match = g.scheduledTime.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (match) {
-                gameYear = parseInt(match[1]);
-                gameMonth = parseInt(match[2]) - 1;
-            } else {
-                gameYear = d.getFullYear();
-                gameMonth = d.getMonth();
-            }
-        }
-        return gameYear === year && gameMonth === month;
+        return d.getFullYear() === year && d.getMonth() === month;
     });
 
     // Padding for first day
@@ -76,11 +49,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
     }
 
     for (let day = 1; day <= totalDays; day++) {
+        const dateKey = `${year}-${month + 1}-${day}`;
         const dayGames = monthGames
-            .filter(g => {
-                const key = getGameDateKey(g.scheduledTime);
-                return key === `${year}-${month + 1}-${day}`;
-            })
+            .filter(g => getGameDateKey(g.scheduledTime) === dateKey)
             .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
         const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
@@ -92,33 +63,39 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
                         {day.toString().padStart(2, '0')}
                     </span>
                     {dayGames.length > 0 && (
-                        <div className="flex -space-x-1">
-                            {dayGames.map((_, i) => (
+                        <div className="flex gap-1">
+                            {dayGames.slice(0, 5).map((_, i) => (
                                 <div key={i} className="w-1.5 h-1.5 bg-brand rounded-full shadow-[0_0_8px_rgba(255,87,34,0.6)] animate-pulse"></div>
                             ))}
+                            {dayGames.length > 5 && <span className="text-[6px] text-brand font-bold font-mono">+</span>}
                         </div>
                     )}
                 </div>
 
                 <div className="mt-2 space-y-1 overflow-y-auto max-h-[calc(100%-2rem)] custom-scrollbar relative z-10 pr-1">
-                    {dayGames.map(game => (
-                        <div
-                            key={game.id}
-                            className={`text-[8px] sm:text-[9px] font-mono p-1.5 rounded-sm border truncate cursor-pointer uppercase tracking-tighter transition-colors ${game.status === 'live' ? 'border-brand bg-brand text-black font-bold animate-pulse' :
-                                game.status === 'finished' ? 'border-surface-border bg-surface-card/50 text-gray-500 hover:border-brand/40 hover:text-white' :
-                                    'border-brand/20 bg-brand/5 text-gray-300 hover:border-brand/50 hover:bg-brand/10'
-                                }`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                game.status === 'finished' ? onViewReport(game) : onStartGame(game.id);
-                            }}
-                            title={`${game.homeTeam.name} vs ${game.awayTeam.name}`}
-                        >
-                            <span className="opacity-70">{game.homeTeam.name.split(' ')[0]}</span>
-                            <span className="text-brand/50 px-1">v</span>
-                            <span>{game.awayTeam.name.split(' ')[0]}</span>
-                        </div>
-                    ))}
+                    {dayGames.map(game => {
+                        const homeName = game.homeTeam?.name || 'Unknown';
+                        const awayName = typeof game.awayTeam === 'string' ? game.awayTeam : game.awayTeam?.name || 'Unknown';
+
+                        return (
+                            <div
+                                key={game.id}
+                                className={`text-[8px] sm:text-[9px] font-mono p-1.5 rounded-sm border truncate cursor-pointer uppercase tracking-tighter transition-colors ${game.status === 'live' ? 'border-brand bg-brand text-black font-bold animate-pulse' :
+                                    game.status === 'finished' ? 'border-surface-border bg-surface-card/50 text-gray-500 hover:border-brand/40 hover:text-white' :
+                                        'border-brand/20 bg-brand/5 text-gray-300 hover:border-brand/50 hover:bg-brand/10'
+                                    }`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    game.status === 'finished' ? onViewReport(game) : onStartGame(game.id);
+                                }}
+                                title={`${homeName} vs ${awayName}`}
+                            >
+                                <span className="opacity-70">{homeName.split(' ')[0]}</span>
+                                <span className="text-brand/50 px-1">v</span>
+                                <span>{awayName.split(' ')[0]}</span>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {isToday && (
@@ -148,7 +125,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
                         <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter leading-none flex items-baseline gap-3">
                             {monthName} <span className="text-brand">{year}</span>
                         </h2>
-                        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em] mt-1">GAME SCHEDULE</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em]">GAME SCHEDULE</p>
+                            {managedTeamId && (
+                                <>
+                                    <div className="h-1 w-1 bg-brand rounded-full animate-pulse"></div>
+                                    <p className="text-[8px] font-mono text-brand uppercase tracking-widest bg-brand/5 border border-brand/20 px-2 py-0.5">
+                                        FILTER: {teams.find((t: any) => t.id === managedTeamId)?.name.toUpperCase() || 'MANAGED TEAM'}
+                                    </p>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     <button

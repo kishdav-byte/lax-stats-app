@@ -175,6 +175,8 @@ const App: React.FC = () => {
         setManagedTeamId(teamId);
         if (teamId) {
             storageService.saveManagedTeamId(teamId);
+        } else {
+            localStorage.removeItem('lax_keeper_managed_team_id');
         }
     };
 
