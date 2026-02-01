@@ -8,7 +8,7 @@ export function initializeApiKey(): boolean {
     // @ts-ignore - Vercel build environment workaround
     const env = (import.meta as any).env;
     if (env && env.VITE_GEMINI_API_KEY) {
-        apiKey = env.VITE_GEMINI_API_KEY;
+        apiKey = env.VITE_GEMINI_API_KEY.replace(/^["']|["']$/g, '').trim();
         return true;
     }
 
@@ -37,8 +37,9 @@ export async function setApiKey(key: string): Promise<void> {
     if (!key || !key.trim()) {
         throw new Error("API Key cannot be empty.");
     }
-    apiKey = key;
-    localStorage.setItem(STORAGE_KEY, key);
+    const cleanKey = key.replace(/^["']|["']$/g, '').trim();
+    apiKey = cleanKey;
+    localStorage.setItem(STORAGE_KEY, cleanKey);
 }
 
 export async function clearApiKey(): Promise<void> {

@@ -17,64 +17,72 @@ export interface ExtractedGame {
 
 /**
  * Robust Model Loader
- * Forces the use of the 'v1' stable API to avoid 404/400 errors found in v1beta.
+ * Falls back between v1 and v1beta and different model names to ensure availability.
  */
-const getStableModel = (genAI: GoogleGenerativeAI, modelName: string) => {
-    return genAI.getGenerativeModel(
-        { model: modelName },
-        { apiVersion: 'v1' }
-    );
-};
+const callGemini = async (prompt: string, isJson: boolean = false, isImage: boolean = false, imageData?: string) => {
+    const genAI = new GoogleGenerativeAI(getApiKey());
 
-const formatGameDataForPrompt = (game: Game): string => {
-    let prompt = `Analyze the following lacrosse game data and provide a concise, exciting game summary. Also, name a "Player of the Game" with a brief justification.\n\n`;
-    prompt += `Final Score: ${game.homeTeam.name} - ${game.score.home}, ${game.awayTeam.name} - ${game.score.away}\n\n`;
-    prompt += `Key Events:\n`;
-    const allPlayers: Player[] = [...game.homeTeam.roster, ...game.awayTeam.roster];
+    // Attempt sequence for maximum compatibility across regions/keys
+    // Often 404s happen because of specific API version vs Model Name combinations
+    const attempts = [
+        { model: "gemini-1.5-flash", version: "v1beta" },
+        { model: "gemini-1.5-flash", version: "v1" },
+        { model: "gemini-pro", version: "v1" } // absolute fallback
+    ];
 
-    game.stats.forEach(stat => {
-        const player = allPlayers.find(p => p.id === stat.playerId);
-        const team = game.homeTeam.roster.some(p => p.id === stat.playerId) ? game.homeTeam : game.awayTeam;
-        if (player) {
-            let eventString = `- ${team.name}: #${player.jerseyNumber} ${player.name} (${player.position || 'N/A'}) - ${stat.type}`;
-            if (stat.type === 'Goal' && stat.assistingPlayerId) {
-                const assistPlayer = allPlayers.find(p => p.id === stat.assistingPlayerId);
-                if (assistPlayer) eventString += ` (Assist: #${assistPlayer.jerseyNumber} ${assistPlayer.name})`;
+    let lastError = null;
+
+    for (const attempt of attempts) {
+        try {
+            const model = genAI.getGenerativeModel(
+                {
+                    model: attempt.model,
+                    ...(isJson ? { generationConfig: { responseMimeType: "application/json" } } : {})
+                },
+                { apiVersion: attempt.version }
+            );
+
+            let result;
+            if (isImage && imageData) {
+                result = await model.generateContent([
+                    prompt,
+                    { inlineData: { mimeType: "image/jpeg", data: imageData } }
+                ]);
+            } else {
+                result = await model.generateContent(prompt);
             }
-            prompt += `${eventString}\n`;
+
+            const response = await result.response;
+            return response.text();
+        } catch (e: any) {
+            console.warn(`Gemini attempt failed (${attempt.model} on ${attempt.version}):`, e.message);
+            lastError = e;
+            // If it's a 404, we continue to next attempt
+            if (e.message?.includes('404') || e.message?.includes('not found')) continue;
+            // If it's something else (like 401/429), we might want to stop, but let's try fallbacks anyway
+            continue;
         }
-    });
-    return prompt;
+    }
+
+    throw lastError || new Error("AI services currently unavailable.");
 };
 
 export const generateGameSummary = async (game: Game): Promise<string> => {
     try {
-        const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getStableModel(genAI, "gemini-1.5-flash");
-        const prompt = formatGameDataForPrompt(game);
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text() || "";
+        const prompt = `Analyze this lacrosse game: ${game.homeTeam.name} (${game.score.home}) vs ${game.awayTeam.name} (${game.score.away}). Provide a summary and Player of the Game.`;
+        return await callGemini(prompt);
     } catch (error) {
         console.error("Error generating game summary:", error);
-        return "Could not generate AI summary. Please check your API key and connection.";
+        return "AI Summary unavailable.";
     }
 };
 
 export const generateScheduleFromText = async (pastedText: string): Promise<ExtractedGame[]> => {
-    if (!pastedText.trim()) throw new Error("Pasted text cannot be empty.");
+    if (!pastedText.trim()) throw new Error("Text is empty.");
 
-    try {
-        const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getStableModel(genAI, "gemini-1.5-flash");
-        const currentYear = new Date().getFullYear();
-
-        const prompt = `Analyze the following sports schedule text and extract game records.
-Identify: Date, Time, Opponent, and Home/Away (vs = home, @ = away).
-Convert Date/Time to ISO 8601 string. Use year ${currentYear}.
-
-IMPORTANT: RETURN ONLY A VALID JSON ARRAY. No markdown, no intro.
-Format: [{"opponentName": "Name", "isHome": true/false, "scheduledTime": "ISO_STRING"}]
+    const prompt = `Extract games from this text as a JSON array.
+Properties: opponentName (string), isHome (boolean), scheduledTime (ISO 8601 string).
+Current year: ${new Date().getFullYear()}.
 
 Text:
 """
@@ -82,31 +90,22 @@ ${pastedText}
 """
 `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text().trim();
-
-        // Robust JSON extraction
-        const match = text.match(/\[[\s\S]*\]/);
-        if (!match) throw new Error("AI failed to format result as a list. Try again.");
-
+    try {
+        const resultText = await callGemini(prompt, true);
+        const match = resultText.match(/\[[\s\S]*\]/);
+        if (!match) throw new Error("Invalid format returned by AI.");
         return JSON.parse(match[0]);
     } catch (error: any) {
-        console.error("Schedule AI Error:", error);
-        throw new Error(error.message || "Extraction failed.");
+        console.error("Schedule extraction error:", error);
+        throw new Error(error.message || "Failed to parse schedule.");
     }
 };
 
 export const generateRosterFromText = async (pastedText: string): Promise<Omit<Player, 'id'>[]> => {
-    if (!pastedText.trim()) throw new Error("Pasted text cannot be empty.");
+    if (!pastedText.trim()) throw new Error("Text is empty.");
 
-    try {
-        const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getStableModel(genAI, "gemini-1.5-flash");
-
-        const prompt = `Extract player roster data from this text. 
-Return ONLY a valid JSON array of objects with: name, jerseyNumber, position.
-Standardize positions (Attack, Midfield, Defense, Goalie, LSM).
+    const prompt = `Extract player roster as a JSON array.
+Properties: name, jerseyNumber, position.
 
 Text:
 """
@@ -114,49 +113,32 @@ ${pastedText}
 """
 `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text().trim();
-        const match = text.match(/\[[\s\S]*\]/);
-        if (!match) throw new Error("AI failed to format roster. Try again.");
+    try {
+        const resultText = await callGemini(prompt, true);
+        const match = resultText.match(/\[[\s\S]*\]/);
+        if (!match) throw new Error("Invalid format returned by AI.");
         return JSON.parse(match[0]);
     } catch (error: any) {
-        console.error("Roster AI Error:", error);
-        throw new Error(error.message || "Roster extraction failed.");
+        console.error("Roster extraction error:", error);
+        throw new Error(error.message || "Failed to parse roster.");
     }
 };
 
 export const analyzeCodeProblem = async (question: string, code: string, fileName: string): Promise<string> => {
-    try {
-        const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getStableModel(genAI, "gemini-1.5-pro");
-        const prompt = `Engineer Analysis for ${fileName}:\nQuestion: ${question}\nCode:\n${code}`;
-        const result = await model.generateContent(prompt);
-        return (await result.response).text();
-    } catch (error) {
-        return "AI analysis failed.";
-    }
+    const prompt = `Analysis for ${fileName}:\nQuestion: ${question}\nCode:\n${code}`;
+    return await callGemini(prompt);
 };
 
 export const analyzePlayerPerformance = async (playerData: PlayerAnalysisData): Promise<string> => {
-    try {
-        const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getStableModel(genAI, "gemini-1.5-pro");
-        const prompt = `Coach Analysis for ${playerData.name} (${playerData.position}). Stats:\n${JSON.stringify(playerData.stats)}`;
-        const result = await model.generateContent(prompt);
-        return (await result.response).text();
-    } catch (error) {
-        return "Performance analysis failed.";
-    }
+    const prompt = `Coach Analysis for ${playerData.name} (${playerData.position}). Stats:\n${JSON.stringify(playerData.stats)}`;
+    return await callGemini(prompt);
 };
 
 export const analyzeShotPlacement = async (base64Image: string): Promise<number | null> => {
     try {
-        const genAI = new GoogleGenerativeAI(getApiKey());
-        const model = getStableModel(genAI, "gemini-1.5-flash");
-        const prompt = "Identify the ball impact zone (0-8) in this 3x3 goal grid. Return only the digit.";
-        const result = await model.generateContent([prompt, { inlineData: { mimeType: "image/jpeg", data: base64Image.split(',')[1] } }]);
-        const zone = parseInt((await result.response).text().trim(), 10);
+        const prompt = "Identify impact zone (0-8) in this 3x3 goal grid. Return only the digit.";
+        const resultText = await callGemini(prompt, false, true, base64Image.split(',')[1]);
+        const zone = parseInt(resultText.trim(), 10);
         return isNaN(zone) ? null : zone;
     } catch (error) {
         return null;
