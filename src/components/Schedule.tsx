@@ -172,11 +172,23 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
         }
 
         extractedGames.forEach(g => {
-            const existingAwayTeam = teams.find(t => t.name.toLowerCase() === g.opponentName.toLowerCase());
-            const awayTeamInfo = existingAwayTeam ? { id: existingAwayTeam.id } : { name: g.opponentName };
+            const opponentTeam = teams.find(t => t.name.toLowerCase() === g.opponentName.toLowerCase());
+            const opponentInfo = opponentTeam ? { id: opponentTeam.id } : { name: g.opponentName };
 
-            // Note: In a real app we might want to check for duplicates
-            onAddGame(homeTeamId, awayTeamInfo, g.scheduledTime);
+            if (g.isHome) {
+                // Managed team is Home
+                onAddGame(homeTeamId, opponentInfo, g.scheduledTime);
+            } else {
+                // Managed team is Away
+                // We need to find the opponent's ID if possible, otherwise it's a string name
+                // Note: onAddGame(homeId, awayInfo, time)
+                if (opponentTeam) {
+                    onAddGame(opponentTeam.id, { id: homeTeamId }, g.scheduledTime);
+                } else {
+                    // Opponent is just a name, but they are HOME
+                    onAddGame('', { id: homeTeamId, name: g.opponentName }, g.scheduledTime);
+                }
+            }
         });
 
         setIsImportModalOpen(false);

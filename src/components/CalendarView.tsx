@@ -24,23 +24,30 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
-    // Helper to get local YYYY-MM-DD from an ISO or local string
-    const getGameDateKey = (dateStr: string) => {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return null;
-        // Use local components to avoid timezone shifts in calendar display
-        return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    // Simplified robust date matching - treats date string as wall clock time
+    const getGameDateParts = (dateStr: string) => {
+        // If it's ISO T format: 2026-03-10T14:00:00
+        const tSplit = dateStr.split('T');
+        const datePart = tSplit[0]; // 2026-03-10
+        const parts = datePart.split('-');
+        if (parts.length < 3) return null;
+
+        return {
+            y: parseInt(parts[0]),
+            m: parseInt(parts[1]) - 1, // 0-indexed
+            d: parseInt(parts[2])
+        };
     };
 
     const days = [];
     const totalDays = daysInMonth(year, month);
     const startDay = firstDayOfMonth(year, month);
 
-    // Get games for the current month using local comparisons
+    // Get games for the current month using wall-clock comparison
     const monthGames = games.filter(g => {
-        const d = new Date(g.scheduledTime);
-        if (isNaN(d.getTime())) return false;
-        return d.getFullYear() === year && d.getMonth() === month;
+        const parts = getGameDateParts(g.scheduledTime);
+        if (!parts) return false;
+        return parts.y === year && parts.m === month;
     });
 
     // Padding for first day
@@ -49,9 +56,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
     }
 
     for (let day = 1; day <= totalDays; day++) {
-        const dateKey = `${year}-${month + 1}-${day}`;
         const dayGames = monthGames
-            .filter(g => getGameDateKey(g.scheduledTime) === dateKey)
+            .filter(g => {
+                const parts = getGameDateParts(g.scheduledTime);
+                return parts && parts.d === day;
+            })
             .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
         const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
