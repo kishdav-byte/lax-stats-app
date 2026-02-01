@@ -1,34 +1,71 @@
 import React from 'react';
-import { Game, Role } from '../types';
+import { Game, Role, Team } from '../types';
 import { View } from '../services/storageService';
 import { Activity, Calendar, Users, Volume2, ChevronRight, Binary, ShieldCheck } from 'lucide-react';
 
 interface DashboardProps {
     games: Game[];
+    teams: Team[];
     onStartGame: (gameId: string) => void;
     onViewChange: (view: View, preference?: any) => void;
     activeGameId: string | null;
     onViewReport: (game: Game) => void;
     userRole?: Role;
+    managedTeamId: string | null;
+    onManagedTeamChange: (teamId: string | null) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange, activeGameId, onViewReport, userRole }) => {
-    const upcomingGames = games.filter(g => g.status === 'scheduled').sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
-    const finishedGames = games.filter(g => g.status === 'finished').sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
+const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onViewChange, activeGameId, onViewReport, userRole, managedTeamId, onManagedTeamChange }) => {
+    // Filter games by managed team if selected
+    const filteredGames = managedTeamId
+        ? games.filter(g => g.homeTeam.id === managedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id === managedTeamId))
+        : games;
+
+    // Sort upcoming: Earliest first (closest to now)
+    const upcomingGames = filteredGames
+        .filter(g => g.status === 'scheduled')
+        .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+
+    // Sort finished: Latest first (shown at the top of reports)
+    const finishedGames = filteredGames
+        .filter(g => g.status === 'finished')
+        .sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
+
     const activeGame = games.find(g => g.id === activeGameId);
 
     return (
         <div className="space-y-12 pb-12">
             {/* Header Section */}
-            <div className="relative">
-                <div className="flex items-center gap-4 mb-3">
-                    <div className="h-px bg-brand w-12"></div>
-                    <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Command Center</p>
+            <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div>
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="h-px bg-brand w-12"></div>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Command Center</p>
+                    </div>
+                    <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
+                        DASH<span className="text-brand">BOARD</span>
+                    </h1>
+                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-3 opacity-60">Intelligent // Athletic // Systems // V4.2</p>
                 </div>
-                <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
-                    DASH<span className="text-brand">BOARD</span>
-                </h1>
-                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-3 opacity-60">Intelligent // Athletic // Systems // V4.2</p>
+
+                <div className="flex flex-col gap-2 min-w-[280px]">
+                    <p className="text-[8px] font-mono text-gray-600 uppercase tracking-[0.3em]">Managed Tactical Unit</p>
+                    <div className="relative group">
+                        <select
+                            value={managedTeamId || ''}
+                            onChange={(e) => onManagedTeamChange(e.target.value || null)}
+                            className="w-full bg-surface-card border border-surface-border text-white px-4 py-3 text-[10px] font-mono uppercase tracking-widest outline-none appearance-none focus:border-brand transition-all cursor-pointer"
+                        >
+                            <option value="">ALL SYSTEMS ACTIVE</option>
+                            {teams.map(team => (
+                                <option key={team.id} value={team.id}>{team.name.toUpperCase()}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand">
+                            <ChevronRight className="w-4 h-4 rotate-90" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Live Game Alert */}
@@ -144,7 +181,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     </h2>
                     {upcomingGames.length > 0 ? (
                         <div className="space-y-4">
-                            {upcomingGames.slice(0, 3).map(game => (
+                            {upcomingGames.slice(0, 10).map(game => (
                                 <div key={game.id} className="cyber-card p-6 flex flex-col md:flex-row items-center justify-between group hover:border-brand/30 transition-all gap-4">
                                     <div className="w-full">
                                         <p className="font-display font-black text-xl text-white group-hover:text-brand transition-colors italic uppercase tracking-tighter">{game.homeTeam.name} <span className="text-brand/50 px-2">//</span> {game.awayTeam.name}</p>
@@ -175,7 +212,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, onStartGame, onViewChange,
                     </h2>
                     {finishedGames.length > 0 ? (
                         <div className="space-y-4">
-                            {finishedGames.slice(0, 3).map(game => (
+                            {finishedGames.slice(0, 10).map(game => (
                                 <div key={game.id} className="cyber-card p-6 flex flex-col md:flex-row items-center justify-between group border-l-2 border-brand hover:bg-brand/5 transition-all gap-4">
                                     <div className="w-full">
                                         <div className="flex flex-wrap items-baseline gap-4 mb-2">

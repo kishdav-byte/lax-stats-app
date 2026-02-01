@@ -207,6 +207,14 @@ export const fetchAppSetting = async (id: string): Promise<any> => {
     return data?.data || null;
 };
 
+export const saveManagedTeamId = (teamId: string) => {
+    localStorage.setItem('lax_keeper_managed_team_id', teamId);
+};
+
+export const fetchManagedTeamId = (): string | null => {
+    return localStorage.getItem('lax_keeper_managed_team_id');
+};
+
 export const saveTrainingSession = async (session: TrainingSession) => {
     await supabase.from('training_sessions').upsert(session);
 };

@@ -44,6 +44,7 @@ const App: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     const [simulatedRole, setSimulatedRole] = useState<Role | null>(null);
     const [viewPreference, setViewPreference] = useState<any>(null);
+    const [managedTeamId, setManagedTeamId] = useState<string | null>(storageService.fetchManagedTeamId());
 
     // Load initial data from Firestore
     useEffect(() => {
@@ -170,6 +171,12 @@ const App: React.FC = () => {
         }
     }, [currentUser, currentView]);
 
+    const handleManagedTeamChange = (teamId: string | null) => {
+        setManagedTeamId(teamId);
+        if (teamId) {
+            storageService.saveManagedTeamId(teamId);
+        }
+    };
 
     useEffect(() => {
         if (currentView === 'game' && !activeGameId) {
@@ -731,6 +738,7 @@ const App: React.FC = () => {
                 return <Schedule
                     teams={teams}
                     games={games}
+                    managedTeamId={managedTeamId}
                     onAddGame={handleAddGame}
                     onStartGame={startGame}
                     onDeleteGame={handleDeleteGame}
@@ -854,6 +862,9 @@ const App: React.FC = () => {
                 return (
                     <Dashboard
                         games={games}
+                        teams={teams}
+                        managedTeamId={managedTeamId}
+                        onManagedTeamChange={handleManagedTeamChange}
                         onStartGame={startGame}
                         onViewChange={handleViewChange}
                         activeGameId={activeGameId}

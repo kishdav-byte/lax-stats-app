@@ -132,9 +132,10 @@ interface ScheduleProps {
     onReturnToDashboard: (view: 'dashboard') => void;
     onViewReport: (game: Game) => void;
     initialViewMode?: 'timeline' | 'calendar';
+    managedTeamId: string | null;
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGame, onDeleteGame, onReturnToDashboard, onViewReport, initialViewMode }) => {
+const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGame, onDeleteGame, onReturnToDashboard, onViewReport, initialViewMode, managedTeamId }) => {
     const [homeTeamId, setHomeTeamId] = useState('');
     const [awayTeamName, setAwayTeamName] = useState('');
     const [gameDate, setGameDate] = useState('');
@@ -181,8 +182,12 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
         setIsImportModalOpen(false);
     };
 
-    const scheduledGames = games.filter(g => g.status === 'scheduled').sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
-    const finishedGames = games.filter(g => g.status === 'finished').sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
+    const filteredGames = managedTeamId
+        ? games.filter(g => g.homeTeam.id === managedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id === managedTeamId))
+        : games;
+
+    const scheduledGames = filteredGames.filter(g => g.status === 'scheduled').sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+    const finishedGames = filteredGames.filter(g => g.status === 'finished').sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
 
 
     return (
@@ -230,7 +235,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
 
             {viewMode === 'calendar' ? (
                 <CalendarView
-                    games={games}
+                    games={filteredGames}
                     onStartGame={onStartGame}
                     onViewReport={onViewReport}
                 />
