@@ -48,6 +48,18 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
         setFollowedPlayerIds(prev => prev.filter(id => id !== playerIdToRemove));
     };
 
+    const handleAddFollowedTeam = (teamId: string) => {
+        if (teamId && !followedTeamIds.includes(teamId)) {
+            setFollowedTeamIds(prev => [...prev, teamId]);
+        }
+    };
+
+    const handleAddFollowedPlayer = (playerId: string) => {
+        if (playerId && !followedPlayerIds.includes(playerId)) {
+            setFollowedPlayerIds(prev => [...prev, playerId]);
+        }
+    };
+
     const handleSave = () => {
         const updatedUser: User = {
             ...user,
@@ -66,7 +78,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
 
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="cyber-card p-8 max-w-lg w-full space-y-6 bg-black border-brand/50">
+            <div className="cyber-card p-8 max-w-lg w-full space-y-6 bg-black border-brand/50 overflow-y-auto max-h-[90vh] custom-scrollbar">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="h-px bg-brand w-8"></div>
                     <p className="text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Edit User Profile</p>
@@ -125,12 +137,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                         />
                     </div>
 
-                    {user.role === Role.PARENT && (
+                    {role === Role.PARENT && (
                         <div className="pt-4 border-t border-surface-border space-y-4">
-                            <p className="text-[10px] font-mono text-brand uppercase tracking-[0.2em] font-bold">Following</p>
+                            <p className="text-[10px] font-mono text-brand uppercase tracking-[0.2em] font-bold">Following Relationships</p>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Teams</label>
+                                    <select
+                                        onChange={(e) => handleAddFollowedTeam(e.target.value)}
+                                        className="w-full cyber-input text-[10px] py-1 px-2 mb-2"
+                                        value=""
+                                    >
+                                        <option value="">+ ADD TEAM</option>
+                                        {teams.filter(t => !followedTeamIds.includes(t.id)).map(t => (
+                                            <option key={t.id} value={t.id} className="bg-black">{t.name}</option>
+                                        ))}
+                                    </select>
                                     <div className="max-h-24 overflow-y-auto bg-surface-card p-2 border border-surface-border space-y-1 custom-scrollbar">
                                         {followedTeamIds.length > 0 ? followedTeamIds.map(id => {
                                             const team = teams.find(t => t.id === id);
@@ -145,6 +168,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Followed Players</label>
+                                    <select
+                                        onChange={(e) => handleAddFollowedPlayer(e.target.value)}
+                                        className="w-full cyber-input text-[10px] py-1 px-2 mb-2"
+                                        value=""
+                                    >
+                                        <option value="">+ ADD PLAYER</option>
+                                        {allPlayers.filter(p => !followedPlayerIds.includes(p.id)).map(p => (
+                                            <option key={p.id} value={p.id} className="bg-black">#{p.jerseyNumber} {p.name}</option>
+                                        ))}
+                                    </select>
                                     <div className="max-h-24 overflow-y-auto bg-surface-card p-2 border border-surface-border space-y-1 custom-scrollbar">
                                         {followedPlayerIds.length > 0 ? followedPlayerIds.map(id => {
                                             const player = allPlayers.find(p => p.id === id);

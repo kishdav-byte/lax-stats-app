@@ -199,19 +199,14 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
         ? games.filter(g => g.homeTeam.id === managedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id === managedTeamId))
         : games;
 
-    // Upcoming: Future scheduled games, earliest first
+    // Upcoming: All scheduled games that haven't been started yet
     const scheduledGames = filteredGames
-        .filter(g => g.status === 'scheduled' && new Date(g.scheduledTime) >= now)
+        .filter(g => g.status === 'scheduled')
         .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
     // Completed: Any finished game, latest first
     const finishedGames = filteredGames
         .filter(g => g.status === 'finished')
-        .sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
-
-    // Past Pending: Games scheduled in the past but never started, latest first
-    const pastPendingGames = filteredGames
-        .filter(g => g.status === 'scheduled' && new Date(g.scheduledTime) < now)
         .sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
 
 
@@ -352,31 +347,33 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                                 <div className="h-px bg-surface-border flex-grow"></div>
                             </h2>
                             <div className="space-y-4">
-                                {scheduledGames.map(game => (
-                                    <div key={game.id} className="cyber-card p-1 bg-surface-card/50">
-                                        <div className="bg-black p-6 flex items-center justify-between group">
-                                            <div>
-                                                <div className="flex items-center gap-3 mb-1">
-                                                    <div className="w-1 h-1 bg-brand rounded-full animate-pulse"></div>
-                                                    <p className="font-display font-bold text-lg text-white group-hover:text-brand transition-colors italic uppercase tracking-tight">
-                                                        {game.homeTeam.name} // {game.awayTeam.name}
-                                                    </p>
+                                {scheduledGames.map(game => {
+                                    const isPast = new Date(game.scheduledTime) < now;
+                                    return (
+                                        <div key={game.id} className={`cyber-card p-6 flex flex-col md:flex-row items-center justify-between group hover:border-brand/40 transition-all gap-4 ${isPast ? 'border-red-500/20' : ''}`}>
+                                            <div className="w-full">
+                                                <div className="flex items-center gap-3">
+                                                    <p className="font-display font-black text-xl text-white group-hover:text-brand transition-colors italic uppercase tracking-tighter">{game.homeTeam.name} <span className="text-brand/50 px-2">//</span> {game.awayTeam.name}</p>
+                                                    {isPast && (
+                                                        <span className="text-[8px] font-mono text-red-500 uppercase tracking-widest border border-red-500/30 px-2 bg-red-500/5 animate-pulse">Delayed/Past Due</span>
+                                                    )}
                                                 </div>
-                                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1 ml-4">
-                                                    Scheduled: {new Date(game.scheduledTime).toLocaleString()}
-                                                </p>
+                                                <div className="flex items-center gap-4 mt-2">
+                                                    <div className={`h-1 w-1 rounded-full animate-pulse ${isPast ? 'bg-red-500' : 'bg-brand'}`}></div>
+                                                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] font-bold">Planned Kickoff: {new Date(game.scheduledTime).toLocaleString()}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-4">
-                                                <button onClick={() => onStartGame(game.id)} className="cyber-button py-2 px-6 flex items-center gap-2 group/btn">
-                                                    START <Play className="w-3 h-3 group-hover/btn:fill-black" />
+                                            <div className="flex gap-4 w-full md:w-auto">
+                                                <button onClick={() => onStartGame(game.id)} className="cyber-button w-full md:w-auto py-3 px-8 text-[10px] font-display font-bold italic tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.15)] flex items-center justify-center gap-2 group/start">
+                                                    SET ACTIVE <Play className="w-3 h-3 group-hover/start:fill-black" />
                                                 </button>
-                                                <button onClick={() => onDeleteGame(game.id)} className="text-gray-600 hover:text-red-500 transition-colors">
-                                                    <Trash2 className="w-5 h-5" />
+                                                <button onClick={() => onDeleteGame(game.id)} className="p-3 text-gray-700 hover:text-red-500 transition-colors border border-surface-border hover:border-red-500/30">
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {scheduledGames.length === 0 && (
                                     <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
                                         <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
@@ -386,45 +383,35 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                             </div>
                         </div>
 
-                        {/* Completed / Past Pending */}
+                        {/* Completed */}
                         <div>
                             <h2 className="text-2xl font-display font-black text-white italic mb-8 flex items-center gap-4">
                                 COMPLETED <span className="text-brand">GAMES</span>
                                 <div className="h-px bg-surface-border flex-grow"></div>
                             </h2>
                             <div className="space-y-4">
-                                {[...pastPendingGames, ...finishedGames].map(game => (
-                                    <div key={game.id} className={`cyber-card p-1 ${game.status === 'scheduled' ? 'border-red-500/30' : 'border-brand/20'}`}>
-                                        <div className="bg-black p-6 flex items-center justify-between">
+                                {finishedGames.map(game => (
+                                    <div key={game.id} className="cyber-card p-1 border-brand/20">
+                                        <div className="bg-black p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                                             <div>
                                                 <div className="flex items-baseline gap-3 mb-1">
                                                     <p className="font-display font-bold text-lg text-white uppercase italic tracking-tight">{game.homeTeam.name} // {game.awayTeam.name}</p>
-                                                    {game.status === 'finished' ? (
-                                                        <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
-                                                    ) : (
-                                                        <span className="text-[8px] font-mono text-red-500 uppercase tracking-widest border border-red-500/20 px-2 bg-red-500/5">Missed/Pending</span>
-                                                    )}
+                                                    <span className="font-display font-black text-brand italic">{game.score.home} - {game.score.away}</span>
                                                 </div>
-                                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
-                                                    {game.status === 'finished' ? 'Played:' : 'Scheduled:'} {new Date(game.scheduledTime).toLocaleDateString()}
+                                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1 font-bold">
+                                                    Session Logged: {new Date(game.scheduledTime).toLocaleDateString()}
                                                 </p>
                                             </div>
-                                            {game.status === 'finished' ? (
-                                                <button
-                                                    onClick={() => onViewReport(game)}
-                                                    className="cyber-button-outline py-1 px-4 text-[10px]"
-                                                >
-                                                    GAME REPORT
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => onStartGame(game.id)} className="cyber-button py-2 px-6 flex items-center gap-2 group/btn">
-                                                    START <Play className="w-3 h-3 group-hover/btn:fill-black" />
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={() => onViewReport(game)}
+                                                className="cyber-button-outline w-full sm:w-auto py-2 px-6 text-[10px] font-display font-bold italic tracking-widest hover:bg-white/5 transition-all text-center"
+                                            >
+                                                INTEL BRIEF
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
-                                {finishedGames.length === 0 && pastPendingGames.length === 0 && (
+                                {finishedGames.length === 0 && (
                                     <div className="p-12 text-center border border-dashed border-surface-border opacity-50">
                                         <Binary className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand" />
                                         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">History Empty</p>
