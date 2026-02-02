@@ -50,50 +50,55 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
         ]);
 
         // Stitch games together with their stats and penalties
-        const stitchedGames: Game[] = (games || []).map(g => ({
-            id: g.id,
-            homeTeam: g.home_team,
-            awayTeam: g.away_team,
-            scheduledTime: g.scheduled_time,
-            status: g.status,
-            score: g.score,
-            currentPeriod: g.current_period,
-            gameClock: g.game_clock,
-            aiSummary: g.ai_summary,
-            periodType: g.period_type,
-            clockType: g.clock_type,
-            periodLength: g.period_length,
-            totalPeriods: g.total_periods,
-            correctionNotes: g.correction_notes,
-            timekeeperId: g.timekeeper_id,
-            stats: (stats || [])
-                .filter(s => s.game_id === g.id)
-                .map(s => ({
-                    id: s.id,
-                    gameId: s.game_id,
-                    playerId: s.player_id,
-                    teamId: s.team_id,
-                    type: s.stat_type,
-                    timestamp: s.game_clock_time,
-                    period: s.period,
-                    assistingPlayerId: s.assisting_player_id,
-                    recordedBy: s.recorded_by
-                })),
-            penalties: (penalties || [])
-                .filter(p => p.game_id === g.id)
-                .map(p => ({
-                    id: p.id,
-                    gameId: p.game_id,
-                    playerId: p.player_id,
-                    teamId: p.team_id,
-                    type: p.penalty_type,
-                    duration: p.duration,
-                    startTime: p.start_time,
-                    releaseTime: p.release_time,
-                    period: p.period,
-                    recordedBy: p.recorded_by
-                }))
-        }));
+        const stitchedGames: Game[] = (games || []).map(g => {
+            const homeTeam = (teams || []).find(t => t.id === g.home_team) || { id: g.home_team, name: g.home_team || 'Unknown', roster: [] };
+            const awayTeam = (teams || []).find(t => t.id === g.away_team) || { id: g.away_team, name: g.away_team || 'Unknown', roster: [] };
+
+            return {
+                id: g.id,
+                homeTeam,
+                awayTeam,
+                scheduledTime: g.scheduled_time,
+                status: g.status,
+                score: g.score || { home: 0, away: 0 },
+                currentPeriod: g.current_period || 1,
+                gameClock: g.game_clock || 0,
+                aiSummary: g.ai_summary,
+                periodType: g.period_type,
+                clockType: g.clock_type,
+                periodLength: g.period_length,
+                totalPeriods: g.total_periods,
+                correctionNotes: g.correction_notes,
+                timekeeperId: g.timekeeper_id,
+                stats: (stats || [])
+                    .filter(s => s.game_id === g.id)
+                    .map(s => ({
+                        id: s.id,
+                        gameId: s.game_id,
+                        playerId: s.player_id,
+                        teamId: s.team_id,
+                        type: s.stat_type,
+                        timestamp: s.game_clock_time,
+                        period: s.period,
+                        assistingPlayerId: s.assisting_player_id,
+                        recordedBy: s.recorded_by
+                    })),
+                penalties: (penalties || [])
+                    .filter(p => p.game_id === g.id)
+                    .map(p => ({
+                        id: p.id,
+                        gameId: p.game_id,
+                        playerId: p.player_id,
+                        teamId: p.team_id,
+                        type: p.penalty_type,
+                        duration: p.duration,
+                        startTime: p.start_time,
+                        releaseTime: p.release_time,
+                        period: p.period,
+                        recordedBy: p.recorded_by
+                    }))
+            };
+        });
 
         return {
             teams: teams || [],
@@ -215,8 +220,8 @@ export const deleteTeam = async (teamId: string) => {
 export const saveGame = async (game: Game) => {
     const dbGame = {
         id: game.id,
-        home_team: game.homeTeam,
-        away_team: game.awayTeam,
+        home_team: game.homeTeam.id,
+        away_team: game.awayTeam.id,
         scheduled_time: game.scheduledTime,
         status: game.status,
         score: game.score,
