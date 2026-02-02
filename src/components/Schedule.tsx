@@ -164,39 +164,42 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
         }
     };
 
-    const handleScheduleImport = (extractedGames: ExtractedGame[]) => {
+    const handleScheduleImport = async (extractedGames: ExtractedGame[]) => {
         if (!homeTeamId) {
             alert("Select a Home Team first to associate these games with.");
             setIsImportModalOpen(false);
             return;
         }
 
-        extractedGames.forEach(g => {
+        const cleanHomeTeamId = homeTeamId.trim();
+
+        for (const g of extractedGames) {
             const opponentTeam = teams.find(t => t.name.toLowerCase() === g.opponentName.toLowerCase());
-            const opponentInfo = opponentTeam ? { id: opponentTeam.id } : { name: g.opponentName };
+            const opponentInfo = opponentTeam ? { id: opponentTeam.id.trim() } : { name: g.opponentName };
 
             if (g.isHome) {
                 // Managed team is Home
-                onAddGame(homeTeamId, opponentInfo, g.scheduledTime);
+                await onAddGame(cleanHomeTeamId, opponentInfo, g.scheduledTime);
             } else {
                 // Managed team is Away
                 // We need to find the opponent's ID if possible, otherwise it's a string name
                 // Note: onAddGame(homeId, awayInfo, time)
                 if (opponentTeam) {
-                    onAddGame(opponentTeam.id, { id: homeTeamId }, g.scheduledTime);
+                    await onAddGame(opponentTeam.id.trim(), { id: cleanHomeTeamId }, g.scheduledTime);
                 } else {
                     // Opponent is just a name, but they are HOME
-                    onAddGame('', { id: homeTeamId, name: g.opponentName }, g.scheduledTime);
+                    await onAddGame('', { id: cleanHomeTeamId, name: g.opponentName }, g.scheduledTime);
                 }
             }
-        });
+        }
 
         setIsImportModalOpen(false);
     };
 
     const now = new Date();
-    const filteredGames = managedTeamId
-        ? games.filter(g => g.homeTeam.id === managedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id === managedTeamId))
+    const cleanManagedTeamId = managedTeamId?.trim();
+    const filteredGames = cleanManagedTeamId
+        ? games.filter(g => g.homeTeam.id.trim() === cleanManagedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id.trim() === cleanManagedTeamId))
         : games;
 
     // Upcoming: All scheduled games that haven't been started yet

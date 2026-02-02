@@ -399,20 +399,28 @@ const App: React.FC = () => {
     };
 
     const handleAddGame = async (homeTeamId: string, awayTeamInfo: { id?: string; name?: string }, scheduledTime: string) => {
-        const homeTeam = teams.find(t => t.id === homeTeamId);
-        let awayTeam: Team | undefined;
+        const cleanHomeId = homeTeamId?.trim();
+        const cleanAwayId = awayTeamInfo.id?.trim();
 
-        if (awayTeamInfo.id) {
-            awayTeam = teams.find(t => t.id === awayTeamInfo.id);
-        } else if (awayTeamInfo.name) {
-            const newOpponentTeam: Team = { id: `team_${Date.now()}`, name: awayTeamInfo.name, roster: [] };
+        let homeTeam = teams.find(t => t.id.trim() === cleanHomeId);
+        let awayTeam = cleanAwayId ? teams.find(t => t.id.trim() === cleanAwayId) : undefined;
+
+        // Special handling for Away games in imports where the Home opponent is just a name
+        if (!homeTeam && cleanHomeId === '' && awayTeamInfo.name) {
+            const newHomeTeam: Team = { id: `team_${Date.now()}_h`, name: awayTeamInfo.name, roster: [] };
+            await storageService.saveTeam(newHomeTeam);
+            homeTeam = newHomeTeam;
+        }
+
+        if (!awayTeam && awayTeamInfo.name) {
+            const newOpponentTeam: Team = { id: `team_${Date.now()}_a`, name: awayTeamInfo.name, roster: [] };
             await storageService.saveTeam(newOpponentTeam);
             awayTeam = newOpponentTeam;
         }
 
         if (homeTeam && awayTeam) {
             const newGame: Game = {
-                id: `game_${Date.now()}`,
+                id: `game_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                 homeTeam,
                 awayTeam,
                 scheduledTime,
@@ -421,8 +429,7 @@ const App: React.FC = () => {
                 stats: [],
                 penalties: [],
                 currentPeriod: 1,
-                gameClock: 720, // Default to 12 min quarters
-                // Add new defaults
+                gameClock: 720,
                 periodType: 'quarters',
                 clockType: 'stop',
                 periodLength: 720,
@@ -431,11 +438,11 @@ const App: React.FC = () => {
             setGames(prev => [...prev, newGame]);
             try {
                 await storageService.saveGame(newGame);
-                alert("Game saved successfully!");
             } catch (error) {
                 console.error("Error saving game:", error);
-                alert(`Failed to save game: ${error} `);
             }
+        } else {
+            console.error("Failed to add game: Missing team data", { homeTeam, awayTeam, homeTeamId, awayTeamInfo });
         }
     };
 
