@@ -1,4 +1,4 @@
-import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback, TrainingSession } from '../types';
+import { Team, Game, User, AccessRequest, DrillAssignment, SoundEffects, Feedback, TrainingSession, Stat, Penalty } from '../types';
 import { supabase } from '../supabaseClient';
 
 export type View = 'dashboard' | 'teams' | 'schedule' | 'game' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'devSupport' | 'playerDashboard' | 'parentDashboard' | 'soundEffects' | 'feedback' | 'gameReport' | 'analytics' | 'playerProfile' | 'globalSettings';
@@ -38,6 +38,8 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
         const [
             { data: teams },
             { data: games },
+            { data: stats },
+            { data: penalties },
             { data: users },
             { data: requests },
             { data: drills },
@@ -45,15 +47,49 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
         ] = await Promise.all([
             supabase.from('teams').select('*'),
             supabase.from('games').select('*'),
+            supabase.from('game_stats').select('*'),
+            supabase.from('game_penalties').select('*'),
             supabase.from('profiles').select('*'),
             supabase.from('access_requests').select('*'),
             supabase.from('drill_assignments').select('*'),
             supabase.from('feedback').select('*'),
         ]);
 
+        // Stitch games together with their stats and penalties
+        const stitchedGames: Game[] = (games || []).map(g => ({
+            ...g,
+            stats: (stats || [])
+                .filter(s => s.game_id === g.id)
+                .map(s => ({
+                    id: s.id,
+                    gameId: s.game_id,
+                    playerId: s.player_id,
+                    teamId: s.team_id,
+                    type: s.stat_type,
+                    timestamp: s.game_clock_time,
+                    period: s.period,
+                    assistingPlayerId: s.assisting_player_id,
+                    recordedBy: s.recorded_by
+                })),
+            penalties: (penalties || [])
+                .filter(p => p.game_id === g.id)
+                .map(p => ({
+                    id: p.id,
+                    gameId: p.game_id,
+                    playerId: p.player_id,
+                    teamId: p.team_id,
+                    type: p.penalty_type,
+                    duration: p.duration,
+                    startTime: p.start_time,
+                    releaseTime: p.release_time,
+                    period: p.period,
+                    recordedBy: p.recorded_by
+                }))
+        }));
+
         return {
             teams: teams || [],
-            games: games || [],
+            games: stitchedGames,
             users: users || [],
             accessRequests: requests || [],
             drillAssignments: drills || [],
@@ -102,24 +138,22 @@ export const subscribeToTeams = (callback: (teams: Team[]) => void) => {
 };
 
 export const subscribeToGames = (callback: (games: Game[]) => void) => {
-    // Fetch initial data immediately
-    const fetchGames = async () => {
-        const { data } = await supabase.from('games').select('*');
-        callback(data || []);
+    const fetchAndCallback = async () => {
+        const res = await fetchInitialData();
+        if (res.games) callback(res.games);
     };
-    fetchGames();
 
-    // Subscribe to changes
-    const subscription = supabase
-        .channel('public:games')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, async () => {
-            const { data } = await supabase.from('games').select('*');
-            callback(data || []);
-        })
+    fetchAndCallback();
+
+    const channel = supabase
+        .channel('game-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, fetchAndCallback)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_stats' }, fetchAndCallback)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_penalties' }, fetchAndCallback)
         .subscribe();
 
     return () => {
-        supabase.removeChannel(subscription);
+        supabase.removeChannel(channel);
     };
 };
 
@@ -136,12 +170,57 @@ export const deleteTeam = async (teamId: string) => {
 };
 
 export const saveGame = async (game: Game) => {
-    const { error } = await supabase.from('games').upsert(game);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { stats, penalties, ...gameMetadata } = game;
+    const { error } = await supabase.from('games').upsert(gameMetadata);
     if (error) throw error;
 };
 
 export const deleteGame = async (gameId: string) => {
     await supabase.from('games').delete().eq('id', gameId);
+};
+
+export const saveStat = async (stat: Stat) => {
+    const dbStat = {
+        id: stat.id,
+        game_id: stat.gameId,
+        player_id: stat.playerId,
+        team_id: stat.teamId,
+        stat_type: stat.type,
+        game_clock_time: stat.timestamp,
+        period: stat.period,
+        recorded_by: stat.recordedBy,
+        assisting_player_id: stat.assistingPlayerId
+    };
+    const { error } = await supabase.from('game_stats').upsert(dbStat);
+    if (error) throw error;
+};
+
+export const deleteStat = async (statId: string) => {
+    const { error } = await supabase.from('game_stats').delete().eq('id', statId);
+    if (error) throw error;
+};
+
+export const savePenalty = async (penalty: Penalty) => {
+    const dbPenalty = {
+        id: penalty.id,
+        game_id: penalty.gameId,
+        player_id: penalty.playerId,
+        team_id: penalty.teamId,
+        penalty_type: penalty.type,
+        duration: penalty.duration,
+        start_time: penalty.startTime,
+        release_time: penalty.releaseTime,
+        period: penalty.period,
+        recorded_by: penalty.recordedBy
+    };
+    const { error } = await supabase.from('game_penalties').upsert(dbPenalty);
+    if (error) throw error;
+};
+
+export const deletePenalty = async (penaltyId: string) => {
+    const { error } = await supabase.from('game_penalties').delete().eq('id', penaltyId);
+    if (error) throw error;
 };
 
 export const saveUser = async (user: User) => {

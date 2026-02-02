@@ -161,7 +161,7 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
             {/* Top Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Network Assets', value: myTeams.length, sub: 'Units Joined', icon: Users },
+                    { label: 'Teams Joined', value: myTeams.length, sub: 'Units Joined', icon: Users },
                     { label: 'Tactical Drills', value: myAssignedDrills.length, sub: 'Target Objectives', icon: Crosshair },
                     { label: 'Deployment Feed', value: upcomingGames.length, sub: 'Active Missions', icon: Calendar },
                     { label: 'Reaction PR', value: currentUser.bestClampSpeed ? `${currentUser.bestClampSpeed}ms` : '---', sub: 'Peak Velocity', icon: Activity, accent: true }

@@ -455,7 +455,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                             <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Personnel Registry</p>
                         </div>
                         <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
-                            UNIT <span className="text-brand">ASSETS</span>
+                            <span className="text-brand">TEAMS</span>
                         </h1>
                         <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Organizing Active Networks</p>
                     </div>
@@ -463,14 +463,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                         onClick={() => onReturnToDashboard('dashboard')}
                         className="cyber-button-outline w-full md:w-auto px-10 py-4 font-display font-bold italic tracking-widest text-xs uppercase hover:bg-white/5 transition-all"
                     >
-                        RETURN TO COMMAND
+                        RETURN TO DASHBOARD
                     </button>
                 </div>
 
                 <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
                     <div className="flex items-center gap-6 mb-8">
                         <UserPlus className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Initialize <span className="text-brand">New Unit</span></h2>
+                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Add <span className="text-brand">New Team</span></h2>
                         <div className="h-px bg-surface-border flex-grow"></div>
                     </div>
 
@@ -483,7 +483,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                             className="flex-grow cyber-input py-3 px-4 text-sm font-mono tracking-widest uppercase"
                         />
                         <button onClick={handleAddTeam} className="cyber-button px-12 py-3 flex items-center justify-center gap-4 font-display font-bold italic tracking-widest text-sm shadow-[0_0_15px_rgba(255,87,34,0.1)]">
-                            CREATE UNIT <UserPlus className="w-4 h-4" />
+                            ADD TEAM <UserPlus className="w-4 h-4" />
                         </button>
                     </div>
                 </div>

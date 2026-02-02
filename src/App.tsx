@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { User as UserIcon } from 'lucide-react';
-import { Team, Game, Player, User, Role, AccessRequest, RequestStatus, DrillAssignment, DrillType, DrillStatus, SoundEffects, SoundEffectName, Feedback, FeedbackType, FeedbackStatus, TrainingSession } from './types';
+import { Team, Game, Player, User, Role, AccessRequest, RequestStatus, DrillAssignment, DrillType, DrillStatus, SoundEffects, SoundEffectName, Feedback, FeedbackType, FeedbackStatus, TrainingSession, Stat, Penalty } from './types';
 import TeamManagement from './components/TeamManagement';
 import Schedule from './components/Schedule';
 import GameTracker from './components/GameTracker';
@@ -445,20 +445,46 @@ const App: React.FC = () => {
             setGameForReport(updatedGame);
         }
 
-        // If the game being updated is the active one and it's now finished,
-        // clear the activeGameId. This will trigger the useEffect to navigate away.
         if (updatedGame.id === activeGameId && updatedGame.status === 'finished') {
-            // We set a brief timeout to allow the user to see the "Game Over" screen
-            // and its options before being navigated away.
-            // This is a UX improvement over instant navigation.
             setTimeout(() => {
-                // Check if the user hasn't already navigated to the report screen
                 if (currentView === 'game') {
                     setActiveGameId(null);
                 }
-            }, 4000); // 4-second delay
+            }, 4000);
         }
     }, [activeGameId, currentView, gameForReport]);
+
+    const handleSaveStat = useCallback(async (stat: Stat) => {
+        try {
+            await storageService.saveStat(stat);
+        } catch (error) {
+            console.error("Error saving stat:", error);
+        }
+    }, []);
+
+    const handleDeleteStat = useCallback(async (statId: string) => {
+        try {
+            await storageService.deleteStat(statId);
+        } catch (error) {
+            console.error("Error deleting stat:", error);
+        }
+    }, []);
+
+    const handleSavePenalty = useCallback(async (penalty: Penalty) => {
+        try {
+            await storageService.savePenalty(penalty);
+        } catch (error) {
+            console.error("Error saving penalty:", error);
+        }
+    }, []);
+
+    const handleDeletePenalty = useCallback(async (penaltyId: string) => {
+        try {
+            await storageService.deletePenalty(penaltyId);
+        } catch (error) {
+            console.error("Error deleting penalty:", error);
+        }
+    }, []);
 
     /*
     const handleUpdateGame = useCallback((updatedGame: Game) => {
@@ -749,7 +775,19 @@ const App: React.FC = () => {
                     initialViewMode={viewPreference?.mode}
                 />;
             case 'game':
-                if (activeGame) return <GameTracker game={activeGame} onUpdateGame={handleUpdateGame} onReturnToDashboard={handleReturnToDashboardFromGame} onViewReport={handleViewReport} />;
+                if (activeGame) return (
+                    <GameTracker
+                        game={activeGame}
+                        currentUser={currentUser}
+                        onUpdateGame={handleUpdateGame}
+                        onSaveStat={handleSaveStat}
+                        onDeleteStat={handleDeleteStat}
+                        onSavePenalty={handleSavePenalty}
+                        onDeletePenalty={handleDeletePenalty}
+                        onReturnToDashboard={handleReturnToDashboardFromGame}
+                        onViewReport={handleViewReport}
+                    />
+                );
                 return null;
             case 'gameReport':
                 return gameForReport ? (

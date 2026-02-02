@@ -74,9 +74,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                     <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
                         {player.name} <span className="text-brand">#{player.jerseyNumber}</span>
                     </h1>
-                    <p className="text-gray-500 font-mono text-xs uppercase tracking-[0.2em] mt-2">
-                        Position: <span className="text-white italic">{player.position}</span> // Unit: <span className="text-brand italic">{team.name}</span>
-                    </p>
+                    Position: <span className="text-white italic">{player.position}</span> // Team: <span className="text-brand italic">{team.name}</span>
                 </div>
                 <button onClick={onClose} className="cyber-button-outline py-2 px-6 flex items-center gap-2">
                     <ChevronLeft className="w-4 h-4" /> BACK TO TEAM

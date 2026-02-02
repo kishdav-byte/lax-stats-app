@@ -51,7 +51,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                 </div>
 
                 <div className="flex flex-col gap-2 min-w-[280px]">
-                    <p className="text-[8px] font-mono text-gray-600 uppercase tracking-[0.3em]">Managed Tactical Unit</p>
+                    <p className="text-[8px] font-mono text-gray-600 uppercase tracking-[0.3em]">Managed Team</p>
                     <div className="relative group">
                         <select
                             value={managedTeamId || ''}
@@ -134,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                         <div className="w-12 h-12 rounded-full border border-brand/20 flex items-center justify-center mb-6 group-hover:border-brand/60 group-hover:scale-110 transition-all">
                             <Users className="w-6 h-6 text-brand" />
                         </div>
-                        <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Tactical Assets</h3>
+                        <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Teams</h3>
                         <p className="text-gray-500 text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">Personnel management, roster extraction & bio profiling.</p>
                         <div className="flex items-center gap-3 text-brand font-mono text-[10px] uppercase tracking-[0.3em] font-bold group-hover:translate-x-2 transition-transform">
                             Access Module <ChevronRight className="w-3 h-3" />
@@ -193,7 +193,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                                         </div>
                                     </div>
                                     <button onClick={() => onStartGame(game.id)} className="cyber-button w-full md:w-auto py-3 px-8 text-[10px] font-display font-bold italic tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.15)]">
-                                        ENGAGE UNIT
+                                        ENGAGE TEAM
                                     </button>
                                 </div>
                             ))}

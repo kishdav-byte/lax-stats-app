@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType } from '../types';
+import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType, User } from '../types';
 import { generateGameSummary } from '../services/geminiService';
-import { Timer, Trophy, ShieldAlert, Binary, Plus, Activity, Cpu, ChevronRight, Zap } from 'lucide-react';
+import { Timer, Trophy, ShieldAlert, Binary, Plus, Activity, Cpu, ChevronRight, Zap, Lock, Trash2 } from 'lucide-react';
+import { Role } from '../types';
 
 interface GameTrackerProps {
     game: Game;
+    currentUser: User | null;
     onUpdateGame: (game: Game) => void;
+    onSaveStat: (stat: Stat) => void;
+    onDeleteStat: (statId: string) => void;
+    onSavePenalty: (penalty: Penalty) => void;
+    onDeletePenalty: (penaltyId: string) => void;
     onReturnToDashboard: () => void;
     onViewReport: (game: Game) => void;
 }
@@ -364,7 +370,22 @@ const LiveStatsSummary: React.FC<{
     );
 };
 
-const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnToDashboard, onViewReport }) => {
+const GameTracker: React.FC<GameTrackerProps> = ({
+    game,
+    currentUser,
+    onUpdateGame,
+    onSaveStat,
+    onDeleteStat,
+    onSavePenalty,
+    onDeletePenalty,
+    onReturnToDashboard,
+    onViewReport
+}) => {
+    const isTimekeeper = useMemo(() => {
+        if (!game.timekeeperId) return false;
+        return currentUser?.id === game.timekeeperId;
+    }, [game.timekeeperId, currentUser]);
+
     const [clock, setClock] = useState(game.gameClock);
     const [isClockRunning, setIsClockRunning] = useState(false);
     const [assistModal, setAssistModal] = useState<{ show: boolean, scoringPlayer: Player | null, scoringTeamId: string | null }>({ show: false, scoringPlayer: null, scoringTeamId: null });
@@ -402,7 +423,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
 
     useEffect(() => {
         let timer: number;
-        if (isClockRunning && clock > 0) {
+        if (isClockRunning && clock > 0 && isTimekeeper) {
             timer = window.setInterval(() => {
                 setClock(prevClock => {
                     const newClock = prevClock - 1;
@@ -422,25 +443,24 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
     }, [isClockRunning, clock, playBuzzer, speak]);
 
     useEffect(() => {
-        if (game.gameClock !== clock) onUpdateGame({ ...game, gameClock: clock });
-    }, [clock, game, onUpdateGame]);
+        if (game.gameClock !== clock && isTimekeeper) onUpdateGame({ ...game, gameClock: clock });
+    }, [clock, game, onUpdateGame, isTimekeeper]);
 
     const handleStatAdd = useCallback((player: Player, teamId: string, type: StatType, assistingPlayerId?: string) => {
         const newStat: Stat = {
             id: `stat_${Date.now()}`,
+            gameId: game.id,
             playerId: player.id,
             teamId: teamId,
             type: type,
             timestamp: clock,
-            assistingPlayerId
+            period: game.currentPeriod,
+            assistingPlayerId,
+            recordedBy: currentUser?.id || undefined
         };
-        let newScore = { ...game.score };
-        if (type === StatType.GOAL) {
-            if (teamId === game.homeTeam.id) newScore.home++;
-            else newScore.away++;
-        }
-        onUpdateGame({ ...game, stats: [...game.stats, newStat], score: newScore });
-    }, [game, onUpdateGame, clock]);
+
+        onSaveStat(newStat);
+    }, [game.id, game.currentPeriod, clock, currentUser?.id, onSaveStat]);
 
     const handleStatButtonClick = (type: StatType) => {
         if (selectedPlayerInfo) {
@@ -472,7 +492,14 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
 
     if (game.status === 'scheduled') {
         return <GameSetup game={game} onStartGame={(config) => {
-            onUpdateGame({ ...game, status: 'live', ...config, gameClock: config.periodLength, currentPeriod: 1 });
+            onUpdateGame({
+                ...game,
+                status: 'live',
+                ...config,
+                gameClock: config.periodLength,
+                currentPeriod: 1,
+                timekeeperId: currentUser?.id
+            });
             setClock(config.periodLength);
             setIsClockRunning(true);
         }} onReturnToDashboard={onReturnToDashboard} />;
@@ -487,10 +514,12 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                         <div className="flex-1 text-right">
                             <h2 className="text-sm font-mono font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{game.homeTeam.name}</h2>
                             <div className="flex items-center justify-end gap-4">
-                                <div className="flex flex-col gap-1 no-print">
-                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: game.score.home + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
-                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: Math.max(0, game.score.home - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
-                                </div>
+                                {isTimekeeper && (
+                                    <div className="flex flex-col gap-1 no-print">
+                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: game.score.home + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: Math.max(0, game.score.home - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
+                                    </div>
+                                )}
                                 <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.home}</p>
                             </div>
                         </div>
@@ -512,42 +541,65 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                             <h2 className="text-sm font-mono font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{game.awayTeam.name}</h2>
                             <div className="flex items-center justify-start gap-4">
                                 <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.away}</p>
-                                <div className="flex flex-col gap-1 no-print">
-                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: game.score.away + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
-                                    <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: Math.max(0, game.score.away - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
-                                </div>
+                                {isTimekeeper && (
+                                    <div className="flex flex-col gap-1 no-print">
+                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: game.score.away + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: Math.max(0, game.score.away - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {/* Control HUD Overlay */}
                     <div className="bg-surface-card border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-6">
-                        <button onClick={() => setIsClockRunning(!isClockRunning)} className={`flex items-center gap-3 px-8 py-2 font-display italic font-black text-xs uppercase tracking-widest transition-all ${isClockRunning ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'}`}>
-                            {isClockRunning ? 'PAUSE CLOCK' : 'START CLOCK'}
-                            {isClockRunning ? <Timer className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
-                        </button>
+                        {isTimekeeper ? (
+                            <>
+                                <button onClick={() => setIsClockRunning(!isClockRunning)} className={`flex items-center gap-3 px-8 py-2 font-display italic font-black text-xs uppercase tracking-widest transition-all ${isClockRunning ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'}`}>
+                                    {isClockRunning ? 'PAUSE CLOCK' : 'START CLOCK'}
+                                    {isClockRunning ? <Timer className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                                </button>
 
-                        <div className="flex items-center gap-4 border-x border-white/10 px-6">
-                            <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.max(1, game.currentPeriod - 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                            <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest">PERIOD</span>
-                            <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.min(game.totalPeriods || 4, game.currentPeriod + 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4" /></button>
-                        </div>
+                                <div className="flex items-center gap-4 border-x border-white/10 px-6">
+                                    <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.max(1, game.currentPeriod - 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4 rotate-180" /></button>
+                                    <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest">PERIOD</span>
+                                    <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.min(game.totalPeriods || 4, game.currentPeriod + 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4" /></button>
+                                </div>
 
-                        <div className="flex items-center gap-2 border-l border-white/10 pl-6">
-                            <button onClick={() => setClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET TIME</button>
-                            <div className="flex items-center gap-1 bg-black/40 border border-white/5 px-2">
-                                <button onClick={() => setClock(p => Math.max(0, p - 60))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-1M</button>
-                                <button onClick={() => setClock(p => Math.max(0, p - 10))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-10S</button>
-                                <div className="w-px h-3 bg-white/10 mx-1"></div>
-                                <button onClick={() => setClock(p => p + 10)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+10S</button>
-                                <button onClick={() => setClock(p => p + 60)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+1M</button>
+                                <div className="flex items-center gap-2 border-l border-white/10 pl-6">
+                                    <button onClick={() => setClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET TIME</button>
+                                    <div className="flex items-center gap-1 bg-black/40 border border-white/5 px-2">
+                                        <button onClick={() => setClock(p => Math.max(0, p - 60))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-1M</button>
+                                        <button onClick={() => setClock(p => Math.max(0, p - 10))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-10S</button>
+                                        <div className="w-px h-3 bg-white/10 mx-1"></div>
+                                        <button onClick={() => setClock(p => p + 10)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+10S</button>
+                                        <button onClick={() => setClock(p => p + 60)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+1M</button>
+                                    </div>
+                                </div>
+
+                                {game.status !== 'finished' && (
+                                    <button onClick={() => { if (window.confirm("FINISH GAME?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="bg-red-900 border border-red-500/50 text-white px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-red-600 transition-all">
+                                        END GAME
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 px-8 py-2 bg-white/5 border border-white/10">
+                                    <Lock className="w-4 h-4 text-gray-500" />
+                                    <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest italic">
+                                        Clock & Score Locked: {game.timekeeperId ? 'Assigned' : 'Awaiting Timekeeper'}
+                                    </span>
+                                </div>
+                                {!game.timekeeperId && (
+                                    <button
+                                        onClick={() => onUpdateGame({ ...game, timekeeperId: currentUser?.id || undefined })}
+                                        className="bg-brand/20 border border-brand/40 text-brand px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-brand/30 transition-all"
+                                    >
+                                        Claim Timekeeper Role
+                                    </button>
+                                )}
                             </div>
-                        </div>
-
-                        {game.status !== 'finished' && (
-                            <button onClick={() => { if (window.confirm("FINISH GAME?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="bg-red-900 border border-red-500/50 text-white px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-red-600 transition-all">
-                                END GAME
-                            </button>
                         )}
                         <button onClick={onReturnToDashboard} className="text-[10px] font-mono font-black text-gray-500 hover:text-white uppercase tracking-widest ml-4">EXIT TRACKER</button>
                     </div>
@@ -631,25 +683,65 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                         </div>
                     )}
 
-                    <div>
-                        <div className="flex items-center gap-4 mb-8">
-                            <Binary className="w-5 h-5 text-brand" />
-                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">GAME <span className="text-brand">LOG</span></h2>
-                            <div className="h-px bg-surface-border flex-grow"></div>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <div className="flex items-center gap-4 mb-4">
+                                <Binary className="w-4 h-4 text-brand" />
+                                <h3 className="text-sm font-display font-black text-white italic uppercase tracking-tighter">STAT <span className="text-brand">LOG</span></h3>
+                                <div className="h-px bg-surface-border flex-grow"></div>
+                            </div>
+                            <div className="cyber-card h-64 overflow-y-auto custom-scrollbar bg-surface-card p-4">
+                                {(game.stats || []).slice().sort((a, b) => b.timestamp - a.timestamp).map(stat => {
+                                    const p = allPlayers.find(pl => pl.id === stat.playerId);
+                                    const t = stat.teamId === game.homeTeam.id ? game.homeTeam : game.awayTeam;
+                                    return (
+                                        <div key={stat.id} className="flex items-center gap-3 border-b border-surface-border py-2 text-[9px] font-mono group hover:bg-white/5 transition-colors">
+                                            <span className="text-gray-600">[{formatTime(stat.timestamp)}]</span>
+                                            <span className="text-brand font-bold">{t.name.substring(0, 3).toUpperCase()}</span>
+                                            <span className="text-white">#{p?.jerseyNumber} {p?.name.split(' ')[0].toUpperCase()}</span>
+                                            <span className="text-gray-500 ml-auto">{stat.type}</span>
+                                            {(isTimekeeper || currentUser?.id === stat.recordedBy || currentUser?.role === Role.ADMIN) && (
+                                                <button
+                                                    onClick={() => { if (window.confirm("Delete stat?")) onDeleteStat(stat.id); }}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-500 transition-all"
+                                                >
+                                                    <Trash2 className="w-2.5 h-2.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="cyber-card h-80 overflow-y-auto custom-scrollbar bg-surface-card p-6">
-                            {game.stats.slice().sort((a, b) => b.timestamp - a.timestamp).map(stat => {
-                                const p = allPlayers.find(pl => pl.id === stat.playerId);
-                                const t = stat.teamId === game.homeTeam.id ? game.homeTeam : game.awayTeam;
-                                return (
-                                    <div key={stat.id} className="flex gap-4 border-b border-surface-border py-2 text-[10px] font-mono group hover:bg-white/5 transition-colors">
-                                        <span className="text-gray-600">[{formatTime(stat.timestamp)}]</span>
-                                        <span className="text-brand font-bold">{t.name.toUpperCase()}</span>
-                                        <span className="text-white">#{p?.jerseyNumber} {p?.name.toUpperCase()}</span>
-                                        <span className="text-gray-500 ml-auto">{stat.type.replace('_', ' ')}</span>
-                                    </div>
-                                );
-                            })}
+
+                        <div>
+                            <div className="flex items-center gap-4 mb-4">
+                                <ShieldAlert className="w-4 h-4 text-yellow-500" />
+                                <h3 className="text-sm font-display font-black text-white italic uppercase tracking-tighter">PENALTY <span className="text-yellow-500">LOG</span></h3>
+                                <div className="h-px bg-surface-border flex-grow"></div>
+                            </div>
+                            <div className="cyber-card h-64 overflow-y-auto custom-scrollbar bg-surface-card p-4">
+                                {(game.penalties || []).slice().sort((a, b) => b.startTime - a.startTime).map(penalty => {
+                                    const p = allPlayers.find(pl => pl.id === penalty.playerId);
+                                    const t = penalty.teamId === game.homeTeam.id ? game.homeTeam : game.awayTeam;
+                                    return (
+                                        <div key={penalty.id} className="flex items-center gap-3 border-b border-surface-border py-2 text-[9px] font-mono group hover:bg-white/5 transition-colors">
+                                            <span className="text-yellow-600">[{formatTime(penalty.startTime)}]</span>
+                                            <span className="text-yellow-500 font-bold">{t.name.substring(0, 3).toUpperCase()}</span>
+                                            <span className="text-white">#{p?.jerseyNumber} {p?.name.split(' ')[0].toUpperCase()}</span>
+                                            <span className="text-gray-500 ml-auto">{penalty.type} ({penalty.duration}s)</span>
+                                            {(isTimekeeper || currentUser?.id === penalty.recordedBy || currentUser?.role === Role.ADMIN) && (
+                                                <button
+                                                    onClick={() => { if (window.confirm("Delete penalty?")) onDeletePenalty(penalty.id); }}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-500 transition-all"
+                                                >
+                                                    <Trash2 className="w-2.5 h-2.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
@@ -689,9 +781,21 @@ const GameTracker: React.FC<GameTrackerProps> = ({ game, onUpdateGame, onReturnT
                     teamName={selectedPlayerInfo.teamId === game.homeTeam.id ? game.homeTeam.name : game.awayTeam.name}
                     onClose={() => setIsPenaltyModalOpen(false)}
                     onAddPenalty={(type, duration) => {
-                        const newPenalty: Penalty = { id: `penalty_${Date.now()}`, playerId: selectedPlayerInfo.player.id, teamId: selectedPlayerInfo.teamId, type, duration, startTime: clock, releaseTime: clock - duration };
-                        onUpdateGame({ ...game, penalties: [...(game.penalties || []), newPenalty] });
-                        setIsPenaltyModalOpen(false); setSelectedPlayerInfo(null);
+                        const newPenalty: Penalty = {
+                            id: `penalty_${Date.now()}`,
+                            gameId: game.id,
+                            playerId: selectedPlayerInfo.player.id,
+                            teamId: selectedPlayerInfo.teamId,
+                            type,
+                            duration,
+                            startTime: clock,
+                            releaseTime: clock - duration,
+                            period: game.currentPeriod,
+                            recordedBy: currentUser?.id || undefined
+                        };
+                        onSavePenalty(newPenalty);
+                        setIsPenaltyModalOpen(false);
+                        setSelectedPlayerInfo(null);
                     }}
                 />
             )}

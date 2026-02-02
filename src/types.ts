@@ -26,11 +26,14 @@ export enum StatType {
 
 export interface Stat {
     id: string;
+    gameId: string;
     playerId: string;
     teamId: string;
     type: StatType;
     timestamp: number; // in-game clock time in seconds
+    period: number;
     assistingPlayerId?: string;
+    recordedBy?: string; // User UUID who created this stat
 }
 
 export enum PenaltyType {
@@ -50,12 +53,15 @@ export enum PenaltyType {
 
 export interface Penalty {
     id: string;
+    gameId: string;
     playerId: string;
     teamId: string;
     type: PenaltyType;
     duration: number; // seconds
     startTime: number; // game clock time when penalty occurred
     releaseTime: number; // game clock time when player is released
+    period: number;
+    recordedBy?: string; // User UUID who created this penalty
 }
 
 export interface Game {
@@ -79,6 +85,7 @@ export interface Game {
     periodLength?: number; // in seconds
     totalPeriods?: number;
     correctionNotes?: string;
+    timekeeperId?: string; // User ID of the person currently managing the clock/score
 }
 
 export enum Role {
