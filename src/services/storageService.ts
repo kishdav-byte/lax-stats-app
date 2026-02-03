@@ -88,7 +88,7 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
                 periodLength: g.periodLength,
                 totalPeriods: g.totalPeriods,
                 correctionNotes: g.correctionNotes,
-                timekeeperId: g.timekeeperId,
+                // timekeeperId removed - doesn't exist in Supabase schema
                 // Ensure stats is always an array (merge from separate table + any JSONB data)
                 stats: [
                     ...(stats || [])
@@ -259,8 +259,8 @@ export const saveGame = async (game: Game) => {
         clockType: game.clockType,
         periodLength: game.periodLength,
         totalPeriods: game.totalPeriods,
-        correctionNotes: game.correctionNotes,
-        timekeeperId: game.timekeeperId
+        correctionNotes: game.correctionNotes
+        // timekeeperId removed - doesn't exist in Supabase schema
     };
     const { error } = await supabase.from('games').upsert(dbGame);
     if (error) throw error;
