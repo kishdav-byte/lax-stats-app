@@ -53,8 +53,8 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
         const stitchedGames: Game[] = (games || []).map(g => {
             const homeId = g.home_team?.trim();
             const awayId = g.away_team?.trim();
-            const homeTeam = (teams || []).find(t => t.id.trim() === homeId) || { id: homeId, name: homeId || 'Unknown', roster: [] };
-            const awayTeam = (teams || []).find(t => t.id.trim() === awayId) || { id: awayId, name: awayId || 'Unknown', roster: [] };
+            const homeTeam = (teams || []).find(t => t.id?.trim() === homeId) || { id: homeId, name: homeId || 'Unknown', roster: [] };
+            const awayTeam = (teams || []).find(t => t.id?.trim() === awayId) || { id: awayId, name: awayId || 'Unknown', roster: [] };
 
             return {
                 id: g.id,

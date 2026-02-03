@@ -402,8 +402,8 @@ const App: React.FC = () => {
         const cleanHomeId = homeTeamId?.trim();
         const cleanAwayId = awayTeamInfo.id?.trim();
 
-        let homeTeam = teams.find(t => t.id.trim() === cleanHomeId);
-        let awayTeam = cleanAwayId ? teams.find(t => t.id.trim() === cleanAwayId) : undefined;
+        let homeTeam = teams.find(t => t.id?.trim() === cleanHomeId);
+        let awayTeam = cleanAwayId ? teams.find(t => t.id?.trim() === cleanAwayId) : undefined;
 
         // Special handling for Away games in imports where the Home opponent is just a name
         if (!homeTeam && cleanHomeId === '' && awayTeamInfo.name) {

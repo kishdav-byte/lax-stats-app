@@ -199,7 +199,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
     const now = new Date();
     const cleanManagedTeamId = managedTeamId?.trim();
     const filteredGames = cleanManagedTeamId
-        ? games.filter(g => g.homeTeam.id.trim() === cleanManagedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam.id.trim() === cleanManagedTeamId))
+        ? games.filter(g => g.homeTeam?.id?.trim() === cleanManagedTeamId || (typeof g.awayTeam !== 'string' && g.awayTeam?.id?.trim() === cleanManagedTeamId))
         : games;
 
     // Upcoming: All scheduled games that haven't been started yet

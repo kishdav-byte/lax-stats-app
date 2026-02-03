@@ -18,7 +18,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onViewChange, activeGameId, onViewReport, userRole, managedTeamId, onManagedTeamChange }) => {
     const cleanManagedId = managedTeamId?.trim();
     const filteredGames = cleanManagedId
-        ? games.filter(g => g.homeTeam.id.trim() === cleanManagedId || (typeof g.awayTeam !== 'string' && g.awayTeam.id.trim() === cleanManagedId))
+        ? games.filter(g => g.homeTeam?.id?.trim() === cleanManagedId || (typeof g.awayTeam !== 'string' && g.awayTeam?.id?.trim() === cleanManagedId))
         : games;
 
     // Sort upcoming: Earliest first (all scheduled, not just future)
