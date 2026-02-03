@@ -89,33 +89,41 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
                 totalPeriods: g.totalPeriods,
                 correctionNotes: g.correctionNotes,
                 timekeeperId: g.timekeeperId,
-                stats: (stats || [])
-                    .filter(s => s.game_id === g.id)
-                    .map(s => ({
-                        id: s.id,
-                        gameId: s.game_id,
-                        playerId: s.player_id,
-                        teamId: s.team_id,
-                        type: s.stat_type,
-                        timestamp: s.game_clock_time,
-                        period: s.period,
-                        assistingPlayerId: s.assisting_player_id,
-                        recordedBy: s.recorded_by
-                    })),
-                penalties: (penalties || [])
-                    .filter(p => p.game_id === g.id)
-                    .map(p => ({
-                        id: p.id,
-                        gameId: p.game_id,
-                        playerId: p.player_id,
-                        teamId: p.team_id,
-                        type: p.penalty_type,
-                        duration: p.duration,
-                        startTime: p.start_time,
-                        releaseTime: p.release_time,
-                        period: p.period,
-                        recordedBy: p.recorded_by
-                    }))
+                // Ensure stats is always an array (merge from separate table + any JSONB data)
+                stats: [
+                    ...(stats || [])
+                        .filter(s => s.game_id === g.id)
+                        .map(s => ({
+                            id: s.id,
+                            gameId: s.game_id,
+                            playerId: s.player_id,
+                            teamId: s.team_id,
+                            type: s.stat_type,
+                            timestamp: s.game_clock_time,
+                            period: s.period,
+                            assistingPlayerId: s.assisting_player_id,
+                            recordedBy: s.recorded_by
+                        })),
+                    ...(Array.isArray(g.stats) ? g.stats : [])
+                ],
+                // Ensure penalties is always an array (merge from separate table + any JSONB data)
+                penalties: [
+                    ...(penalties || [])
+                        .filter(p => p.game_id === g.id)
+                        .map(p => ({
+                            id: p.id,
+                            gameId: p.game_id,
+                            playerId: p.player_id,
+                            teamId: p.team_id,
+                            type: p.penalty_type,
+                            duration: p.duration,
+                            startTime: p.start_time,
+                            releaseTime: p.release_time,
+                            period: p.period,
+                            recordedBy: p.recorded_by
+                        })),
+                    ...(Array.isArray(g.penalties) ? g.penalties : [])
+                ]
             };
         });
 
