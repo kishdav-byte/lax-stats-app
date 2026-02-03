@@ -140,7 +140,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ games, onStartGame, onViewR
                                 <>
                                     <div className="h-1 w-1 bg-brand rounded-full animate-pulse"></div>
                                     <p className="text-[8px] font-mono text-brand uppercase tracking-widest bg-brand/5 border border-brand/20 px-2 py-0.5">
-                                        FILTER: {teams.find((t: any) => t.id === managedTeamId)?.name.toUpperCase() || 'MANAGED TEAM'}
+                                        FILTER: {teams.find((t: any) => t.id === managedTeamId)?.name?.toUpperCase() || 'MANAGED TEAM'}
                                     </p>
                                 </>
                             )}

@@ -230,7 +230,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                             <>
                                 <div className="h-1 w-1 bg-brand rounded-full animate-pulse"></div>
                                 <p className="text-[8px] font-mono text-brand uppercase tracking-widest border border-brand/20 px-2 py-0.5 bg-brand/5">
-                                    FILTER ACTIVE: {teams.find(t => t.id === managedTeamId)?.name.toUpperCase()}
+                                    FILTER ACTIVE: {teams.find(t => t.id === managedTeamId)?.name?.toUpperCase() || 'SELECTED TEAM'}
                                 </p>
                             </>
                         )}

@@ -58,7 +58,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                         >
                             <option value="">ALL SYSTEMS ACTIVE</option>
                             {teams.map(team => (
-                                <option key={team.id} value={team.id}>{team.name.toUpperCase()}</option>
+                                <option key={team.id} value={team.id}>{team.name?.toUpperCase() || 'UNKNOWN TEAM'}</option>
                             ))}
                         </select>
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand">

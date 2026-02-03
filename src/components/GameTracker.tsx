@@ -350,9 +350,9 @@ const LiveStatsSummary: React.FC<{
             <div className="bg-black p-6 border border-surface-border">
                 <h3 className="text-xs font-mono font-black text-brand uppercase tracking-[0.3em] mb-6 text-center">LIVE STATS SUMMARY</h3>
                 <div className="grid grid-cols-3 gap-4 font-mono">
-                    <div className="text-right text-[10px] font-black text-gray-500 uppercase tracking-widest underline decoration-brand/30 underline-offset-8 mb-4">{homeTeam.name.toUpperCase()}</div>
+                    <div className="text-right text-[10px] font-black text-gray-500 uppercase tracking-widest underline decoration-brand/30 underline-offset-8 mb-4">{homeTeam?.name?.toUpperCase() || 'HOME'}</div>
                     <div className="text-center text-[10px] font-black text-brand uppercase tracking-widest mb-4">STAT</div>
-                    <div className="text-left text-[10px] font-black text-gray-500 uppercase tracking-widest underline decoration-brand/30 underline-offset-8 mb-4">{awayTeam.name.toUpperCase()}</div>
+                    <div className="text-left text-[10px] font-black text-gray-500 uppercase tracking-widest underline decoration-brand/30 underline-offset-8 mb-4">{awayTeam?.name?.toUpperCase() || 'AWAY'}</div>
 
                     {statsToDisplay.map(({ key, label }) => (
                         <React.Fragment key={key}>
