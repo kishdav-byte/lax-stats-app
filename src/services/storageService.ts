@@ -51,10 +51,27 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
 
         // Stitch games together with their stats and penalties
         const stitchedGames: Game[] = (games || []).map(g => {
-            const homeId = g.homeTeam?.trim();
-            const awayId = g.awayTeam?.trim();
-            const homeTeam = (teams || []).find(t => t.id?.trim() === homeId) || { id: homeId, name: homeId || 'Unknown', roster: [] };
-            const awayTeam = (teams || []).find(t => t.id?.trim() === awayId) || { id: awayId, name: awayId || 'Unknown', roster: [] };
+            // Handle both cases: homeTeam/awayTeam as JSONB objects OR as string IDs
+            let homeTeam: Team;
+            let awayTeam: Team;
+
+            if (typeof g.homeTeam === 'object' && g.homeTeam !== null) {
+                // homeTeam is already a full object from JSONB
+                homeTeam = g.homeTeam as Team;
+            } else {
+                // homeTeam is a string ID (legacy format)
+                const homeId = (g.homeTeam as string)?.trim();
+                homeTeam = (teams || []).find(t => t.id?.trim() === homeId) || { id: homeId, name: homeId || 'Unknown', roster: [] };
+            }
+
+            if (typeof g.awayTeam === 'object' && g.awayTeam !== null) {
+                // awayTeam is already a full object from JSONB
+                awayTeam = g.awayTeam as Team;
+            } else {
+                // awayTeam is a string ID (legacy format)
+                const awayId = (g.awayTeam as string)?.trim();
+                awayTeam = (teams || []).find(t => t.id?.trim() === awayId) || { id: awayId, name: awayId || 'Unknown', roster: [] };
+            }
 
             return {
                 id: g.id,
@@ -222,8 +239,8 @@ export const deleteTeam = async (teamId: string) => {
 export const saveGame = async (game: Game) => {
     const dbGame = {
         id: game.id,
-        homeTeam: game.homeTeam.id,
-        awayTeam: game.awayTeam.id,
+        homeTeam: game.homeTeam,  // Save full team object
+        awayTeam: game.awayTeam,  // Save full team object
         scheduledTime: game.scheduledTime,
         status: game.status,
         score: game.score,
