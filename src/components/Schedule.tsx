@@ -363,7 +363,7 @@ const Schedule: React.FC<ScheduleProps> = ({ teams, games, onAddGame, onStartGam
                                                 </div>
                                                 <div className="flex items-center gap-4 mt-2">
                                                     <div className={`h-1 w-1 rounded-full animate-pulse ${isPast ? 'bg-red-500' : 'bg-brand'}`}></div>
-                                                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] font-bold">Planned Kickoff: {new Date(game.scheduledTime).toLocaleString()}</p>
+                                                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] font-bold">Faceoff Time: {new Date(game.scheduledTime).toLocaleString()}</p>
                                                 </div>
                                             </div>
                                             <div className="flex gap-4 w-full md:w-auto">

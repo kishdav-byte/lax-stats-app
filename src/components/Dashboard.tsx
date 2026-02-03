@@ -95,7 +95,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                    { label: 'Scheduled Games', value: upcomingGames.length, sub: 'Ready for Kickoff', icon: Calendar, onClick: () => onViewChange('schedule', { mode: 'calendar' }) },
+                    { label: 'Scheduled Games', value: upcomingGames.length, sub: 'Ready for Faceoff', icon: Calendar, onClick: () => onViewChange('schedule', { mode: 'calendar' }) },
                     { label: 'Completed Sets', value: finishedGames.length, sub: 'Performance Logged', icon: Binary, onClick: () => onViewChange('schedule') },
                     { label: 'System Status', value: 'ONLINE', sub: 'Secure & Synchronized', icon: ShieldCheck, onClick: () => onViewChange('globalSettings') }
                 ].map((metric, i) => (
