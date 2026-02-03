@@ -51,8 +51,8 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
 
         // Stitch games together with their stats and penalties
         const stitchedGames: Game[] = (games || []).map(g => {
-            const homeId = g.home_team?.trim();
-            const awayId = g.away_team?.trim();
+            const homeId = g.homeTeam?.trim();
+            const awayId = g.awayTeam?.trim();
             const homeTeam = (teams || []).find(t => t.id?.trim() === homeId) || { id: homeId, name: homeId || 'Unknown', roster: [] };
             const awayTeam = (teams || []).find(t => t.id?.trim() === awayId) || { id: awayId, name: awayId || 'Unknown', roster: [] };
 
@@ -60,18 +60,18 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
                 id: g.id,
                 homeTeam,
                 awayTeam,
-                scheduledTime: g.scheduled_time,
+                scheduledTime: g.scheduledTime,
                 status: g.status,
                 score: g.score || { home: 0, away: 0 },
-                currentPeriod: g.current_period || 1,
-                gameClock: g.game_clock || 0,
-                aiSummary: g.ai_summary,
-                periodType: g.period_type,
-                clockType: g.clock_type,
-                periodLength: g.period_length,
-                totalPeriods: g.total_periods,
-                correctionNotes: g.correction_notes,
-                timekeeperId: g.timekeeper_id,
+                currentPeriod: g.currentPeriod || 1,
+                gameClock: g.gameClock || 0,
+                aiSummary: g.aiSummary,
+                periodType: g.periodType,
+                clockType: g.clockType,
+                periodLength: g.periodLength,
+                totalPeriods: g.totalPeriods,
+                correctionNotes: g.correctionNotes,
+                timekeeperId: g.timekeeperId,
                 stats: (stats || [])
                     .filter(s => s.game_id === g.id)
                     .map(s => ({
@@ -222,20 +222,20 @@ export const deleteTeam = async (teamId: string) => {
 export const saveGame = async (game: Game) => {
     const dbGame = {
         id: game.id,
-        home_team: game.homeTeam.id,
-        away_team: game.awayTeam.id,
-        scheduled_time: game.scheduledTime,
+        homeTeam: game.homeTeam.id,
+        awayTeam: game.awayTeam.id,
+        scheduledTime: game.scheduledTime,
         status: game.status,
         score: game.score,
-        current_period: game.currentPeriod,
-        game_clock: game.gameClock,
-        ai_summary: game.aiSummary,
-        period_type: game.periodType,
-        clock_type: game.clockType,
-        period_length: game.periodLength,
-        total_periods: game.totalPeriods,
-        correction_notes: game.correctionNotes,
-        timekeeper_id: game.timekeeperId
+        currentPeriod: game.currentPeriod,
+        gameClock: game.gameClock,
+        aiSummary: game.aiSummary,
+        periodType: game.periodType,
+        clockType: game.clockType,
+        periodLength: game.periodLength,
+        totalPeriods: game.totalPeriods,
+        correctionNotes: game.correctionNotes,
+        timekeeperId: game.timekeeperId
     };
     const { error } = await supabase.from('games').upsert(dbGame);
     if (error) throw error;
