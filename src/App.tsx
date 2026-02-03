@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, ChevronRight } from 'lucide-react';
 import { Team, Game, Player, User, Role, AccessRequest, RequestStatus, DrillAssignment, DrillType, DrillStatus, SoundEffects, SoundEffectName, Feedback, FeedbackType, FeedbackStatus, TrainingSession, Stat, Penalty } from './types';
 import TeamManagement from './components/TeamManagement';
 import Schedule from './components/Schedule';
@@ -452,14 +452,13 @@ const App: React.FC = () => {
             setGameForReport(updatedGame);
         }
 
+        // Clear activeGameId when game is finished (regardless of current view)
         if (updatedGame.id === activeGameId && updatedGame.status === 'finished') {
             setTimeout(() => {
-                if (currentView === 'game') {
-                    setActiveGameId(null);
-                }
+                setActiveGameId(null);
             }, 4000);
         }
-    }, [activeGameId, currentView, gameForReport]);
+    }, [activeGameId, gameForReport]);
 
     const handleSaveStat = useCallback(async (stat: Stat) => {
         try {
@@ -504,7 +503,8 @@ const App: React.FC = () => {
     */
 
     const handleReturnToDashboardFromGame = () => {
-        setActiveGameId(null);
+        // DON'T clear activeGameId - keep it so user can resume the game
+        // Only clear it when the game is actually finished
         const defaultView = currentUser?.role === Role.PLAYER ? 'playerDashboard' : 'dashboard';
         setCurrentView(defaultView);
     };
@@ -996,6 +996,22 @@ const App: React.FC = () => {
 
                     <div className="space-y-1 mt-12">
                         <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest mb-4 px-2">Main Menu</p>
+
+                        {/* Resume Game Button - Shows when there's an active game */}
+                        {activeGame && (
+                            <button
+                                onClick={() => setCurrentView('game')}
+                                className="w-full text-left px-3 py-3 rounded-none text-xs font-display font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-between group bg-brand/20 text-brand border-l-2 border-brand hover:bg-brand/30 mb-4 animate-pulse"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-brand rounded-full animate-ping absolute"></span>
+                                    <span className="w-2 h-2 bg-brand rounded-full relative"></span>
+                                    RESUME GAME
+                                </span>
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        )}
+
                         {allNavItems.map(item => {
                             const isActive = item.view === 'trainingMenu' ? isTrainingView : currentView === item.view;
                             return (
