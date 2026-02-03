@@ -96,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
                     { label: 'Scheduled Games', value: upcomingGames.length, sub: 'Ready for Faceoff', icon: Calendar, onClick: () => onViewChange('schedule', { mode: 'calendar' }) },
-                    { label: 'Completed Sets', value: finishedGames.length, sub: 'Performance Logged', icon: Binary, onClick: () => onViewChange('schedule') },
+                    { label: 'Completed Games', value: finishedGames.length, sub: 'Performance Logged', icon: Binary, onClick: () => onViewChange('schedule') },
                     { label: 'System Status', value: 'ONLINE', sub: 'Secure & Synchronized', icon: ShieldCheck, onClick: () => onViewChange('globalSettings') }
                 ].map((metric, i) => (
                     <div
@@ -146,7 +146,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                         <div className="w-12 h-12 rounded-full border border-brand/20 flex items-center justify-center mb-6 group-hover:border-brand/60 group-hover:scale-110 transition-all">
                             <Calendar className="w-6 h-6 text-brand" />
                         </div>
-                        <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Engagement Log</h3>
+                        <h3 className="text-2xl font-display font-black text-white mb-3 italic tracking-tight uppercase group-hover:text-brand transition-colors">Game Schedule</h3>
                         <p className="text-gray-500 text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">Mission scheduling, event sequencing & orbital planning.</p>
                         <div className="flex items-center gap-3 text-brand font-mono text-[10px] uppercase tracking-[0.3em] font-bold group-hover:translate-x-2 transition-transform">
                             Access Module <ChevronRight className="w-3 h-3" />
