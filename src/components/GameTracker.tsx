@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType, User } from '../types';
 import { generateGameSummary } from '../services/geminiService';
-import { Timer, Trophy, ShieldAlert, Binary, Plus, Activity, Cpu, ChevronRight, Zap, Lock, Trash2 } from 'lucide-react';
+import { Trophy, ShieldAlert, Plus, Activity, Cpu, ChevronRight, Zap, Trash2 } from 'lucide-react';
 import { Role } from '../types';
 
 interface GameTrackerProps {
@@ -97,46 +97,6 @@ const StatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]: { [k
         </div>
     );
 };
-
-const RosterColumn: React.FC<{
-    team: Game['homeTeam'];
-    onSelectPlayer: (player: Player, teamId: string) => void;
-    selectedPlayerId: string | null;
-}> = ({ team, onSelectPlayer, selectedPlayerId }) => (
-    <div className="space-y-3">
-        <h3 className="text-xs font-mono font-black text-gray-500 uppercase tracking-[0.3em] mb-4 text-center border-b border-surface-border pb-2">{team.name} // ROSTER</h3>
-        <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-            {team.roster.map(player => (
-                <div
-                    key={player.id}
-                    onClick={() => onSelectPlayer(player, team.id)}
-                    className={`p-3 border transition-all duration-300 cursor-pointer group flex items-baseline gap-3 ${selectedPlayerId === player.id
-                        ? 'bg-brand/10 border-brand shadow-[inset_0_0_15px_rgba(255,87,34,0.1)]'
-                        : 'bg-black border-surface-border hover:border-brand/40'
-                        }`}
-                >
-                    <span className={`font-mono text-[10px] font-black group-hover:text-brand transition-colors ${selectedPlayerId === player.id ? 'text-brand' : 'text-gray-600'}`}>#{player.jerseyNumber}</span>
-                    <div className="flex flex-col">
-                        <span className={`font-display font-bold uppercase italic text-sm tracking-tight transition-colors ${selectedPlayerId === player.id ? 'text-white' : 'text-gray-400'}`}>{player.name}</span>
-                        <div className="flex gap-2 mt-1">
-                            <span className="text-[8px] font-mono text-gray-500">{player.position}</span>
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
-    </div>
-);
-
-const StatEntryButton: React.FC<{ label: string, onClick: () => void, className?: string }> = ({ label, onClick, className }) => (
-    <button
-        onClick={onClick}
-        className={`p-4 font-display font-black italic uppercase tracking-tighter text-sm transition-all duration-300 relative group overflow-hidden border border-black/10 ${className}`}
-    >
-        <span className="relative z-10">{label}</span>
-        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-    </button>
-);
 
 const formatTime = (seconds: number) => {
     const min = Math.floor(seconds / 60);
@@ -410,6 +370,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     const [isPenaltyModalOpen, setIsPenaltyModalOpen] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [selectedPlayerInfo, setSelectedPlayerInfo] = useState<{ player: Player; teamId: string } | null>(null);
+    const [isLogStatDrawerOpen, setIsLogStatDrawerOpen] = useState(false);
     const audioCtxRef = useRef<AudioContext | null>(null);
 
     const playBuzzer = useCallback(() => {
@@ -530,12 +491,14 @@ const GameTracker: React.FC<GameTrackerProps> = ({
         };
 
         onSaveStat(newStat);
+        setIsLogStatDrawerOpen(false); // Close drawer after stat
+        setSelectedPlayerInfo(null); // Clear selection
     }, [game.id, game.currentPeriod, clock, currentUser?.id, onSaveStat]);
 
     const handleStatButtonClick = (type: StatType) => {
         if (selectedPlayerInfo) {
             handleStatAdd(selectedPlayerInfo.player, selectedPlayerInfo.teamId, type);
-            setSelectedPlayerInfo(null);
+            // setIsStatDrawerOpen(false); // Handled in handleStatAdd
         }
     };
 
@@ -581,247 +544,276 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 pb-24">
-            {/* HUD / Scoreboard */}
-            <div className="sticky top-16 z-50 animate-in slide-in-from-top-4 duration-500">
-                <div className="cyber-card p-1 border-white/20 bg-black/80 backdrop-blur-xl">
-                    <div className="px-12 py-8 flex items-center justify-between gap-12 border border-white/5">
-                        <div className="flex-1 text-right">
-                            <h2 className="text-sm font-mono font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{game.homeTeam.name}</h2>
-                            <div className="flex items-center justify-end gap-4">
-                                {isTimekeeper && (
-                                    <div className="flex flex-col gap-1 no-print">
-                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: game.score.home + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
-                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, home: Math.max(0, game.score.home - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
-                                    </div>
-                                )}
-                                <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.home}</p>
+        <div className="max-w-7xl mx-auto pb-32">
+            {/* COMPACT STICKY HUD */}
+            <div className="sticky top-16 z-[60] px-4 animate-in slide-in-from-top-2 duration-500">
+                <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="flex items-stretch divide-x divide-white/10 h-24 sm:h-32">
+                        {/* HOME SCORE */}
+                        <div
+                            onClick={() => isTimekeeper && onUpdateGame({ ...game, score: { ...game.score, home: game.score.home + 1 } })}
+                            className={`flex-1 flex flex-col items-center justify-center p-2 tap-target cursor-pointer group transition-colors ${isTimekeeper ? 'hover:bg-brand/5' : ''}`}
+                        >
+                            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest truncate max-w-full italic px-2">{game.homeTeam.name}</span>
+                            <div className="relative">
+                                <span className="text-5xl sm:text-7xl font-display font-black group-hover:text-brand transition-colors italic">{game.score.home}</span>
+                                {isTimekeeper && <Plus className="w-4 h-4 text-brand absolute -top-1 -right-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
                             </div>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${game.clockRunning ? 'bg-brand animate-ping' : 'bg-gray-600'}`}></div>
-                                <p className={`text-[10px] font-mono uppercase tracking-[0.4em] ${game.clockRunning ? 'text-brand' : 'text-gray-600'}`}>{game.clockRunning ? 'LIVE' : 'PAUSED'}</p>
-                            </div>
-                            <p className={`text-7xl font-mono font-black tracking-tighter transition-colors duration-500 ${game.clockRunning ? 'text-brand drop-shadow-[0_0_15px_rgba(255,87,34,0.4)]' : 'text-gray-800'}`}>
-                                {formatTime(clock)}
-                            </p>
-                            <div className="flex items-center gap-4 bg-brand/10 border border-brand/30 px-6 py-1">
-                                <span className="text-[10px] font-mono font-black text-brand uppercase tracking-widest italic">{game.periodType?.slice(0, -1) || 'Period'} {game.currentPeriod}</span>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 text-left">
-                            <h2 className="text-sm font-mono font-black text-gray-500 uppercase tracking-[0.4em] mb-2">{game.awayTeam.name}</h2>
-                            <div className="flex items-center justify-start gap-4">
-                                <p className="text-8xl font-display font-black text-white italic tracking-tighter shadow-[0_0_30px_rgba(255,255,255,0.1)]">{game.score.away}</p>
-                                {isTimekeeper && (
-                                    <div className="flex flex-col gap-1 no-print">
-                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: game.score.away + 1 } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><Plus className="w-3 h-3" /></button>
-                                        <button onClick={() => onUpdateGame({ ...game, score: { ...game.score, away: Math.max(0, game.score.away - 1) } })} className="p-1 text-gray-600 hover:text-brand transition-colors"><span className="font-bold">-</span></button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Control HUD Overlay */}
-                    <div className="bg-surface-card border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-6">
-                        {isTimekeeper ? (
-                            <>
-                                <button onClick={toggleClock} className={`flex items-center gap-3 px-8 py-2 font-display italic font-black text-xs uppercase tracking-widest transition-all ${game.clockRunning ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'}`}>
-                                    {game.clockRunning ? 'PAUSE CLOCK' : 'START CLOCK'}
-                                    {game.clockRunning ? <Timer className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                            {isTimekeeper && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onUpdateGame({ ...game, score: { ...game.score, home: Math.max(0, game.score.home - 1) } }); }}
+                                    className="text-[8px] font-mono text-gray-700 hover:text-red-500 uppercase tracking-[0.2em] mt-1"
+                                >
+                                    DECREASE
                                 </button>
+                            )}
+                        </div>
 
-                                <div className="flex items-center gap-4 border-x border-white/10 px-6">
-                                    <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.max(1, game.currentPeriod - 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                                    <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest">PERIOD</span>
-                                    <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.min(game.totalPeriods || 4, game.currentPeriod + 1) })} className="p-1 text-gray-500 hover:text-white"><ChevronRight className="w-4 h-4" /></button>
-                                </div>
-
-                                <div className="flex items-center gap-2 border-l border-white/10 pl-6">
-                                    <button onClick={() => adjustClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET TIME</button>
-                                    <div className="flex items-center gap-1 bg-black/40 border border-white/5 px-2">
-                                        <button onClick={() => adjustClock(Math.max(0, clock - 60))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-1M</button>
-                                        <button onClick={() => adjustClock(Math.max(0, clock - 10))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-10S</button>
-                                        <div className="w-px h-3 bg-white/10 mx-1"></div>
-                                        <button onClick={() => adjustClock(clock + 10)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+10S</button>
-                                        <button onClick={() => adjustClock(clock + 60)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+1M</button>
-                                    </div>
-                                </div>
-
-                                {game.status !== 'finished' && (
-                                    <button onClick={() => { if (window.confirm("FINISH GAME?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="bg-red-900 border border-red-500/50 text-white px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-red-600 transition-all">
-                                        END GAME
-                                    </button>
-                                )}
-                            </>
-                        ) : (
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-4 px-8 py-2 bg-white/5 border border-white/10">
-                                    <Lock className="w-4 h-4 text-gray-500" />
-                                    <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-widest italic">
-                                        Clock & Score Locked: {game.timekeeperId ? 'Assigned' : 'Awaiting Timekeeper'}
-                                    </span>
-                                </div>
-                                {!game.timekeeperId && (
-                                    <button
-                                        onClick={() => onUpdateGame({ ...game, timekeeperId: currentUser?.id || undefined })}
-                                        className="bg-brand/20 border border-brand/40 text-brand px-6 py-2 text-[10px] font-mono font-black uppercase tracking-widest hover:bg-brand/30 transition-all"
-                                    >
-                                        Claim Timekeeper Role
-                                    </button>
-                                )}
+                        {/* CENTER: CLOCK & PERIOD */}
+                        <div className="w-32 sm:w-48 flex flex-col items-center justify-center bg-white/5 px-2 relative">
+                            <div className="flex items-center gap-1.5 mb-1 sm:mb-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${game.clockRunning ? 'bg-brand animate-ping' : 'bg-gray-600'}`}></div>
+                                <span className={`text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.3em] ${game.clockRunning ? 'text-brand font-bold' : 'text-gray-600'}`}>
+                                    {game.clockRunning ? 'LIVE' : 'PAUSED'}
+                                </span>
                             </div>
-                        )}
-                        <button onClick={onReturnToDashboard} className="text-[10px] font-mono font-black text-gray-500 hover:text-white uppercase tracking-widest ml-4">EXIT TRACKER</button>
+
+                            <div
+                                onClick={() => isTimekeeper && toggleClock()}
+                                className="cursor-pointer tap-target group"
+                            >
+                                <p className={`text-4xl sm:text-6xl font-mono font-black tracking-tighter transition-all duration-500 ${game.clockRunning ? 'text-brand drop-shadow-[0_0_15px_rgba(255,87,34,0.4)]' : 'text-gray-400 group-hover:text-white'}`}>
+                                    {formatTime(clock)}
+                                </p>
+                            </div>
+
+                            <div className="mt-1 sm:mt-2 text-center">
+                                <span className="text-[8px] sm:text-[10px] font-mono font-black text-white/40 uppercase tracking-widest bg-white/10 px-3 py-0.5 rounded-full">
+                                    {game.periodType?.slice(0, -1) || 'P'} {game.currentPeriod}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* AWAY SCORE */}
+                        <div
+                            onClick={() => isTimekeeper && onUpdateGame({ ...game, score: { ...game.score, away: game.score.away + 1 } })}
+                            className={`flex-1 flex flex-col items-center justify-center p-2 tap-target cursor-pointer group transition-colors ${isTimekeeper ? 'hover:bg-brand/5' : ''}`}
+                        >
+                            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest truncate max-w-full italic px-2">{game.awayTeam.name}</span>
+                            <div className="relative">
+                                <span className="text-5xl sm:text-7xl font-display font-black group-hover:text-brand transition-colors italic">{game.score.away}</span>
+                                {isTimekeeper && <Plus className="w-4 h-4 text-brand absolute -top-1 -right-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                            </div>
+                            {isTimekeeper && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onUpdateGame({ ...game, score: { ...game.score, away: Math.max(0, game.score.away - 1) } }); }}
+                                    className="text-[8px] font-mono text-gray-700 hover:text-red-500 uppercase tracking-[0.2em] mt-1"
+                                >
+                                    DECREASE
+                                </button>
+                            )}
+                        </div>
                     </div>
+
+                    {/* QUICK ACTION BAR */}
+                    {isTimekeeper && (
+                        <div className="bg-black/40 border-t border-white/5 px-4 py-2 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.max(1, game.currentPeriod - 1) })} className="p-2 text-gray-600 hover:text-white transition-colors"><ChevronRight className="w-4 h-4 rotate-180" /></button>
+                                <span className="text-[9px] font-mono font-black text-white/20 uppercase tracking-widest">PERIOD</span>
+                                <button onClick={() => onUpdateGame({ ...game, currentPeriod: Math.min(game.totalPeriods || 4, game.currentPeriod + 1) })} className="p-2 text-gray-600 hover:text-white transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-2 py-1">
+                                <button onClick={() => adjustClock(Math.max(0, clock - 60))} className="text-[9px] font-mono text-gray-500 hover:text-white transition-colors px-1.5 focus:text-brand"> -1M </button>
+                                <button onClick={() => adjustClock(Math.max(0, clock - 10))} className="text-[9px] font-mono text-gray-500 hover:text-white transition-colors px-1.5 focus:text-brand"> -10S </button>
+                                <div className="w-px h-3 bg-white/10 mx-1"></div>
+                                <button onClick={() => adjustClock(clock + 10)} className="text-[9px] font-mono text-gray-500 hover:text-white transition-colors px-1.5 focus:text-brand"> +10S </button>
+                                <button onClick={() => adjustClock(clock + 60)} className="text-[9px] font-mono text-gray-500 hover:text-white transition-colors px-1.5 focus:text-brand"> +1M </button>
+                            </div>
+
+                            {game.status !== 'finished' && (
+                                <button onClick={() => { if (window.confirm("FINISH GAME?")) onUpdateGame({ ...game, status: 'finished', gameClock: 0 }); }} className="text-red-500/50 hover:text-red-500 text-[8px] font-mono font-black uppercase tracking-widest transition-colors mr-2">
+                                    END
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <PenaltyBox penalties={game.penalties || []} clock={clock} homeTeam={game.homeTeam} awayTeam={game.awayTeam} />
+            <div className="px-4 mt-8 space-y-8">
+                <PenaltyBox penalties={game.penalties || []} clock={clock} homeTeam={game.homeTeam} awayTeam={game.awayTeam} />
 
-            {game.status === 'live' ? (
-                <div className="grid lg:grid-cols-[1fr_2fr_1fr] gap-8 mt-12">
-                    <RosterColumn team={game.homeTeam} onSelectPlayer={(p, t) => setSelectedPlayerInfo({ player: p, teamId: t })} selectedPlayerId={selectedPlayerInfo?.player.id ?? null} />
+                {game.status === 'live' ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-1.5 h-6 bg-brand"></div>
+                                <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter">LIVE <span className="text-brand">TRACKING</span></h3>
+                            </div>
+                            <LiveStatsSummary homeTeam={game.homeTeam} awayTeam={game.awayTeam} playerStats={playerStats} />
 
-                    <div className="space-y-8">
-                        {/* Tactical Stat Entry */}
-                        <div className="cyber-card p-1 border-brand h-full min-h-[400px]">
-                            <div className="bg-black p-8 border border-brand/30 h-full flex flex-col">
-                                {selectedPlayerInfo ? (
-                                    <div className="flex-grow flex flex-col animate-in fade-in duration-300">
-                                        <div className="mb-8 border-b border-surface-border pb-4">
-                                            <p className="text-[10px] font-mono italic text-brand uppercase tracking-[0.2em] mb-1">Player Selected</p>
-                                            <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">#{selectedPlayerInfo.player.jerseyNumber} {selectedPlayerInfo.player.name}</h3>
-                                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">{selectedPlayerInfo.teamId === game.homeTeam.id ? game.homeTeam.name : game.awayTeam.name}</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3 mb-8">
-                                            <StatEntryButton label="GOAL" onClick={() => { if (game.clockRunning) toggleClock(); setAssistModal({ show: true, scoringPlayer: selectedPlayerInfo.player, scoringTeamId: selectedPlayerInfo.teamId }); }} className="bg-green-500 text-black h-20" />
-                                            <StatEntryButton label="SHOT" onClick={() => handleStatButtonClick(StatType.SHOT)} className="bg-white/10 text-white border-white/20 h-20" />
-                                            <StatEntryButton label="GB" onClick={() => handleStatButtonClick(StatType.GROUND_BALL)} className="bg-brand text-black" />
-                                            <StatEntryButton label="TURNOVER" onClick={() => handleStatButtonClick(StatType.TURNOVER)} className="bg-red-500 text-black" />
-                                            <StatEntryButton label="CAUSED TO" onClick={() => handleStatButtonClick(StatType.CAUSED_TURNOVER)} className="bg-surface-card text-brand border-brand/30" />
-                                            <StatEntryButton label="PENALTY" onClick={() => setIsPenaltyModalOpen(true)} className="bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.2)]" />
-                                            <StatEntryButton label="FACEOFF WIN" onClick={() => handleStatButtonClick(StatType.FACEOFF_WIN)} className="bg-brand/80 text-black" />
-                                            <StatEntryButton label="FACEOFF LOSS" onClick={() => handleStatButtonClick(StatType.FACEOFF_LOSS)} className="bg-gray-900 text-gray-600" />
-                                        </div>
-
-                                        <button onClick={() => setSelectedPlayerInfo(null)} className="w-full py-4 text-[10px] font-mono text-gray-700 uppercase hover:text-white border-t border-surface-border mt-auto">DESELECT PLAYER</button>
-                                    </div>
-                                ) : (
-                                    <div className="flex-grow flex flex-col items-center justify-center text-center opacity-20">
-                                        <Activity className="w-16 h-16 mb-4 text-brand animate-pulse" />
-                                        <p className="font-mono text-[10px] uppercase tracking-[0.4em] max-w-[200px]">Select a player to add stats...</p>
-                                    </div>
-                                )}
+                            <div className="mt-8 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-display font-black text-white italic uppercase tracking-widest">RECORDED LOGS</h3>
+                                    <Activity className="w-4 h-4 text-brand/30" />
+                                </div>
+                                <div className="bg-surface-card/30 border border-white/5 rounded-xl h-64 overflow-y-auto custom-scrollbar p-1">
+                                    {(game.stats || []).slice().sort((a, b) => b.timestamp - a.timestamp).map(stat => {
+                                        const p = allPlayers.find(pl => pl.id === stat.playerId);
+                                        const t = stat.teamId === game.homeTeam.id ? game.homeTeam : game.awayTeam;
+                                        return (
+                                            <div key={stat.id} className="flex items-center gap-3 border-b border-white/5 p-3 text-[10px] font-mono group hover:bg-white/5 transition-colors">
+                                                <span className="text-gray-600">[{formatTime(stat.timestamp)}]</span>
+                                                <span className="text-brand font-bold">{t.name.substring(0, 3).toUpperCase()}</span>
+                                                <span className="text-white">#{p?.jerseyNumber} {p?.name.split(' ')[0].toUpperCase()}</span>
+                                                <span className="text-gray-500 ml-auto whitespace-nowrap">{stat.type.replace('_', ' ')}</span>
+                                                {(isTimekeeper || currentUser?.id === stat.recordedBy || currentUser?.role === Role.ADMIN) && (
+                                                    <button onClick={() => { if (window.confirm("Delete stat?")) onDeleteStat(stat.id); }} className="p-1 text-gray-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
-                        <LiveStatsSummary homeTeam={game.homeTeam} awayTeam={game.awayTeam} playerStats={playerStats} />
-                    </div>
 
-                    <RosterColumn team={game.awayTeam} onSelectPlayer={(p, t) => setSelectedPlayerInfo({ player: p, teamId: t })} selectedPlayerId={selectedPlayerInfo?.player.id ?? null} />
+                        <div className="space-y-8">
+                            <StatsTable team={game.homeTeam} playerStats={playerStats} />
+                            <StatsTable team={game.awayTeam} playerStats={playerStats} />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-12 py-12">
+                        <div className="cyber-card p-1">
+                            <div className="bg-black p-12 text-center border border-brand/50 rounded-lg">
+                                <Trophy className="w-16 h-16 text-brand mx-auto mb-6" />
+                                <h2 className="text-5xl font-display font-black text-white italic uppercase tracking-tighter mb-8">GAME <span className="text-brand">FINISHED</span></h2>
+                                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                                    <button onClick={() => onViewReport(game)} className="cyber-button px-12 py-4 text-xl rounded-lg">VIEW GAME REPORT</button>
+                                    <button onClick={handleReturnToDashboard} className="cyber-button-outline px-12 py-4 text-xl rounded-lg">EXIT TO DASHBOARD</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* STICKY "LOG STAT" BUTTON (MOBILE-FACING) */}
+            {game.status === 'live' && (
+                <div className="fixed bottom-8 left-0 right-0 flex justify-center z-[70] pointer-events-none">
+                    <button
+                        onClick={() => {
+                            if (isLogStatDrawerOpen) {
+                                setIsLogStatDrawerOpen(false);
+                                setSelectedPlayerInfo(null);
+                            } else {
+                                setIsLogStatDrawerOpen(true);
+                            }
+                        }}
+                        className="pointer-events-auto bg-brand hover:bg-brand-dark text-black font-display font-black px-12 py-5 rounded-full shadow-[0_15px_40px_rgba(255,87,34,0.4)] flex items-center gap-3 tap-target uppercase italic tracking-wider group"
+                    >
+                        {isLogStatDrawerOpen ? 'CLOSE' : 'LOG STAT'}
+                        {isLogStatDrawerOpen ? <Trash2 className="w-5 h-5" /> : <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />}
+                    </button>
                 </div>
-            ) : (
-                <div className="space-y-12">
-                    <div className="cyber-card p-1">
-                        <div className="bg-black p-12 text-center border border-brand/50">
-                            <Trophy className="w-16 h-16 text-brand mx-auto mb-6" />
-                            <h2 className="text-5xl font-display font-black text-white italic uppercase tracking-tighter mb-8">GAME <span className="text-brand">FINISHED</span></h2>
-                            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                                <button onClick={() => onViewReport(game)} className="cyber-button px-12 py-4 text-xl">VIEW GAME REPORT</button>
-                                <button onClick={handleReturnToDashboard} className="cyber-button-outline px-12 py-4 text-xl">EXIT TO DASHBOARD</button>
-                            </div>
-                        </div>
-                    </div>
+            )}
 
-                    {game.aiSummary ? (
-                        <div className="cyber-card p-8">
-                            <div className="flex items-center gap-4 mb-6">
-                                <Cpu className="w-6 h-6 text-brand" />
-                                <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">AI <span className="text-brand">SUMMARY</span></h2>
-                                <div className="h-px bg-surface-border flex-grow"></div>
+            {/* FULL-SCREEN DRAWER OVERLAY */}
+            {(isLogStatDrawerOpen || selectedPlayerInfo) && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[80] animate-in fade-in duration-300 flex flex-col pt-20 overflow-hidden">
+                    <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 overflow-hidden">
+
+                        {/* HEADER */}
+                        <div className="border-b border-white/10 pb-6 mb-6 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-2xl font-display font-black text-white italic uppercase tracking-tight">
+                                    {selectedPlayerInfo ? 'SELECT ACTION' : 'LOG STATISTICAL DATA'}
+                                </h3>
+                                <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
+                                    {selectedPlayerInfo ? `RECORD FOR #${selectedPlayerInfo.player.jerseyNumber} ${selectedPlayerInfo.player.name}` : 'STEP 1: SELECT SOURCE PLAYER'}
+                                </p>
                             </div>
-                            <div className="prose prose-invert max-w-none">
-                                <p className="text-sm font-mono text-gray-300 leading-relaxed uppercase tracking-wide whitespace-pre-wrap">{game.aiSummary}</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="cyber-card p-12 text-center border-dashed">
-                            <button onClick={async () => { setIsGeneratingSummary(true); const s = await generateGameSummary(game); onUpdateGame({ ...game, aiSummary: s }); setIsGeneratingSummary(false); }} disabled={isGeneratingSummary} className="cyber-button px-12 py-4 flex items-center gap-4 mx-auto disabled:opacity-50">
-                                {isGeneratingSummary ? <Cpu className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
-                                {isGeneratingSummary ? 'GENERATING...' : 'GENERATE AI SUMMARY'}
+                            <button
+                                onClick={() => { setIsLogStatDrawerOpen(false); setSelectedPlayerInfo(null); }}
+                                className="p-4 text-gray-500 hover:text-white transition-colors"
+                            >
+                                <Plus className="w-6 h-6 rotate-45" />
                             </button>
                         </div>
-                    )}
 
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <div className="flex items-center gap-4 mb-4">
-                                <Binary className="w-4 h-4 text-brand" />
-                                <h3 className="text-sm font-display font-black text-white italic uppercase tracking-tighter">STAT <span className="text-brand">LOG</span></h3>
-                                <div className="h-px bg-surface-border flex-grow"></div>
-                            </div>
-                            <div className="cyber-card h-64 overflow-y-auto custom-scrollbar bg-surface-card p-4">
-                                {(game.stats || []).slice().sort((a, b) => b.timestamp - a.timestamp).map(stat => {
-                                    const p = allPlayers.find(pl => pl.id === stat.playerId);
-                                    const t = stat.teamId === game.homeTeam.id ? game.homeTeam : game.awayTeam;
-                                    return (
-                                        <div key={stat.id} className="flex items-center gap-3 border-b border-surface-border py-2 text-[9px] font-mono group hover:bg-white/5 transition-colors">
-                                            <span className="text-gray-600">[{formatTime(stat.timestamp)}]</span>
-                                            <span className="text-brand font-bold">{t.name.substring(0, 3).toUpperCase()}</span>
-                                            <span className="text-white">#{p?.jerseyNumber} {p?.name.split(' ')[0].toUpperCase()}</span>
-                                            <span className="text-gray-500 ml-auto">{stat.type}</span>
-                                            {(isTimekeeper || currentUser?.id === stat.recordedBy || currentUser?.role === Role.ADMIN) && (
-                                                <button
-                                                    onClick={() => { if (window.confirm("Delete stat?")) onDeleteStat(stat.id); }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-500 transition-all"
-                                                >
-                                                    <Trash2 className="w-2.5 h-2.5" />
-                                                </button>
-                                            )}
+                        {/* CONTENT AREA */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
+                            {selectedPlayerInfo ? (
+                                <div className="space-y-8 animate-slide-up">
+                                    {/* HUGE ACTION GRID */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => { if (game.clockRunning) toggleClock(); setAssistModal({ show: true, scoringPlayer: selectedPlayerInfo.player, scoringTeamId: selectedPlayerInfo.teamId }); }} className="h-28 flex flex-col items-center justify-center bg-green-500 text-black rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            <Trophy className="w-8 h-8 mb-2" />
+                                            GOAL
+                                        </button>
+                                        <button onClick={() => handleStatButtonClick(StatType.SHOT)} className="h-28 flex flex-col items-center justify-center bg-white/10 text-white border border-white/20 rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            <Zap className="w-8 h-8 mb-2" />
+                                            SHOT
+                                        </button>
+                                        <button onClick={() => handleStatButtonClick(StatType.GROUND_BALL)} className="h-24 flex flex-col items-center justify-center bg-brand text-black rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            GB
+                                        </button>
+                                        <button onClick={() => handleStatButtonClick(StatType.TURNOVER)} className="h-24 flex flex-col items-center justify-center bg-red-500 text-black rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            TO
+                                        </button>
+                                        <button onClick={() => handleStatButtonClick(StatType.CAUSED_TURNOVER)} className="h-24 flex flex-col items-center justify-center bg-surface-card border border-brand/40 text-brand rounded-xl font-display font-black italic tracking-wider tap-target uppercase">
+                                            CT
+                                        </button>
+                                        <button onClick={() => setIsPenaltyModalOpen(true)} className="h-24 flex flex-col items-center justify-center bg-yellow-500 text-black rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            <ShieldAlert className="w-6 h-6 mb-1" />
+                                            PENALTY
+                                        </button>
+                                        <button onClick={() => handleStatButtonClick(StatType.FACEOFF_WIN)} className="h-24 flex flex-col items-center justify-center bg-white/5 text-brand border border-white/10 rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            FO WIN
+                                        </button>
+                                        <button onClick={() => handleStatButtonClick(StatType.FACEOFF_LOSS)} className="h-24 flex flex-col items-center justify-center bg-white/5 text-gray-500 border border-white/10 rounded-xl font-display font-black italic tracking-wider tap-target">
+                                            FO LOSS
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedPlayerInfo(null)}
+                                        className="w-full py-6 text-[10px] font-mono text-gray-600 hover:text-white border-y border-white/5 uppercase tracking-[0.4em] transition-colors"
+                                    >
+                                        ← Change Player
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-12">
+                                    {/* ROSTER SELECTION */}
+                                    {[game.homeTeam, game.awayTeam].map(team => (
+                                        <div key={team.id} className="space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-mono text-brand font-black uppercase tracking-widest">{team.name}</span>
+                                                <div className="h-px bg-white/10 flex-grow"></div>
+                                            </div>
+                                            <div className="stats-grid-mobile">
+                                                {team.roster.map(player => (
+                                                    <button
+                                                        key={player.id}
+                                                        onClick={() => setSelectedPlayerInfo({ player, teamId: team.id })}
+                                                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-left transition-all tap-target flex flex-col group active:border-brand"
+                                                    >
+                                                        <span className="text-brand font-mono text-xs font-black mb-1 group-active:text-white">#{player.jerseyNumber}</span>
+                                                        <span className="text-white font-display font-bold uppercase italic tracking-tight text-sm truncate">{player.name}</span>
+                                                        <span className="text-[8px] font-mono text-gray-600 uppercase mt-1">{player.position}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center gap-4 mb-4">
-                                <ShieldAlert className="w-4 h-4 text-yellow-500" />
-                                <h3 className="text-sm font-display font-black text-white italic uppercase tracking-tighter">PENALTY <span className="text-yellow-500">LOG</span></h3>
-                                <div className="h-px bg-surface-border flex-grow"></div>
-                            </div>
-                            <div className="cyber-card h-64 overflow-y-auto custom-scrollbar bg-surface-card p-4">
-                                {(game.penalties || []).slice().sort((a, b) => b.startTime - a.startTime).map(penalty => {
-                                    const p = allPlayers.find(pl => pl.id === penalty.playerId);
-                                    const t = penalty.teamId === game.homeTeam.id ? game.homeTeam : game.awayTeam;
-                                    return (
-                                        <div key={penalty.id} className="flex items-center gap-3 border-b border-surface-border py-2 text-[9px] font-mono group hover:bg-white/5 transition-colors">
-                                            <span className="text-yellow-600">[{formatTime(penalty.startTime)}]</span>
-                                            <span className="text-yellow-500 font-bold">{t.name.substring(0, 3).toUpperCase()}</span>
-                                            <span className="text-white">#{p?.jerseyNumber} {p?.name.split(' ')[0].toUpperCase()}</span>
-                                            <span className="text-gray-500 ml-auto">{penalty.type} ({penalty.duration}s)</span>
-                                            {(isTimekeeper || currentUser?.id === penalty.recordedBy || currentUser?.role === Role.ADMIN) && (
-                                                <button
-                                                    onClick={() => { if (window.confirm("Delete penalty?")) onDeletePenalty(penalty.id); }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-500 transition-all"
-                                                >
-                                                    <Trash2 className="w-2.5 h-2.5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-
-                    <StatsTable team={game.homeTeam} playerStats={playerStats} />
-                    <StatsTable team={game.awayTeam} playerStats={playerStats} />
                 </div>
             )}
 

@@ -89,3 +89,29 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-surface-border hover:bg-brand transition-colors;
 }
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stats-grid-mobile {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.tap-target {
+  @apply active:scale-95 transition-transform;
+}
