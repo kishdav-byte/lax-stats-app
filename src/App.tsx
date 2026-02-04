@@ -43,6 +43,8 @@ const App: React.FC = () => {
     const [viewingPlayer, setViewingPlayer] = useState<{ player: Player; team: Team } | null>(null);
     const [loginError, setLoginError] = useState('');
     const [simulatedRole, setSimulatedRole] = useState<Role | null>(null);
+    const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
+    const [isStealthMode, setIsStealthMode] = useState(false);
     const [viewPreference, setViewPreference] = useState<any>(null);
     const [managedTeamId, setManagedTeamId] = useState<string | null>(storageService.fetchManagedTeamId());
 
@@ -740,8 +742,15 @@ const App: React.FC = () => {
         />;
     }
 
+    // Determine the user to display and interact as
+    const displayUser = (currentUser?.role === Role.ADMIN && impersonatedUserId)
+        ? (users.find(u => u.id === impersonatedUserId) || currentUser)
+        : currentUser;
+
     // Determine the effective role (simulated role for Admin testing, or actual role)
-    const effectiveRole = currentUser.role === Role.ADMIN && simulatedRole ? simulatedRole : currentUser.role;
+    const effectiveRole = (currentUser?.role === Role.ADMIN && simulatedRole)
+        ? simulatedRole
+        : (displayUser?.role || Role.FAN);
 
     const renderContent = () => {
         switch (currentView) {
@@ -791,11 +800,11 @@ const App: React.FC = () => {
                 return gameForReport ? (
                     <GameReport
                         game={gameForReport}
-                        currentUser={currentUser}
+                        currentUser={displayUser || {} as User}
                         onUpdateGame={handleUpdateGame}
                         onClose={() => {
                             setGameForReport(null);
-                            const defaultView = currentUser?.role === Role.PLAYER ? 'playerDashboard' : 'dashboard';
+                            const defaultView = displayUser?.role === Role.PLAYER ? 'playerDashboard' : 'dashboard';
                             setCurrentView(defaultView);
                         }} />
                 ) : null;
@@ -838,12 +847,12 @@ const App: React.FC = () => {
                     soundEffects={soundEffects}
                 />;
             case 'users':
-                if (currentUser.role === Role.ADMIN || currentUser.role === Role.COACH) {
+                if (currentUser?.role === Role.ADMIN || currentUser?.role === Role.COACH) {
                     return <UserManagement users={users} teams={teams} onInviteUser={handleInviteUser} onDeleteUser={handleDeleteUser} onUpdateUser={handleUpdateUser} onReturnToDashboard={() => setCurrentView('dashboard')} />;
                 }
                 return null; // Fallback for non-admins, handled by useEffect
             case 'soundEffects':
-                if (currentUser.role === Role.ADMIN) {
+                if (currentUser?.role === Role.ADMIN) {
                     return <SoundEffectsManager
                         soundEffects={soundEffects}
                         onUpdateSoundEffect={handleUpdateSoundEffect}
@@ -854,29 +863,29 @@ const App: React.FC = () => {
                 return null; // Fallback for non-admins, handled by useEffect
             case 'feedback':
                 return <FeedbackComponent
-                    currentUser={currentUser}
+                    currentUser={displayUser || {} as User}
                     feedbackList={feedback}
                     onAddFeedback={handleAddFeedback}
                     onUpdateFeedbackStatus={handleUpdateFeedbackStatus}
                     onReturnToDashboard={() => {
-                        const defaultView = currentUser?.role === Role.PLAYER ? 'playerDashboard' : (currentUser?.role === Role.PARENT ? 'parentDashboard' : 'dashboard');
+                        const defaultView = displayUser?.role === Role.PLAYER ? 'playerDashboard' : (displayUser?.role === Role.PARENT ? 'parentDashboard' : 'dashboard');
                         setCurrentView(defaultView);
                     }}
                 />;
             case 'devSupport':
-                if (currentUser.role === Role.ADMIN || currentUser.role === Role.COACH) {
+                if (currentUser?.role === Role.ADMIN || currentUser?.role === Role.COACH) {
                     return <DevSupport onReturnToDashboard={() => setCurrentView('dashboard')} />;
                 }
                 return null; // Fallback for non-admins, handled by useEffect
             case 'globalSettings':
-                if (currentUser.role === Role.ADMIN) {
+                if (currentUser?.role === Role.ADMIN) {
                     return <GlobalSettings onReturnToDashboard={() => setCurrentView('dashboard')} />;
                 }
                 return null;
             case 'parentDashboard':
-                if (effectiveRole === Role.PARENT || currentUser.role === Role.ADMIN) {
+                if (effectiveRole === Role.PARENT || currentUser?.role === Role.ADMIN) {
                     return <ParentDashboard
-                        currentUser={currentUser}
+                        currentUser={displayUser || {} as User}
                         teams={teams}
                         games={games}
                         onUpdateUser={handleUpdateUser}
@@ -884,9 +893,9 @@ const App: React.FC = () => {
                 }
                 return null;
             case 'playerDashboard':
-                if (effectiveRole === Role.PLAYER || currentUser.role === Role.ADMIN) {
+                if (effectiveRole === Role.PLAYER || currentUser?.role === Role.ADMIN) {
                     return <PlayerDashboard
-                        currentUser={currentUser}
+                        currentUser={displayUser || {} as User}
                         teams={teams}
                         games={games}
                         onJoinRequest={handlePlayerJoinRequest}
@@ -1012,42 +1021,80 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Innovation Lab Marker Decoration */}
-                <div className="mt-auto p-8 opacity-20 pointer-events-none">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-1 h-[100px] bg-gradient-to-b from-brand to-transparent"></div>
-                        <div className="vertical-text font-mono text-[8px] uppercase tracking-[0.3em]">INNOVATION // LAB // 001</div>
+                {!isStealthMode && (
+                    <div className="mt-auto p-8 opacity-20 pointer-events-none">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-1 h-[100px] bg-gradient-to-b from-brand to-transparent"></div>
+                            <div className="vertical-text font-mono text-[8px] uppercase tracking-[0.3em]">INNOVATION // LAB // 001</div>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                {/* Role Simulation Controls (Admin Only) */}
-                {currentUser.role === Role.ADMIN && (
+                {/* Role Simulation & Impersonation (Admin Only) */}
+                {currentUser.role === Role.ADMIN && !isStealthMode && (
                     <div className="p-8 pt-0 border-t border-surface-border bg-surface-card/20">
                         <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mb-3">Test Mode</p>
-                        <div className="space-y-1">
-                            <button
-                                onClick={() => handleRoleSimulation(null)}
-                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${!simulatedRole ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
-                            >
-                                Admin View
-                            </button>
-                            <button
-                                onClick={() => handleRoleSimulation(Role.PLAYER)}
-                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.PLAYER ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
-                            >
-                                → Player View
-                            </button>
-                            <button
-                                onClick={() => handleRoleSimulation(Role.COACH)}
-                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.COACH ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
-                            >
-                                → Coach View
-                            </button>
-                            <button
-                                onClick={() => handleRoleSimulation(Role.PARENT)}
-                                className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.PARENT ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
-                            >
-                                → Parent View
-                            </button>
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <button
+                                    onClick={() => { handleRoleSimulation(null); setImpersonatedUserId(null); }}
+                                    className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${!simulatedRole && !impersonatedUserId ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    Admin View
+                                </button>
+                                <button
+                                    onClick={() => handleRoleSimulation(Role.PLAYER)}
+                                    className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.PLAYER ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    → Player View
+                                </button>
+                                <button
+                                    onClick={() => handleRoleSimulation(Role.COACH)}
+                                    className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.COACH ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    → Coach View
+                                </button>
+                                <button
+                                    onClick={() => handleRoleSimulation(Role.PARENT)}
+                                    className={`w-full text-left px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${simulatedRole === Role.PARENT ? 'text-brand bg-brand/10' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    → Parent View
+                                </button>
+                            </div>
+
+                            <div className="pt-4 border-t border-surface-border/50">
+                                <label className="block text-[8px] font-mono text-gray-600 uppercase tracking-widest mb-2">Impersonate Identity</label>
+                                <select
+                                    value={impersonatedUserId || ''}
+                                    onChange={(e) => {
+                                        const uid = e.target.value || null;
+                                        setImpersonatedUserId(uid);
+                                        const u = users.find(user => user.id === uid);
+                                        if (u) {
+                                            setSimulatedRole(null); // Reset role simulation when selecting specific user
+                                            // Auto-redirect to their dashboard
+                                            if (u.role === Role.PLAYER) setCurrentView('playerDashboard');
+                                            else if (u.role === Role.PARENT) setCurrentView('parentDashboard');
+                                            else setCurrentView('dashboard');
+                                        }
+                                    }}
+                                    className="w-full bg-black border border-surface-border text-[9px] font-mono text-white p-2 uppercase tracking-tighter"
+                                >
+                                    <option value="">SELECT USER...</option>
+                                    {users.filter(u => u.id !== currentUser.id).map(u => (
+                                        <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {impersonatedUserId && (
+                                <button
+                                    onClick={() => { setIsStealthMode(true); setIsMenuOpen(false); }}
+                                    className="w-full py-2 bg-brand/10 border border-brand/30 text-[9px] font-mono text-brand uppercase tracking-widest hover:bg-brand/20 transition-all font-bold"
+                                >
+                                    ACTIVATE STEALTH MODE
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -1072,22 +1119,24 @@ const App: React.FC = () => {
                         </h1>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-8">
-                        <div className="h-4 w-px bg-surface-border"></div>
-                        <div className="flex items-center gap-2">
-                            <p className="text-[10px] font-mono text-gray-500 uppercase">Status:</p>
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <p className="text-[10px] font-mono text-green-500 uppercase tracking-widest">System Online</p>
+                    {!isStealthMode && (
+                        <div className="hidden md:flex items-center gap-8">
+                            <div className="h-4 w-px bg-surface-border"></div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-[10px] font-mono text-gray-500 uppercase">Status:</p>
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <p className="text-[10px] font-mono text-green-500 uppercase tracking-widest">System Online</p>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-5 py-3 px-6 bg-brand/5 border-r-2 border-brand/30 rounded-l-sm backdrop-blur-sm group hover:bg-brand/10 transition-all duration-300">
                             <div className="text-right hidden sm:block border-r border-brand/20 pr-5">
-                                <p className="text-[9px] font-mono text-brand/60 uppercase tracking-[0.3em] font-bold leading-none mb-2">Node Operator</p>
+                                <p className="text-[9px] font-mono text-brand/60 uppercase tracking-[0.3em] font-bold leading-none mb-2">{isStealthMode ? 'SECURE_NODE' : 'Node Operator'}</p>
                                 <div className="flex flex-col items-end gap-0.5">
-                                    <p className="text-sm font-display font-black text-white uppercase italic tracking-wider leading-none">{currentUser.username}</p>
-                                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em]">{currentUser.role.toUpperCase()}_ACCESS</p>
+                                    <p className="text-sm font-display font-black text-white uppercase italic tracking-wider leading-none">{displayUser?.username}</p>
+                                    <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em]">{effectiveRole.toUpperCase()}_ACCESS</p>
                                 </div>
                             </div>
                             <div className="relative">
@@ -1151,7 +1200,7 @@ const App: React.FC = () => {
                         {currentView !== 'game' && currentView !== 'playerProfile' && (
                             <div className="mb-12">
                                 <Notifications
-                                    currentUser={currentUser}
+                                    currentUser={displayUser || {} as User}
                                     requests={accessRequests}
                                     teams={teams}
                                     users={users}
@@ -1166,6 +1215,42 @@ const App: React.FC = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Stealth Mode Overlay Bar */}
+            {currentUser?.role === Role.ADMIN && (impersonatedUserId || simulatedRole) && (
+                <div className={`fixed bottom-0 left-0 right-0 z-[60] py-2 px-6 flex items-center justify-between border-t transition-all ${isStealthMode ? 'bg-black/90 backdrop-blur-md border-brand/50 h-10' : 'bg-surface-card border-surface-border h-12'}`}>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-brand rounded-full animate-pulse"></div>
+                            <p className="text-[9px] font-mono text-white uppercase tracking-widest font-black">
+                                {impersonatedUserId ? `IMPERSONATING: ${displayUser?.username.toUpperCase()}` : `SIMULATING: ${effectiveRole.toUpperCase()}`}
+                            </p>
+                        </div>
+                        {isStealthMode && (
+                            <p className="text-[8px] font-mono text-gray-500 uppercase tracking-widest hidden sm:block">
+                                // Stealth Protocol Active // UI Artifacts Cleaned
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex gap-4">
+                        {isStealthMode ? (
+                            <button
+                                onClick={() => setIsStealthMode(false)}
+                                className="text-[9px] font-mono text-brand border border-brand/30 px-3 py-1 hover:bg-brand/10 transition-all font-bold"
+                            >
+                                DISABLE STEALTH
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => { setImpersonatedUserId(null); setSimulatedRole(null); }}
+                                className="text-[9px] font-mono text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 transition-all font-bold"
+                            >
+                                TERMINATE SESSION
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
