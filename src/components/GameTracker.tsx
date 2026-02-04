@@ -451,7 +451,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
 
     const handleStatAdd = useCallback((player: Player, teamId: string, type: StatType, assistingPlayerId?: string) => {
         const newStat: Stat = {
-            id: `stat_${Date.now()}`,
+            id: crypto.randomUUID(), // Generate proper UUID for Supabase
             gameId: game.id,
             playerId: player.id,
             teamId: teamId,
@@ -785,7 +785,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                     onClose={() => setIsPenaltyModalOpen(false)}
                     onAddPenalty={(type, duration) => {
                         const newPenalty: Penalty = {
-                            id: `penalty_${Date.now()}`,
+                            id: crypto.randomUUID(), // Generate proper UUID for Supabase
                             gameId: game.id,
                             playerId: selectedPlayerInfo.player.id,
                             teamId: selectedPlayerInfo.teamId,
