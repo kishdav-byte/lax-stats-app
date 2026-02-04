@@ -461,12 +461,10 @@ const App: React.FC = () => {
     }, [activeGameId, gameForReport]);
 
     const handleSaveStat = useCallback(async (stat: Stat) => {
-        console.log('📊 handleSaveStat called with:', stat);
         try {
             await storageService.saveStat(stat);
-            console.log('📊 Stat saved via storageService');
         } catch (error) {
-            console.error("❌ Error saving stat:", error);
+            console.error("Error saving stat:", error);
         }
     }, []);
 
@@ -517,16 +515,11 @@ const App: React.FC = () => {
     };
 
     const startGame = (gameId: string) => {
-        console.log('🎮 startGame called with gameId:', gameId);
         const game = games.find(g => g.id === gameId);
-        console.log('🎮 Found game:', game);
         if (game) {
-            console.log('🎮 Setting activeGameId and switching to game view');
             // We no longer set status to 'live' here. The GameTracker component will handle it.
             setActiveGameId(gameId);
             setCurrentView('game');
-        } else {
-            console.error('❌ Game not found for ID:', gameId);
         }
     };
 
@@ -743,7 +736,6 @@ const App: React.FC = () => {
 
 
     const activeGame = games.find(g => g.id === activeGameId);
-    console.log('🎮 Active game lookup - activeGameId:', activeGameId, 'activeGame:', activeGame);
 
 
     if (!currentUser) {
@@ -790,24 +782,19 @@ const App: React.FC = () => {
                     initialViewMode={viewPreference?.mode}
                 />;
             case 'game':
-                console.log('🎮 Rendering game view - activeGame:', activeGame);
-                if (activeGame) {
-                    console.log('🎮 Rendering GameTracker component');
-                    return (
-                        <GameTracker
-                            game={activeGame}
-                            currentUser={currentUser}
-                            onUpdateGame={handleUpdateGame}
-                            onSaveStat={handleSaveStat}
-                            onDeleteStat={handleDeleteStat}
-                            onSavePenalty={handleSavePenalty}
-                            onDeletePenalty={handleDeletePenalty}
-                            onReturnToDashboard={handleReturnToDashboardFromGame}
-                            onViewReport={handleViewReport}
-                        />
-                    );
-                }
-                console.log('❌ No activeGame found, returning null');
+                if (activeGame) return (
+                    <GameTracker
+                        game={activeGame}
+                        currentUser={currentUser}
+                        onUpdateGame={handleUpdateGame}
+                        onSaveStat={handleSaveStat}
+                        onDeleteStat={handleDeleteStat}
+                        onSavePenalty={handleSavePenalty}
+                        onDeletePenalty={handleDeletePenalty}
+                        onReturnToDashboard={handleReturnToDashboardFromGame}
+                        onViewReport={handleViewReport}
+                    />
+                );
                 return null;
             case 'gameReport':
                 return gameForReport ? (

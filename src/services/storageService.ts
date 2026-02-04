@@ -271,7 +271,6 @@ export const deleteGame = async (gameId: string) => {
 };
 
 export const saveStat = async (stat: any) => {
-    console.log('💾 saveStat called with:', stat);
     const dbStat = {
         id: stat.id,
         game_id: stat.gameId,
@@ -283,13 +282,8 @@ export const saveStat = async (stat: any) => {
         recorded_by: stat.recordedBy,
         assisting_player_id: stat.assistingPlayerId
     };
-    console.log('💾 Saving to database:', dbStat);
-    const { data, error } = await supabase.from('game_stats').upsert(dbStat);
-    if (error) {
-        console.error('❌ Error saving stat:', error);
-        throw error;
-    }
-    console.log('✅ Stat saved successfully:', data);
+    const { error } = await supabase.from('game_stats').upsert(dbStat);
+    if (error) throw error;
 };
 
 export const deleteStat = async (statId: string) => {
