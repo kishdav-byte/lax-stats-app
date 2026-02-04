@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Game, Team, User, DrillAssignment, DrillStatus } from '../types';
 import { Users, Crosshair, Calendar, ArrowRight, Shield, Activity } from 'lucide-react';
+import GameTicker from './GameTicker';
 
 const lacrossePositions = ['Attack', 'Midfield', 'Defense', 'Goalie', 'LSM', 'Face Off Specialist'];
 
@@ -139,12 +140,12 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                 <div className="space-y-2">
                     <div className="flex items-center gap-4 mb-1">
                         <div className="h-px bg-brand w-12"></div>
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Combatant Logs</p>
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase font-bold">Player Terminal</p>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white uppercase italic leading-none">
-                        PLAYER <span className="text-brand">BASE</span>
+                        PLAYER <span className="text-brand">DASH</span>
                     </h1>
-                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Session ID: {currentUser.id.slice(0, 8)}</p>
+                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-1 opacity-60">Status: Tactical View // Sector {currentUser.username.substring(0, 2).toUpperCase()}</p>
                 </div>
                 <div className="flex items-center gap-6 py-4 px-6 bg-brand/5 border-l-2 border-brand/40 group hover:bg-brand/10 transition-all">
                     <div className="relative">
@@ -157,6 +158,10 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                     </div>
                 </div>
             </div>
+
+            {games.filter(g => g.status === 'live').map(game => (
+                <GameTicker key={game.id} game={game} />
+            ))}
 
             {/* Top Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Game, Team, User } from '../types';
 import { Shield, Eye, Activity, Calendar, Users, Trash2, ArrowRight } from 'lucide-react';
+import GameTicker from './GameTicker';
 
 interface ParentDashboardProps {
     currentUser: User;
@@ -163,7 +164,10 @@ const ParentDashboard: React.FC<ParentDashboardProps> = ({ currentUser, teams, g
             </div>
 
             {liveGames.map(game => (
-                <LiveGameViewer key={game.id} game={game} />
+                <div key={game.id} className="space-y-4">
+                    <GameTicker game={game} />
+                    <LiveGameViewer game={game} />
+                </div>
             ))}
 
             <div className="grid lg:grid-cols-3 gap-8">

@@ -122,14 +122,14 @@
   }
 
   100% {
-    transform: translateX(-50%);
+    transform: translateX(-33.33%);
   }
 }
 
 .animate-ticker {
   display: flex;
-  width: fit-content;
-  animation: ticker 30s linear infinite;
+  width: max-content;
+  animation: ticker 60s linear infinite;
   white-space: nowrap;
 }
 
