@@ -86,7 +86,7 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                             onClick={() => onViewChange('game')}
                             className="cyber-button w-full md:w-auto px-12 py-4 flex items-center justify-center gap-3 font-display font-bold italic tracking-widest text-sm"
                         >
-                            RESUME OPS <ChevronRight className="w-5 h-5" />
+                            RESUME GAME <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>

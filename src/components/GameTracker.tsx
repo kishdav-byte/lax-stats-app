@@ -382,7 +382,10 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     onViewReport
 }) => {
     const isTimekeeper = useMemo(() => {
-        if (!game.timekeeperId) return false;
+        // Since timekeeperId is not stored in the database, allow anyone to be timekeeper
+        // If timekeeperId is set, check if current user matches
+        // Otherwise, default to true (anyone can control the clock)
+        if (!game.timekeeperId) return true;
         return currentUser?.id === game.timekeeperId;
     }, [game.timekeeperId, currentUser]);
 
