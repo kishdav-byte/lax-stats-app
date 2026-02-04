@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Game, Team, StatType, User, Role } from '../types';
-import { Printer, X, Edit3, Save, Check, Shield, FileText, BarChart3, Binary, Cpu } from 'lucide-react';
+import { Printer, X, Edit3, Save, Check, Shield, FileText, BarChart3, Binary, Cpu, Activity } from 'lucide-react';
 
 interface GameReportProps {
     game: Game;
@@ -221,25 +221,68 @@ const GameReport: React.FC<GameReportProps> = ({ game, onClose, currentUser, onU
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-12">
-                    <div className="cyber-card p-1">
-                        <div className="bg-black p-8 border border-surface-border h-full">
-                            <div className="flex items-center gap-3 mb-6">
-                                <Cpu className="w-5 h-5 text-brand" />
-                                <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">AI SUMMARY</h3>
-                            </div>
-
-                            {isEditing ? (
-                                <textarea
-                                    value={editedGame.aiSummary || ''}
-                                    onChange={(e) => setEditedGame(prev => ({ ...prev, aiSummary: e.target.value }))}
-                                    className="w-full bg-surface-card border border-surface-border p-4 font-mono text-[11px] text-gray-300 custom-scrollbar uppercase tracking-wider"
-                                    rows={10}
-                                />
-                            ) : (
-                                <div className="font-mono text-[11px] text-gray-400 leading-relaxed uppercase tracking-wider whitespace-pre-wrap">
-                                    {game.aiSummary || 'NO AI SUMMARY GENERATED'}
+                    <div className="space-y-12">
+                        <div className="cyber-card p-1">
+                            <div className="bg-black p-8 border border-surface-border">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <Cpu className="w-5 h-5 text-brand" />
+                                    <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">AI SUMMARY</h3>
                                 </div>
-                            )}
+
+                                {isEditing ? (
+                                    <textarea
+                                        value={editedGame.aiSummary || ''}
+                                        onChange={(e) => setEditedGame(prev => ({ ...prev, aiSummary: e.target.value }))}
+                                        className="w-full bg-surface-card border border-surface-border p-4 font-mono text-[11px] text-gray-300 custom-scrollbar uppercase tracking-wider"
+                                        rows={10}
+                                    />
+                                ) : (
+                                    <div className="font-mono text-[11px] text-gray-400 leading-relaxed uppercase tracking-wider whitespace-pre-wrap">
+                                        {game.aiSummary || 'NO AI SUMMARY GENERATED'}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* KEY MOMENTS LOG */}
+                        <div className="cyber-card p-1">
+                            <div className="bg-black p-8 border border-surface-border">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <Activity className="w-5 h-5 text-brand" />
+                                    <h3 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">KEY MOMENTS</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    {(() => {
+                                        const impactful: { description: string, stat: any }[] = [];
+                                        let hScore = 0; let aScore = 0;
+                                        [...game.stats].sort((a, b) => a.timestamp - b.timestamp).forEach(s => {
+                                            const isH = s.teamId === game.homeTeam.id;
+                                            const prevDiff = hScore - aScore;
+                                            if (s.type === StatType.GOAL) {
+                                                if (isH) hScore++; else aScore++;
+                                                const newDiff = hScore - aScore;
+                                                const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(pl => pl.id === s.playerId);
+                                                if ((prevDiff <= 0 && newDiff > 0) || (prevDiff >= 0 && newDiff < 0)) {
+                                                    impactful.push({ description: `LEAD CHANGE: ${p?.name.toUpperCase()} puts ${isH ? game.homeTeam.name : game.awayTeam.name} ahead`, stat: s });
+                                                } else if (newDiff === 0 && prevDiff !== 0) {
+                                                    impactful.push({ description: `EQUALIZER: ${p?.name.toUpperCase()} ties the game`, stat: s });
+                                                }
+                                            }
+                                            if (s.type === StatType.SAVE && Math.abs(prevDiff) <= 1) {
+                                                const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(pl => pl.id === s.playerId);
+                                                impactful.push({ description: `CLUTCH SAVE: ${p?.name.toUpperCase()} preserves the margin`, stat: s });
+                                            }
+                                        });
+
+                                        return impactful.length > 0 ? impactful.map((m, idx) => (
+                                            <div key={idx} className="flex gap-4 border-l border-brand/30 pl-4 py-1">
+                                                <div className="text-[9px] font-mono text-gray-600 mt-1 whitespace-nowrap">P{m.stat.period} {Math.floor(m.stat.timestamp / 60)}:{(m.stat.timestamp % 60).toString().padStart(2, '0')}</div>
+                                                <div className="text-[10px] font-mono text-white uppercase tracking-wider">{m.description}</div>
+                                            </div>
+                                        )) : <p className="text-[10px] font-mono text-gray-600 italic">No major lead changes or clutch plays recorded.</p>;
+                                    })()}
+                                </div>
+                            </div>
                         </div>
                     </div>
 

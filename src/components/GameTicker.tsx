@@ -13,6 +13,53 @@ const GameTicker: React.FC<GameTickerProps> = ({ game }) => {
         return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     };
 
+    const getImpactfulPlays = () => {
+        const impactful: { description: string, icon: React.ReactNode }[] = [];
+        const sortedStats = [...game.stats].sort((a, b) => a.timestamp - b.timestamp);
+
+        // Track score progression to identify lead changes/equalizers
+        let homeScore = 0;
+        let awayScore = 0;
+
+        sortedStats.forEach((stat) => {
+            const isHome = stat.teamId === game.homeTeam.id;
+            const prevDiff = homeScore - awayScore;
+
+            if (stat.type === StatType.GOAL) {
+                if (isHome) homeScore++; else awayScore++;
+                const newDiff = homeScore - awayScore;
+                const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(pl => pl.id === stat.playerId);
+                const playerName = p?.name.split(' ')[0].toUpperCase() || 'PLAYER';
+
+                // Lead Change
+                if ((prevDiff <= 0 && newDiff > 0) || (prevDiff >= 0 && newDiff < 0)) {
+                    impactful.push({
+                        description: `LEAD CHANGE: ${playerName} PUTS ${isHome ? game.homeTeam.name : game.awayTeam.name} AHEAD!`,
+                        icon: <Activity className="w-3 h-3 text-red-500 animate-pulse" />
+                    });
+                }
+                // Equalizer
+                else if (newDiff === 0 && prevDiff !== 0) {
+                    impactful.push({
+                        description: `EQUALIZER: ${playerName} TIES IT UP!`,
+                        icon: <Zap className="w-3 h-3 text-yellow-400" />
+                    });
+                }
+            }
+
+            // Clutch Saves (within 1 goal difference)
+            if (stat.type === StatType.SAVE && Math.abs(prevDiff) <= 1) {
+                const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(pl => pl.id === stat.playerId);
+                impactful.push({
+                    description: `CLUTCH SAVE: ${p?.name.split(' ')[0].toUpperCase() || 'GOALIE'} DENIES EQUALIZER!`,
+                    icon: <ShieldAlert className="w-3 h-3 text-brand" />
+                });
+            }
+        });
+
+        return impactful.reverse().slice(0, 3); // Get latest 3 impactful plays
+    };
+
     const getRecentEvents = () => {
         return [...game.stats]
             .sort((a, b) => b.timestamp - a.timestamp)
@@ -35,6 +82,7 @@ const GameTicker: React.FC<GameTickerProps> = ({ game }) => {
 
     const recentEvents = getRecentEvents();
     const leaders = getStatLeaders();
+    const impactfulPlays = getImpactfulPlays();
     const activePenalties = game.penalties.filter(p => game.gameClock > p.releaseTime);
 
     // Triple the items to ensure it fills even large displays before looping
@@ -53,6 +101,15 @@ const GameTicker: React.FC<GameTickerProps> = ({ game }) => {
                     PERIOD {game.currentPeriod} | {formatTime(game.gameClock)}
                 </span>
             </div>
+
+            {impactfulPlays.map((play, i) => (
+                <div key={`${keyPrefix}-impact-${i}`} className="flex items-center gap-6 text-white bg-white/10 px-4 py-1 rounded-sm border-x border-white/20">
+                    {play.icon}
+                    <span className="font-mono text-[11px] font-black italic tracking-[0.2em] whitespace-nowrap uppercase">
+                        KEY MOMENT: {play.description}
+                    </span>
+                </div>
+            ))}
 
             {recentEvents.map((stat, i) => {
                 const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(p => p.id === stat.playerId);
