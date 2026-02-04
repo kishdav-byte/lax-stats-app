@@ -461,10 +461,12 @@ const App: React.FC = () => {
     }, [activeGameId, gameForReport]);
 
     const handleSaveStat = useCallback(async (stat: Stat) => {
+        console.log('📊 handleSaveStat called with:', stat);
         try {
             await storageService.saveStat(stat);
+            console.log('📊 Stat saved via storageService');
         } catch (error) {
-            console.error("Error saving stat:", error);
+            console.error("❌ Error saving stat:", error);
         }
     }, []);
 
