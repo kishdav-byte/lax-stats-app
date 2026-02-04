@@ -241,17 +241,17 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Team Joined</p>
                                         </div>
                                     </div>
-                                    <div className="overflow-x-auto">
+                                    <div className="max-h-80 overflow-y-auto custom-scrollbar pr-2">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
-                                                <tr className="border-b border-surface-border">
+                                                <tr className="border-b border-surface-border sticky top-0 bg-black z-10">
                                                     <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest">ID</th>
                                                     <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest">PLAYER</th>
                                                     <th className="py-2 text-[8px] font-mono text-gray-600 uppercase tracking-widest text-right">POSITION</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {team.roster.slice(0, 5).map(p => (
+                                                {team.roster.map(p => (
                                                     <tr key={p.id} className="border-b border-surface-border/30 hover:bg-white/5">
                                                         <td className="py-2 text-[10px] font-mono text-brand font-bold">#{p.jerseyNumber}</td>
                                                         <td className="py-2 text-[10px] font-mono text-gray-300 uppercase">{p.name}</td>
@@ -260,9 +260,6 @@ const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ currentUser, teams, g
                                                 ))}
                                             </tbody>
                                         </table>
-                                        {team.roster.length > 5 && (
-                                            <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mt-2 text-center">+ {team.roster.length - 5} MORE PLAYERS</p>
-                                        )}
                                     </div>
                                 </div>
                             )) : (

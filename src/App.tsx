@@ -201,6 +201,7 @@ const App: React.FC = () => {
 
         switch (currentView) {
             case 'users':
+            case 'teams':
             case 'soundEffects':
             case 'devSupport':
             case 'analytics':

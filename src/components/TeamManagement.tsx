@@ -467,26 +467,28 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                     </button>
                 </div>
 
-                <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
-                    <div className="flex items-center gap-6 mb-8">
-                        <UserPlus className="w-5 h-5 text-brand" />
-                        <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Add <span className="text-brand">New Team</span></h2>
-                        <div className="h-px bg-surface-border flex-grow"></div>
-                    </div>
+                {(currentUser.role === Role.ADMIN || currentUser.role === Role.COACH) && (
+                    <div className="cyber-card p-10 bg-brand/5 border-surface-border/50">
+                        <div className="flex items-center gap-6 mb-8">
+                            <UserPlus className="w-5 h-5 text-brand" />
+                            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Add <span className="text-brand">New Team</span></h2>
+                            <div className="h-px bg-surface-border flex-grow"></div>
+                        </div>
 
-                    <div className="flex flex-col sm:flex-row gap-6">
-                        <input
-                            type="text"
-                            value={newTeamName}
-                            onChange={(e) => setNewTeamName(e.target.value)}
-                            placeholder="DESIGNATION NAME (E.G. VARSITY ELITE)..."
-                            className="flex-grow cyber-input py-3 px-4 text-sm font-mono tracking-widest uppercase"
-                        />
-                        <button onClick={handleAddTeam} className="cyber-button px-12 py-3 flex items-center justify-center gap-4 font-display font-bold italic tracking-widest text-sm shadow-[0_0_15px_rgba(255,87,34,0.1)]">
-                            ADD TEAM <UserPlus className="w-4 h-4" />
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-6">
+                            <input
+                                type="text"
+                                value={newTeamName}
+                                onChange={(e) => setNewTeamName(e.target.value)}
+                                placeholder="DESIGNATION NAME (E.G. VARSITY ELITE)..."
+                                className="flex-grow cyber-input py-3 px-4 text-sm font-mono tracking-widest uppercase"
+                            />
+                            <button onClick={handleAddTeam} className="cyber-button px-12 py-3 flex items-center justify-center gap-4 font-display font-bold italic tracking-widest text-sm shadow-[0_0_15px_rgba(255,87,34,0.1)]">
+                                ADD TEAM <UserPlus className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="grid md:grid-cols-3 gap-8">
                     {/* Sidebar: Team List */}
@@ -521,12 +523,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                         {selectedTeam.name}
                                     </h2>
                                     <div className="flex gap-4">
-                                        <button onClick={() => setIsImportModalOpen(true)} className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2">
-                                            IMPORT / MERGE <Upload className="w-3 h-3" />
-                                        </button>
-                                        <button onClick={() => { onDeleteTeam(selectedTeam.id); setSelectedTeamId(null); }} className="text-red-500 hover:text-red-400 transition-colors text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
-                                            DELETE TEAM <Trash2 className="w-3 h-3" />
-                                        </button>
+                                        {(currentUser.role === Role.ADMIN || (currentUser.role === Role.COACH && currentUser.teamIds?.includes(selectedTeam.id))) && (
+                                            <>
+                                                <button onClick={() => setIsImportModalOpen(true)} className="cyber-button-outline py-1 px-4 text-[10px] flex items-center gap-2">
+                                                    IMPORT / MERGE <Upload className="w-3 h-3" />
+                                                </button>
+                                                {currentUser.role === Role.ADMIN && (
+                                                    <button onClick={() => { onDeleteTeam(selectedTeam.id); setSelectedTeamId(null); }} className="text-red-500 hover:text-red-400 transition-colors text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
+                                                        DELETE TEAM <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
@@ -559,42 +567,46 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                     </div>
                                 )}
 
-                                <div>
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-gray-500 flex items-center gap-4 flex-grow">
-                                            Roster Entry
-                                            <div className="h-px bg-surface-border flex-grow"></div>
-                                        </h3>
-                                        {currentUser.role === Role.ADMIN && (
-                                            <button
-                                                onClick={() => setIsAddExistingModalOpen(true)}
-                                                className="ml-4 text-[10px] font-mono text-brand border border-brand/30 px-3 py-1 hover:bg-brand/10 transition-all flex items-center gap-2"
-                                            >
-                                                <Users className="w-3 h-3" /> ADD EXISTING PLAYER
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-surface-card p-6 border border-surface-border">
-                                        <div className="sm:col-span-1">
-                                            <input type="text" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="NAME" className="w-full cyber-input text-xs" />
-                                        </div>
-                                        <div className="sm:col-span-1">
-                                            <input type="text" value={newPlayerNumber} onChange={(e) => setNewPlayerNumber(e.target.value)} placeholder="00" className="w-full cyber-input text-xs" />
-                                        </div>
-                                        <div className="sm:col-span-1">
-                                            <select
-                                                value={newPlayerPosition}
-                                                onChange={(e) => setNewPlayerPosition(e.target.value)}
-                                                className="w-full cyber-input text-xs appearance-none"
-                                            >
-                                                <option value="" className="bg-black">SELECT POSITION</option>
-                                                {lacrossePositions.map(pos => <option key={pos} value={pos} className="bg-black">{pos.toUpperCase()}</option>)}
-                                            </select>
-                                        </div>
-                                        <button onClick={handleAddPlayer} className="cyber-button text-xs py-2 px-4 shadow-[0_0_15px_rgba(255,87,34,0.3)]">
-                                            ADD MANUAL
-                                        </button>
-                                    </div>
+                                <div className="space-y-4">
+                                    {(currentUser.role === Role.ADMIN || (currentUser.role === Role.COACH && currentUser.teamIds?.includes(selectedTeam.id))) && (
+                                        <>
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-gray-500 flex items-center gap-4 flex-grow">
+                                                    Roster Entry
+                                                    <div className="h-px bg-surface-border flex-grow"></div>
+                                                </h3>
+                                                {currentUser.role === Role.ADMIN && (
+                                                    <button
+                                                        onClick={() => setIsAddExistingModalOpen(true)}
+                                                        className="ml-4 text-[10px] font-mono text-brand border border-brand/30 px-3 py-1 hover:bg-brand/10 transition-all flex items-center gap-2"
+                                                    >
+                                                        <Users className="w-3 h-3" /> ADD EXISTING PLAYER
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-surface-card p-6 border border-surface-border">
+                                                <div className="sm:col-span-1">
+                                                    <input type="text" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="NAME" className="w-full cyber-input text-xs" />
+                                                </div>
+                                                <div className="sm:col-span-1">
+                                                    <input type="text" value={newPlayerNumber} onChange={(e) => setNewPlayerNumber(e.target.value)} placeholder="00" className="w-full cyber-input text-xs" />
+                                                </div>
+                                                <div className="sm:col-span-1">
+                                                    <select
+                                                        value={newPlayerPosition}
+                                                        onChange={(e) => setNewPlayerPosition(e.target.value)}
+                                                        className="w-full cyber-input text-xs appearance-none"
+                                                    >
+                                                        <option value="" className="bg-black">SELECT POSITION</option>
+                                                        {lacrossePositions.map(pos => <option key={pos} value={pos} className="bg-black">{pos.toUpperCase()}</option>)}
+                                                    </select>
+                                                </div>
+                                                <button onClick={handleAddPlayer} className="cyber-button text-xs py-2 px-4 shadow-[0_0_15px_rgba(255,87,34,0.3)]">
+                                                    ADD MANUAL
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4">
@@ -640,12 +652,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ teams, onAddTeam, onUpd
                                                                 </button>
                                                             )}
                                                             <div className="w-[1px] h-4 bg-surface-border hidden md:block"></div>
-                                                            <button
-                                                                onClick={() => handleDeletePlayer(player.id)}
-                                                                className="text-gray-600 hover:text-red-500 transition-colors"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
+                                                            {(currentUser.role === Role.ADMIN || (currentUser.role === Role.COACH && currentUser.teamIds?.includes(selectedTeam.id))) && (
+                                                                <button
+                                                                    onClick={() => handleDeletePlayer(player.id)}
+                                                                    className="text-gray-600 hover:text-red-500 transition-colors"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     {playerAssignments.length > 0 && (
