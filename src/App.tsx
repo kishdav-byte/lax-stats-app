@@ -482,13 +482,6 @@ const App: React.FC = () => {
         }
     }, []);
 
-    const handleDeletePenalty = useCallback(async (penaltyId: string) => {
-        try {
-            await storageService.deletePenalty(penaltyId);
-        } catch (error) {
-            console.error("Error deleting penalty:", error);
-        }
-    }, []);
 
     /*
     const handleUpdateGame = useCallback((updatedGame: Game) => {
@@ -788,7 +781,6 @@ const App: React.FC = () => {
                         onSaveStat={handleSaveStat}
                         onDeleteStat={handleDeleteStat}
                         onSavePenalty={handleSavePenalty}
-                        onDeletePenalty={handleDeletePenalty}
                         onReturnToDashboard={handleReturnToDashboardFromGame}
                         onViewReport={handleViewReport}
                     />

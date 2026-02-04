@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType, User } from '../types';
-import { generateGameSummary } from '../services/geminiService';
-import { Trophy, ShieldAlert, Plus, Activity, Cpu, ChevronRight, Zap, Trash2 } from 'lucide-react';
+import { Trophy, ShieldAlert, Plus, Activity, ChevronRight, Zap, Trash2 } from 'lucide-react';
 import { Role } from '../types';
 
 interface GameTrackerProps {
@@ -11,7 +10,6 @@ interface GameTrackerProps {
     onSaveStat: (stat: Stat) => void;
     onDeleteStat: (statId: string) => void;
     onSavePenalty: (penalty: Penalty) => void;
-    onDeletePenalty: (penaltyId: string) => void;
     onReturnToDashboard: () => void;
     onViewReport: (game: Game) => void;
 }
@@ -337,7 +335,6 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     onSaveStat,
     onDeleteStat,
     onSavePenalty,
-    onDeletePenalty,
     onReturnToDashboard,
     onViewReport
 }) => {
@@ -368,7 +365,6 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     const [clock, setClock] = useState(calculateCurrentClock());
     const [assistModal, setAssistModal] = useState<{ show: boolean, scoringPlayer: Player | null, scoringTeamId: string | null }>({ show: false, scoringPlayer: null, scoringTeamId: null });
     const [isPenaltyModalOpen, setIsPenaltyModalOpen] = useState(false);
-    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [selectedPlayerInfo, setSelectedPlayerInfo] = useState<{ player: Player; teamId: string } | null>(null);
     const [isLogStatDrawerOpen, setIsLogStatDrawerOpen] = useState(false);
     const audioCtxRef = useRef<AudioContext | null>(null);
