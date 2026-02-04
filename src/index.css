@@ -115,3 +115,24 @@
 .tap-target {
   @apply active:scale-95 transition-transform;
 }
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  display: flex;
+  width: fit-content;
+  animation: ticker 30s linear infinite;
+  white-space: nowrap;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}

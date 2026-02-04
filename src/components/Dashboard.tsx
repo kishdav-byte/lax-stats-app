@@ -1,7 +1,19 @@
 import React from 'react';
-import { Game, Role, Team } from '../types';
+import { Game, Role, Team, StatType } from '../types';
 import { View } from '../services/storageService';
-import { Activity, Calendar, Users, Volume2, ChevronRight, Binary, ShieldCheck } from 'lucide-react';
+import {
+    Activity,
+    Calendar,
+    Users,
+    Volume2,
+    ChevronRight,
+    Binary,
+    ShieldCheck,
+    Zap,
+    Trophy,
+    ShieldAlert,
+    Target
+} from 'lucide-react';
 
 interface DashboardProps {
     games: Game[];
@@ -14,6 +26,94 @@ interface DashboardProps {
     managedTeamId: string | null;
     onManagedTeamChange: (teamId: string | null) => void;
 }
+
+const GameTicker: React.FC<{ game: Game }> = ({ game }) => {
+    const formatTime = (seconds: number) => {
+        const min = Math.floor(seconds / 60);
+        const sec = seconds % 60;
+        return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    };
+
+    const getRecentEvents = () => {
+        return [...game.stats]
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .slice(0, 5);
+    };
+
+    const getStatLeaders = () => {
+        const stats: Record<string, { g: number, a: number, name: string }> = {};
+        game.stats.forEach(s => {
+            const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(player => player.id === s.playerId);
+            if (!p) return;
+            if (!stats[p.id]) stats[p.id] = { g: 0, a: 0, name: p.name };
+            if (s.type === StatType.GOAL) stats[p.id].g++;
+            if (s.type === StatType.ASSIST) stats[p.id].a++;
+        });
+        return Object.values(stats)
+            .sort((a, b) => (b.g + b.a) - (a.g + a.a))
+            .slice(0, 3);
+    };
+
+    const recentEvents = getRecentEvents();
+    const leaders = getStatLeaders();
+
+    return (
+        <div className="w-full bg-brand/10 border-y border-brand/20 overflow-hidden py-3 select-none pointer-events-none backdrop-blur-sm">
+            <div className="animate-ticker flex items-center gap-16 px-16">
+                {/* Loop items */}
+                {[1, 2].map((loop) => (
+                    <React.Fragment key={loop}>
+                        <div className="flex items-center gap-8">
+                            <Activity className="w-3 h-3 text-brand animate-pulse" />
+                            <span className="text-brand font-mono text-[10px] font-black italic tracking-[0.2em] whitespace-nowrap uppercase">
+                                LIVE SCORE: {game.homeTeam.name} {game.score.home} - {game.score.away} {game.awayTeam.name}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-8">
+                            <Target className="w-3 h-3 text-brand" />
+                            <span className="text-brand font-mono text-[10px] font-black italic tracking-[0.2em] whitespace-nowrap uppercase">
+                                PERIOD {game.currentPeriod} | {formatTime(game.gameClock)} REMAINING
+                            </span>
+                        </div>
+
+                        {recentEvents.map((stat, i) => {
+                            const p = [...game.homeTeam.roster, ...game.awayTeam.roster].find(p => p.id === stat.playerId);
+                            return (
+                                <div key={`event-${i}`} className="flex items-center gap-8 text-white/90">
+                                    {stat.type === StatType.GOAL ? <Trophy className="w-3 h-3 text-green-500" /> : <Zap className="w-3 h-3" />}
+                                    <span className="font-mono text-[10px] font-black italic tracking-[0.2em] whitespace-nowrap uppercase">
+                                        RECENT: {stat.type.toUpperCase()} - {p?.name || 'UNKNOWN'} ({formatTime(stat.timestamp)})
+                                    </span>
+                                </div>
+                            );
+                        })}
+
+                        {leaders.map((l, i) => (
+                            <div key={`leader-${i}`} className="flex items-center gap-8 text-brand/80">
+                                <div className="p-0.5 border border-brand/40">
+                                    <Users className="w-2.5 h-2.5" />
+                                </div>
+                                <span className="font-mono text-[10px] font-black italic tracking-[0.2em] whitespace-nowrap uppercase">
+                                    LEADER: {l.name} ({l.g}G, {l.a}A)
+                                </span>
+                            </div>
+                        ))}
+
+                        {game.penalties.filter(p => game.gameClock > p.releaseTime).map((p, i) => (
+                            <div key={`penalty-${i}`} className="flex items-center gap-8 text-yellow-500">
+                                <ShieldAlert className="w-3 h-3 animate-pulse" />
+                                <span className="font-mono text-[10px] font-black italic tracking-[0.2em] whitespace-nowrap uppercase">
+                                    PENALTY: #{p.playerId} ({formatTime(game.gameClock - p.releaseTime)} REMAINING)
+                                </span>
+                            </div>
+                        ))}
+                    </React.Fragment>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onViewChange, activeGameId, onViewReport, userRole, managedTeamId, onManagedTeamChange }) => {
     const cleanManagedId = managedTeamId?.trim();
@@ -68,26 +168,29 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                 </div>
             </div>
 
-            {/* Live Game Alert */}
+            {/* Live Game Alert & Ticker */}
             {activeGame && (
-                <div className="cyber-card p-1 border-brand/50 bg-brand/5 animate-pulse">
-                    <div className="bg-black p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex items-center gap-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-brand blur-xl opacity-30 rounded-full"></div>
-                                <Activity className="relative w-10 h-10 text-brand" />
+                <div className="space-y-4">
+                    <GameTicker game={activeGame} />
+                    <div className="cyber-card p-1 border-brand/50 bg-brand/5 animate-pulse">
+                        <div className="bg-black p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                            <div className="flex items-center gap-6">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-brand blur-xl opacity-30 rounded-full"></div>
+                                    <Activity className="relative w-10 h-10 text-brand" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">Deployment Active</h2>
+                                    <p className="text-brand font-mono text-xs uppercase tracking-[0.2em] mt-1 font-bold">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">Deployment Active</h2>
-                                <p className="text-brand font-mono text-xs uppercase tracking-[0.2em] mt-1 font-bold">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
-                            </div>
+                            <button
+                                onClick={() => onViewChange('game')}
+                                className="cyber-button w-full md:w-auto px-12 py-4 flex items-center justify-center gap-3 font-display font-bold italic tracking-widest text-sm"
+                            >
+                                RESUME GAME <ChevronRight className="w-5 h-5" />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => onViewChange('game')}
-                            className="cyber-button w-full md:w-auto px-12 py-4 flex items-center justify-center gap-3 font-display font-bold italic tracking-widest text-sm"
-                        >
-                            RESUME GAME <ChevronRight className="w-5 h-5" />
-                        </button>
                     </div>
                 </div>
             )}
