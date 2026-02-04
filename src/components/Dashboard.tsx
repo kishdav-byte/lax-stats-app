@@ -78,29 +78,33 @@ const Dashboard: React.FC<DashboardProps> = ({ games, teams, onStartGame, onView
                 </div>
             </div>
 
-            {/* Live Game Alert & Ticker */}
+            {/* All Live Games Tickers */}
+            <div className="space-y-2">
+                {games.filter(g => g.status === 'live').map(game => (
+                    <GameTicker key={game.id} game={game} />
+                ))}
+            </div>
+
+            {/* Live Game Alert (Management Card) */}
             {activeGame && (
-                <div className="space-y-4">
-                    <GameTicker game={activeGame} />
-                    <div className="cyber-card p-1 border-brand/50 bg-brand/5 animate-pulse">
-                        <div className="bg-black p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-                            <div className="flex items-center gap-6">
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-brand blur-xl opacity-30 rounded-full"></div>
-                                    <Activity className="relative w-10 h-10 text-brand" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">Deployment Active</h2>
-                                    <p className="text-brand font-mono text-xs uppercase tracking-[0.2em] mt-1 font-bold">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
-                                </div>
+                <div className="cyber-card p-1 border-brand/50 bg-brand/5 animate-pulse mt-4">
+                    <div className="bg-black p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex items-center gap-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-brand blur-xl opacity-30 rounded-full"></div>
+                                <Activity className="relative w-10 h-10 text-brand" />
                             </div>
-                            <button
-                                onClick={() => onViewChange('game')}
-                                className="cyber-button w-full md:w-auto px-12 py-4 flex items-center justify-center gap-3 font-display font-bold italic tracking-widest text-sm"
-                            >
-                                RESUME GAME <ChevronRight className="w-5 h-5" />
-                            </button>
+                            <div>
+                                <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">Deployment Active</h2>
+                                <p className="text-brand font-mono text-xs uppercase tracking-[0.2em] mt-1 font-bold">{activeGame.homeTeam.name} vs {activeGame.awayTeam.name}</p>
+                            </div>
                         </div>
+                        <button
+                            onClick={() => onViewChange('game')}
+                            className="cyber-button w-full md:w-auto px-12 py-4 flex items-center justify-center gap-3 font-display font-bold italic tracking-widest text-sm"
+                        >
+                            RESUME GAME <ChevronRight className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
             )}

@@ -542,9 +542,9 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     return (
         <div className="max-w-7xl mx-auto pb-32">
             {/* COMPACT STICKY HUD */}
-            <div className="sticky top-16 z-[60] px-4 animate-in slide-in-from-top-2 duration-500">
-                <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="flex items-stretch divide-x divide-white/10 h-24 sm:h-32">
+            <div className="sticky top-2 z-[60] px-2 sm:px-4 animate-in slide-in-from-top-2 duration-500">
+                <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="flex items-stretch divide-x divide-white/10 h-20 sm:h-28">
                         {/* HOME SCORE */}
                         <div
                             onClick={() => isTimekeeper && onUpdateGame({ ...game, score: { ...game.score, home: game.score.home + 1 } })}
@@ -700,7 +700,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
 
             {/* STICKY "LOG STAT" BUTTON (MOBILE-FACING) */}
             {game.status === 'live' && (
-                <div className="fixed bottom-8 left-0 right-0 flex justify-center z-[70] pointer-events-none">
+                <div className="fixed bottom-6 left-0 right-0 flex justify-center z-[90] pointer-events-none">
                     <button
                         onClick={() => {
                             if (isLogStatDrawerOpen) {
@@ -710,7 +710,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                                 setIsLogStatDrawerOpen(true);
                             }
                         }}
-                        className="pointer-events-auto bg-brand hover:bg-brand-dark text-black font-display font-black px-12 py-5 rounded-full shadow-[0_15px_40px_rgba(255,87,34,0.4)] flex items-center gap-3 tap-target uppercase italic tracking-wider group"
+                        className="pointer-events-auto bg-brand hover:bg-brand-dark text-black font-display font-black px-10 py-4 sm:px-12 sm:py-5 rounded-full shadow-[0_15px_40px_rgba(255,87,34,0.4)] flex items-center gap-3 tap-target uppercase italic tracking-wider group border-2 border-black/20"
                     >
                         {isLogStatDrawerOpen ? 'CLOSE' : 'LOG STAT'}
                         {isLogStatDrawerOpen ? <Trash2 className="w-5 h-5" /> : <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />}
