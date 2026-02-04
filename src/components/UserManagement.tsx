@@ -196,7 +196,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, teams, onSave, onCl
 
                     <div className="pt-2">
                         <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest leading-relaxed">
-                            Last Authentication: {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'No recorded activity'}
+                            Profile Status: {user.status || 'Active'}
                         </p>
                     </div>
                 </div>
@@ -351,7 +351,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, teams, onInviteU
                                         </td>
                                         <td className="p-4 px-6">
                                             <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest whitespace-nowrap">
-                                                {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'NEVER'}
+                                                <span className="text-gray-600 italic">LOGGING ENABLED</span>
                                             </span>
                                         </td>
                                         <td className="p-4 px-6 text-right">

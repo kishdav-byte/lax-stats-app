@@ -95,7 +95,6 @@ const App: React.FC = () => {
                         ...userData,
                         id: sbUser.id,
                         email: sbUser.email || userData.email || '',
-                        lastLogin: sbUser.last_sign_in_at,
                     } as User;
 
                     // Update profile with last login info
