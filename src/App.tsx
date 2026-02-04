@@ -125,7 +125,6 @@ const App: React.FC = () => {
                         role: Role.FAN, // Default to Fan instead of Coach if profile is missing
                         status: 'active',
                         password: '', // Not stored in DB, but required by type
-                        lastLogin: sbUser.last_sign_in_at,
                     };
 
                     try {

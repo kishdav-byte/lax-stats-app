@@ -138,12 +138,12 @@ export const fetchInitialData = async (): Promise<Partial<AppDatabase>> => {
                 email: u.email,
                 password: u.password || '',
                 role: u.role,
-                teamIds: u.team_ids,
-                followedTeamIds: u.followed_team_ids,
-                followedPlayerIds: u.followed_player_ids,
+                teamIds: u.teamIds,
+                followedTeamIds: u.followedTeamIds,
+                followedPlayerIds: u.followedPlayerIds,
                 status: u.status,
-                bestClampSpeed: u.best_clamp_speed,
-                lastLogin: u.last_login
+                bestClampSpeed: u.bestClampSpeed
+                // lastLogin removed - doesn't exist in schema
             })),
             accessRequests: (requests || []).map(r => ({
                 id: r.id,
@@ -191,12 +191,12 @@ export const fetchUserById = async (userId: string): Promise<User | null> => {
         email: data.email,
         password: data.password || '',
         role: data.role,
-        teamIds: data.team_ids,
-        followedTeamIds: data.followed_team_ids,
-        followedPlayerIds: data.followed_player_ids,
+        teamIds: data.teamIds,
+        followedTeamIds: data.followedTeamIds,
+        followedPlayerIds: data.followedPlayerIds,
         status: data.status,
-        bestClampSpeed: data.best_clamp_speed,
-        lastLogin: data.last_login
+        bestClampSpeed: data.bestClampSpeed
+        // lastLogin removed - doesn't exist in schema
     };
 };
 
@@ -324,12 +324,12 @@ export const saveUser = async (user: User) => {
         email: user.email,
         password: user.password,
         role: user.role,
-        team_ids: user.teamIds,
-        followed_team_ids: user.followedTeamIds,
-        followed_player_ids: user.followedPlayerIds,
+        teamIds: user.teamIds,
+        followedTeamIds: user.followedTeamIds,
+        followedPlayerIds: user.followedPlayerIds,
         status: user.status,
-        best_clamp_speed: user.bestClampSpeed,
-        last_login: user.lastLogin
+        bestClampSpeed: user.bestClampSpeed
+        // last_login removed - doesn't exist in schema
     };
 
     const { error } = await supabase.from('profiles').upsert(dbProfile);
