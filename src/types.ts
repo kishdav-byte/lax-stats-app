@@ -86,6 +86,9 @@ export interface Game {
     totalPeriods?: number;
     correctionNotes?: string;
     timekeeperId?: string; // User ID of the person currently managing the clock/score
+    // Server-side clock tracking
+    clockRunning?: boolean; // Is the clock currently running?
+    clockLastStarted?: string; // ISO timestamp when clock was last started
 }
 
 export enum Role {

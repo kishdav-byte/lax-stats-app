@@ -389,8 +389,23 @@ const GameTracker: React.FC<GameTrackerProps> = ({
         return currentUser?.id === game.timekeeperId;
     }, [game.timekeeperId, currentUser]);
 
-    const [clock, setClock] = useState(game.gameClock);
-    const [isClockRunning, setIsClockRunning] = useState(false);
+    // Calculate current clock value from server state
+    const calculateCurrentClock = useCallback(() => {
+        if (!game.clockRunning || !game.clockLastStarted) {
+            return game.gameClock;
+        }
+
+        // Calculate elapsed time since clock was started
+        const startTime = new Date(game.clockLastStarted).getTime();
+        const now = Date.now();
+        const elapsedSeconds = Math.floor((now - startTime) / 1000);
+
+        // Subtract elapsed time from the clock value when it was started
+        const currentClock = Math.max(0, game.gameClock - elapsedSeconds);
+        return currentClock;
+    }, [game.clockRunning, game.clockLastStarted, game.gameClock]);
+
+    const [clock, setClock] = useState(calculateCurrentClock());
     const [assistModal, setAssistModal] = useState<{ show: boolean, scoringPlayer: Player | null, scoringTeamId: string | null }>({ show: false, scoringPlayer: null, scoringTeamId: null });
     const [isPenaltyModalOpen, setIsPenaltyModalOpen] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -424,30 +439,82 @@ const GameTracker: React.FC<GameTrackerProps> = ({
         }
     }, []);
 
+    // Update local clock display every 100ms when clock is running
     useEffect(() => {
         let timer: number;
-        if (isClockRunning && clock > 0 && isTimekeeper) {
+        if (game.clockRunning) {
             timer = window.setInterval(() => {
-                setClock(prevClock => {
-                    const newClock = prevClock - 1;
-                    if (newClock <= 10 && newClock > 0) speak(String(newClock));
-                    else if (newClock === 0) {
-                        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-                        playBuzzer();
-                    }
-                    return newClock;
-                });
-            }, 1000);
+                const newClock = calculateCurrentClock();
+                setClock(newClock);
+
+                // Play countdown sounds
+                if (newClock <= 10 && newClock > 0) speak(String(newClock));
+                else if (newClock === 0) {
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                    playBuzzer();
+                }
+            }, 100); // Update every 100ms for smooth display
+        } else {
+            // When clock is paused, just show the stored value
+            setClock(game.gameClock);
         }
         return () => {
             clearInterval(timer);
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         };
-    }, [isClockRunning, clock, playBuzzer, speak]);
+    }, [game.clockRunning, game.gameClock, game.clockLastStarted, calculateCurrentClock, playBuzzer, speak]);
 
+    // Sync clock to server when it hits 0
     useEffect(() => {
-        if (game.gameClock !== clock && isTimekeeper) onUpdateGame({ ...game, gameClock: clock });
+        if (clock === 0 && game.clockRunning && isTimekeeper) {
+            onUpdateGame({
+                ...game,
+                gameClock: 0,
+                clockRunning: false,
+                clockLastStarted: undefined
+            });
+        }
     }, [clock, game, onUpdateGame, isTimekeeper]);
+
+    // Toggle clock running state (server-side)
+    const toggleClock = useCallback(() => {
+        if (game.clockRunning) {
+            // Pause the clock - save current calculated time
+            const currentClock = calculateCurrentClock();
+            onUpdateGame({
+                ...game,
+                clockRunning: false,
+                gameClock: currentClock,
+                clockLastStarted: undefined
+            });
+        } else {
+            // Start the clock - record start time
+            onUpdateGame({
+                ...game,
+                clockRunning: true,
+                gameClock: clock, // Use current display value
+                clockLastStarted: new Date().toISOString()
+            });
+        }
+    }, [game, clock, calculateCurrentClock, onUpdateGame]);
+
+    // Manual clock adjustment
+    const adjustClock = useCallback((newClock: number) => {
+        if (game.clockRunning) {
+            // If clock is running, update the start time to maintain the new value
+            onUpdateGame({
+                ...game,
+                gameClock: newClock,
+                clockLastStarted: new Date().toISOString()
+            });
+        } else {
+            // If clock is paused, just update the value
+            onUpdateGame({
+                ...game,
+                gameClock: newClock
+            });
+        }
+    }, [game, onUpdateGame]);
 
     const handleStatAdd = useCallback((player: Player, teamId: string, type: StatType, assistingPlayerId?: string) => {
         const newStat: Stat = {
@@ -489,7 +556,10 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     }, [game.stats, allPlayers]);
 
     const handleReturnToDashboard = () => {
-        setIsClockRunning(false); // Pause the clock before leaving
+        // Pause the clock before leaving
+        if (game.clockRunning) {
+            toggleClock();
+        }
         onReturnToDashboard();
     };
 
@@ -504,7 +574,9 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                 timekeeperId: currentUser?.id
             });
             setClock(config.periodLength);
-            setIsClockRunning(true);
+            if (!game.clockRunning) {
+                toggleClock();
+            }
         }} onReturnToDashboard={onReturnToDashboard} />;
     }
 
@@ -529,10 +601,10 @@ const GameTracker: React.FC<GameTrackerProps> = ({
 
                         <div className="flex flex-col items-center gap-2">
                             <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${isClockRunning ? 'bg-brand animate-ping' : 'bg-gray-600'}`}></div>
-                                <p className={`text-[10px] font-mono uppercase tracking-[0.4em] ${isClockRunning ? 'text-brand' : 'text-gray-600'}`}>{isClockRunning ? 'LIVE' : 'PAUSED'}</p>
+                                <div className={`w-2 h-2 rounded-full ${game.clockRunning ? 'bg-brand animate-ping' : 'bg-gray-600'}`}></div>
+                                <p className={`text-[10px] font-mono uppercase tracking-[0.4em] ${game.clockRunning ? 'text-brand' : 'text-gray-600'}`}>{game.clockRunning ? 'LIVE' : 'PAUSED'}</p>
                             </div>
-                            <p className={`text-7xl font-mono font-black tracking-tighter transition-colors duration-500 ${isClockRunning ? 'text-brand drop-shadow-[0_0_15px_rgba(255,87,34,0.4)]' : 'text-gray-800'}`}>
+                            <p className={`text-7xl font-mono font-black tracking-tighter transition-colors duration-500 ${game.clockRunning ? 'text-brand drop-shadow-[0_0_15px_rgba(255,87,34,0.4)]' : 'text-gray-800'}`}>
                                 {formatTime(clock)}
                             </p>
                             <div className="flex items-center gap-4 bg-brand/10 border border-brand/30 px-6 py-1">
@@ -558,9 +630,9 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                     <div className="bg-surface-card border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-6">
                         {isTimekeeper ? (
                             <>
-                                <button onClick={() => setIsClockRunning(!isClockRunning)} className={`flex items-center gap-3 px-8 py-2 font-display italic font-black text-xs uppercase tracking-widest transition-all ${isClockRunning ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'}`}>
-                                    {isClockRunning ? 'PAUSE CLOCK' : 'START CLOCK'}
-                                    {isClockRunning ? <Timer className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                                <button onClick={toggleClock} className={`flex items-center gap-3 px-8 py-2 font-display italic font-black text-xs uppercase tracking-widest transition-all ${game.clockRunning ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'}`}>
+                                    {game.clockRunning ? 'PAUSE CLOCK' : 'START CLOCK'}
+                                    {game.clockRunning ? <Timer className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
                                 </button>
 
                                 <div className="flex items-center gap-4 border-x border-white/10 px-6">
@@ -570,13 +642,13 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                                 </div>
 
                                 <div className="flex items-center gap-2 border-l border-white/10 pl-6">
-                                    <button onClick={() => setClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET TIME</button>
+                                    <button onClick={() => adjustClock(game.periodLength || 720)} className="text-[10px] font-mono font-black text-gray-500 uppercase hover:text-brand transition-colors p-2">RESET TIME</button>
                                     <div className="flex items-center gap-1 bg-black/40 border border-white/5 px-2">
-                                        <button onClick={() => setClock(p => Math.max(0, p - 60))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-1M</button>
-                                        <button onClick={() => setClock(p => Math.max(0, p - 10))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-10S</button>
+                                        <button onClick={() => adjustClock(Math.max(0, clock - 60))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-1M</button>
+                                        <button onClick={() => adjustClock(Math.max(0, clock - 10))} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">-10S</button>
                                         <div className="w-px h-3 bg-white/10 mx-1"></div>
-                                        <button onClick={() => setClock(p => p + 10)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+10S</button>
-                                        <button onClick={() => setClock(p => p + 60)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+1M</button>
+                                        <button onClick={() => adjustClock(clock + 10)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+10S</button>
+                                        <button onClick={() => adjustClock(clock + 60)} className="text-[9px] font-mono text-gray-600 hover:text-white p-1">+1M</button>
                                     </div>
                                 </div>
 
@@ -628,7 +700,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 mb-8">
-                                            <StatEntryButton label="GOAL" onClick={() => { setIsClockRunning(false); setAssistModal({ show: true, scoringPlayer: selectedPlayerInfo.player, scoringTeamId: selectedPlayerInfo.teamId }); }} className="bg-green-500 text-black h-20" />
+                                            <StatEntryButton label="GOAL" onClick={() => { if (game.clockRunning) toggleClock(); setAssistModal({ show: true, scoringPlayer: selectedPlayerInfo.player, scoringTeamId: selectedPlayerInfo.teamId }); }} className="bg-green-500 text-black h-20" />
                                             <StatEntryButton label="SHOT" onClick={() => handleStatButtonClick(StatType.SHOT)} className="bg-white/10 text-white border-white/20 h-20" />
                                             <StatEntryButton label="GB" onClick={() => handleStatButtonClick(StatType.GROUND_BALL)} className="bg-brand text-black" />
                                             <StatEntryButton label="TURNOVER" onClick={() => handleStatButtonClick(StatType.TURNOVER)} className="bg-red-500 text-black" />
@@ -771,7 +843,7 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                         </div>
                         <div className="mt-12 flex justify-between border-t border-surface-border pt-6">
                             <button onClick={() => { handleStatAdd(assistModal.scoringPlayer!, assistModal.scoringTeamId!, StatType.GOAL); setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setSelectedPlayerInfo(null); }} className="text-gray-500 hover:text-white uppercase tracking-widest">UNASSISTED GOAL</button>
-                            <button onClick={() => { setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setIsClockRunning(true); }} className="text-red-500 uppercase tracking-widest font-black">CANCEL</button>
+                            <button onClick={() => { setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); if (!game.clockRunning) toggleClock(); }} className="text-red-500 uppercase tracking-widest font-black">CANCEL</button>
                         </div>
                     </div>
                 </div>
