@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DrillAssignment, DrillStatus, SoundEffects, SoundEffectName } from '../types';
-import { Target, Zap, Activity, Binary, ShieldAlert, RefreshCcw, Home, Move, Maximize2, Cpu, Loader2 } from 'lucide-react';
+import { Target, Zap, Activity, Binary, ShieldAlert, RefreshCcw, Home, Cpu, Loader2 } from 'lucide-react';
 import { analyzeShotPlacement } from '../services/geminiService';
 
 // --- Constants ---
@@ -10,41 +10,52 @@ const VIDEO_HEIGHT = 360;
 
 // --- Helper Components ---
 
-const DraggableResizableOverlay: React.FC<{
-    overlay: { x: number, y: number, width: number, height: number };
-    setOverlay: React.Dispatch<React.SetStateAction<{ x: number, y: number, width: number, height: number }>>;
-}> = ({ overlay, setOverlay }) => {
-    const overlayRef = useRef<HTMLDivElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isResizing, setIsResizing] = useState(false);
+interface Point { x: number; y: number; }
+interface GoalQuad {
+    tl: Point; // Top Left
+    tr: Point; // Top Right
+    bl: Point; // Bottom Left
+    br: Point; // Bottom Right
+}
+
+const QuadrilateralOverlay: React.FC<{
+    quad: GoalQuad;
+    setQuad: React.Dispatch<React.SetStateAction<GoalQuad>>;
+}> = ({ quad, setQuad }) => {
+    const [activeHandle, setActiveHandle] = useState<keyof GoalQuad | 'drag' | null>(null);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, action: 'drag' | 'resize') => {
+    const handleMouseDown = (e: React.MouseEvent, handle: keyof GoalQuad | 'drag') => {
         e.preventDefault();
         e.stopPropagation();
-        if (action === 'drag') setIsDragging(true);
-        if (action === 'resize') setIsResizing(true);
+        setActiveHandle(handle);
         setDragStart({ x: e.clientX, y: e.clientY });
     };
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (isDragging) {
-            const dx = e.clientX - dragStart.x;
-            const dy = e.clientY - dragStart.y;
-            setOverlay(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-            setDragStart({ x: e.clientX, y: e.clientY });
+        if (!activeHandle) return;
+
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+
+        if (activeHandle === 'drag') {
+            setQuad(prev => ({
+                tl: { x: prev.tl.x + dx, y: prev.tl.y + dy },
+                tr: { x: prev.tr.x + dx, y: prev.tr.y + dy },
+                bl: { x: prev.bl.x + dx, y: prev.bl.y + dy },
+                br: { x: prev.br.x + dx, y: prev.br.y + dy }
+            }));
+        } else {
+            setQuad(prev => ({
+                ...prev,
+                [activeHandle]: { x: prev[activeHandle].x + dx, y: prev[activeHandle].y + dy }
+            }));
         }
-        if (isResizing) {
-            const dx = e.clientX - dragStart.x;
-            const dy = e.clientY - dragStart.y;
-            setOverlay(prev => ({ ...prev, width: Math.max(50, prev.width + dx), height: Math.max(50, prev.height + dy) }));
-            setDragStart({ x: e.clientX, y: e.clientY });
-        }
-    }, [isDragging, isResizing, dragStart, setOverlay]);
+        setDragStart({ x: e.clientX, y: e.clientY });
+    }, [activeHandle, dragStart, setQuad]);
 
     const handleMouseUp = useCallback(() => {
-        setIsDragging(false);
-        setIsResizing(false);
+        setActiveHandle(null);
     }, []);
 
     useEffect(() => {
@@ -56,36 +67,44 @@ const DraggableResizableOverlay: React.FC<{
         };
     }, [handleMouseMove, handleMouseUp]);
 
+    // Path for the polygon
+    const points = `${quad.tl.x},${quad.tl.y} ${quad.tr.x},${quad.tr.y} ${quad.br.x},${quad.br.y} ${quad.bl.x},${quad.bl.y}`;
+
+    // Midpoints for 2x2 grid lines
+    const topMid = { x: (quad.tl.x + quad.tr.x) / 2, y: (quad.tl.y + quad.tr.y) / 2 };
+    const bottomMid = { x: (quad.bl.x + quad.br.x) / 2, y: (quad.bl.y + quad.br.y) / 2 };
+    const leftMid = { x: (quad.tl.x + quad.bl.x) / 2, y: (quad.tl.y + quad.bl.y) / 2 };
+    const rightMid = { x: (quad.tr.x + quad.br.x) / 2, y: (quad.tr.y + quad.br.y) / 2 };
+
     return (
-        <div
-            ref={overlayRef}
-            className="absolute border-2 border-brand cursor-move grid grid-cols-3 grid-rows-3 bg-brand/5 backdrop-blur-[1px]"
-            style={{ left: overlay.x, top: overlay.y, width: overlay.width, height: overlay.height }}
-            onMouseDown={(e) => handleMouseDown(e, 'drag')}
-        >
-            {/* HUD Corner Decorations */}
-            <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-brand"></div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-brand"></div>
-            <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-brand"></div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-brand"></div>
+        <div className="absolute inset-0 pointer-events-none">
+            <svg className="w-full h-full overflow-visible pointer-events-auto">
+                {/* Main Quadrilateral */}
+                <polygon
+                    points={points}
+                    fill="rgba(255, 87, 34, 0.05)"
+                    stroke="rgb(255, 87, 34)"
+                    strokeWidth="2"
+                    className="cursor-move"
+                    onMouseDown={(e) => handleMouseDown(e, 'drag')}
+                />
 
-            {[...Array(9)].map((_, i) => (
-                <div key={i} className="w-full h-full border border-brand/20"></div>
-            ))}
+                {/* 2x2 Grid Lines */}
+                <line x1={topMid.x} y1={topMid.y} x2={bottomMid.x} y2={bottomMid.y} stroke="rgba(255, 87, 34, 0.3)" strokeWidth="1" strokeDasharray="4" />
+                <line x1={leftMid.x} y1={leftMid.y} x2={rightMid.x} y2={rightMid.y} stroke="rgba(255, 87, 34, 0.3)" strokeWidth="1" strokeDasharray="4" />
 
-            <div
-                className="absolute -bottom-2 -right-2 w-5 h-5 bg-brand cursor-se-resize flex items-center justify-center shadow-[0_0_10px_rgba(255,87,34,0.5)]"
-                onMouseDown={(e) => handleMouseDown(e, 'resize')}
-            >
-                <Maximize2 className="w-3 h-3 text-black" />
-            </div>
+                {/* Handles */}
+                {Object.entries(quad).map(([key, point]) => (
+                    <g key={key} transform={`translate(${point.x}, ${point.y})`} onMouseDown={(e) => handleMouseDown(e as any, key as keyof GoalQuad)}>
+                        <circle r="8" fill="rgb(255, 87, 34)" className="cursor-pointer shadow-lg" />
+                        <circle r="12" fill="transparent" className="cursor-pointer" />
+                        <text y="-12" textAnchor="middle" fill="white" fontSize="8" className="uppercase font-mono font-bold select-none">{key}</text>
+                    </g>
+                ))}
+            </svg>
 
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-brand text-black px-3 py-1 text-[8px] font-mono font-black uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.3)]">
-                SET_FRAME_POSITION
-            </div>
-
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20">
-                <Move className="w-8 h-8 text-brand" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-12 bg-brand text-black px-3 py-1 text-[8px] font-mono font-black uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.3)]">
+                STRETCH_GOAL_FRAME (PERSPECTIVE_LOCK)
             </div>
         </div>
     );
@@ -98,11 +117,12 @@ const ShotChart: React.FC<{ history: number[] }> = ({ history }) => {
     }, {} as Record<number, number>);
 
     const maxCount = Math.max(0, ...Object.values(counts));
+    const labels = ["TOP LEFT", "TOP RIGHT", "BOTTOM LEFT", "BOTTOM RIGHT"];
 
     return (
-        <div className="grid grid-cols-3 grid-rows-3 gap-2 w-80 h-80 mx-auto bg-black p-4 border border-surface-border relative group">
+        <div className="grid grid-cols-2 grid-rows-2 gap-4 w-80 h-80 mx-auto bg-black p-4 border border-surface-border relative group">
             <div className="absolute -inset-0.5 bg-brand/10 opacity-20 pointer-events-none"></div>
-            {[...Array(9)].map((_, i) => {
+            {[...Array(4)].map((_, i) => {
                 const count = counts[i] || 0;
                 const weight = count > 0 ? (count / maxCount) : 0;
                 return (
@@ -118,11 +138,11 @@ const ShotChart: React.FC<{ history: number[] }> = ({ history }) => {
                                 <Activity className="w-full h-full text-brand scale-150" />
                             </div>
                         )}
-                        <span className={`font-display font-black italic text-4xl transition-colors ${weight > 0 ? 'text-white' : 'text-gray-900'}`}>
+                        <span className={`font-display font-black italic text-5xl transition-colors ${weight > 0 ? 'text-white' : 'text-gray-900'}`}>
                             {count > 0 ? count : '0'}
                         </span>
                         {/* Zone Marker */}
-                        <span className="absolute top-1 left-1 text-[6px] font-mono text-gray-700 tracking-tighter">Z_{i + 1 < 10 ? '0' : ''}{i + 1}</span>
+                        <span className="absolute top-1 left-1 text-[6px] font-mono text-gray-500 tracking-tighter">{labels[i]}</span>
                     </div>
                 )
             })}
@@ -158,7 +178,12 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     const [activeTargetZone, setActiveTargetZone] = useState<number | null>(null);
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
-    const [overlay, setOverlay] = useState({ x: 50, y: 50, width: 200, height: 150 });
+    const [overlay, setOverlay] = useState<GoalQuad>({
+        tl: { x: 140, y: 100 },
+        tr: { x: 340, y: 100 },
+        bl: { x: 140, y: 260 },
+        br: { x: 340, y: 260 }
+    });
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -259,10 +284,16 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
         const scaleX = video.videoWidth / video.clientWidth;
         const scaleY = video.videoHeight / video.clientHeight;
 
-        const roiX = Math.floor(overlay.x * scaleX);
-        const roiY = Math.floor(overlay.y * scaleY);
-        const roiW = Math.floor(overlay.width * scaleX);
-        const roiH = Math.floor(overlay.height * scaleY);
+        // Calculate bounding box for motion detection
+        const minX = Math.min(overlay.tl.x, overlay.bl.x);
+        const minY = Math.min(overlay.tl.y, overlay.tr.y);
+        const maxX = Math.max(overlay.tr.x, overlay.br.x);
+        const maxY = Math.max(overlay.bl.y, overlay.br.y);
+
+        const roiX = Math.floor(minX * scaleX);
+        const roiY = Math.floor(minY * scaleY);
+        const roiW = Math.floor((maxX - minX) * scaleX);
+        const roiH = Math.floor((maxY - minY) * scaleY);
 
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const referenceFrameData = context.getImageData(roiX, roiY, roiW, roiH).data;
@@ -337,11 +368,10 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
         // 5. Target Selection & Sound
         const targetZones: SoundEffectName[] = [
-            'target_top_left', 'target_top_center', 'target_top_right',
-            'target_mid_left', 'target_mid_center', 'target_mid_right',
-            'target_bottom_left', 'target_bottom_center', 'target_bottom_right'
+            'target_top_left', 'target_top_right',
+            'target_bottom_left', 'target_bottom_right'
         ];
-        const zoneIndex = Math.floor(Math.random() * 9);
+        const zoneIndex = Math.floor(Math.random() * 4);
         const randomZoneSound = targetZones[zoneIndex];
 
         timeouts.push(window.setTimeout(() => {
@@ -670,7 +700,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                     <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
                         <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
                             <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${facingMode === 'user' ? 'scaleX(-1)' : ''} grayscale brightness-50 opacity-100`}></video>
-                            <DraggableResizableOverlay overlay={overlay} setOverlay={setOverlay} />
+                            <QuadrilateralOverlay quad={overlay} setQuad={setOverlay} />
 
                             {/* Camera Toggle Button during calibration */}
                             <div className="absolute top-4 right-4 z-10">
@@ -819,10 +849,12 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                             <div
                                 className="absolute border-4 border-brand/50 bg-brand/10 animate-pulse pointer-events-none"
                                 style={{
-                                    left: overlay.x + (activeTargetZone % 3) * (overlay.width / 3),
-                                    top: overlay.y + Math.floor(activeTargetZone / 3) * (overlay.height / 3),
-                                    width: overlay.width / 3,
-                                    height: overlay.height / 3
+                                    left: activeTargetZone % 2 === 0 ? overlay.tl.x : (overlay.tl.x + overlay.tr.x) / 2,
+                                    top: activeTargetZone < 2 ? overlay.tl.y : (overlay.tl.y + overlay.bl.y) / 2,
+                                    width: (overlay.tr.x - overlay.tl.x) / 2,
+                                    height: (overlay.bl.y - overlay.tl.y) / 2,
+                                    // Note: This HUD marker simple positioning doesn't handle extreme perspective skew visually perfectly, 
+                                    // but it indicates the quadrant correctly for the user.
                                 }}
                             >
                                 <div className="absolute inset-0 flex items-center justify-center opacity-30">
@@ -833,18 +865,33 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
                         {drillState === 'log_shot' && (
                             <div
-                                className="absolute grid grid-cols-3 grid-rows-3 cursor-crosshair animate-in fade-in duration-500"
-                                style={{ left: overlay.x, top: overlay.y, width: overlay.width, height: overlay.height }}
+                                className="absolute cursor-crosshair animate-in fade-in duration-500 overflow-visible"
+                                style={{ top: 0, left: 0, width: '100%', height: '100%' }}
                             >
-                                {[...Array(9)].map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className="w-full h-full border border-brand/10 hover:bg-brand/40 hover:border-brand transition-all flex items-center justify-center group/zone"
-                                        onClick={() => handleLogShotPlacement(i)}
-                                    >
-                                        <div className="opacity-0 group-hover/zone:opacity-100 text-[8px] font-mono text-white font-black bg-brand px-1">Z_{i + 1}</div>
-                                    </div>
-                                ))}
+                                <svg className="w-full h-full overflow-visible">
+                                    {[0, 1, 2, 3].map((i) => {
+                                        let points = "";
+                                        const midT = { x: (overlay.tl.x + overlay.tr.x) / 2, y: (overlay.tl.y + overlay.tr.y) / 2 };
+                                        const midB = { x: (overlay.bl.x + overlay.br.x) / 2, y: (overlay.bl.y + overlay.br.y) / 2 };
+                                        const midL = { x: (overlay.tl.x + overlay.bl.x) / 2, y: (overlay.tl.y + overlay.bl.y) / 2 };
+                                        const midR = { x: (overlay.tr.x + overlay.br.x) / 2, y: (overlay.tr.y + overlay.br.y) / 2 };
+                                        const center = { x: (midT.x + midB.x) / 2, y: (midL.y + midR.y) / 2 };
+
+                                        if (i === 0) points = `${overlay.tl.x},${overlay.tl.y} ${midT.x},${midT.y} ${center.x},${center.y} ${midL.x},${midL.y}`;
+                                        if (i === 1) points = `${midT.x},${midT.y} ${overlay.tr.x},${overlay.tr.y} ${midR.x},${midR.y} ${center.x},${center.y}`;
+                                        if (i === 2) points = `${midL.x},${midL.y} ${center.x},${center.y} ${midB.x},${midB.y} ${overlay.bl.x},${overlay.bl.y}`;
+                                        if (i === 3) points = `${center.x},${center.y} ${midR.x},${midR.y} ${overlay.br.x},${overlay.br.y} ${midB.x},${midB.y}`;
+
+                                        return (
+                                            <polygon
+                                                key={i}
+                                                points={points}
+                                                className="fill-brand/0 hover:fill-brand/40 stroke-brand/10 hover:stroke-brand transition-all cursor-pointer pointer-events-auto"
+                                                onClick={() => handleLogShotPlacement(i)}
+                                            />
+                                        );
+                                    })}
+                                </svg>
                             </div>
                         )}
                     </div>

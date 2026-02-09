@@ -178,10 +178,10 @@ export const analyzePlayerPerformance = async (playerData: PlayerAnalysisData): 
 
 export const analyzeShotPlacement = async (base64Image: string): Promise<number | null> => {
     try {
-        const prompt = "Identify impact zone (0-8) in this 3x3 goal grid. Return only the digit.";
+        const prompt = "Identify which quadrant the ball hit in this lacrosse goal: 0: Top Left, 1: Top Right, 2: Bottom Left, 3: Bottom Right. Return only the digit.";
         const resultText = await callAI(prompt, false, true, base64Image.split(',')[1]);
         const zone = parseInt(resultText.trim(), 10);
-        return isNaN(zone) ? null : zone;
+        return isNaN(zone) || zone < 0 || zone > 3 ? null : zone;
     } catch (error) {
         return null;
     }
