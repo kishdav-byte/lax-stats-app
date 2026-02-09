@@ -85,13 +85,8 @@ const SoundEffectsManager: React.FC<SoundEffectsManagerProps> = ({ soundEffects,
 
     const targetSounds: { name: SoundEffectName; label: string }[] = [
         { name: 'target_top_left', label: 'Top Left' },
-        { name: 'target_top_center', label: 'Top Center' },
         { name: 'target_top_right', label: 'Top Right' },
-        { name: 'target_mid_left', label: 'Mid Left' },
-        { name: 'target_mid_center', label: 'Center' },
-        { name: 'target_mid_right', label: 'Mid Right' },
         { name: 'target_bottom_left', label: 'Bottom Left' },
-        { name: 'target_bottom_center', label: 'Bottom Center' },
         { name: 'target_bottom_right', label: 'Bottom Right' },
     ];
 
