@@ -25,18 +25,28 @@ const QuadrilateralOverlay: React.FC<{
     const [activeHandle, setActiveHandle] = useState<keyof GoalQuad | 'drag' | null>(null);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+    const handleStart = (clientX: number, clientY: number, handle: keyof GoalQuad | 'drag') => {
+        setActiveHandle(handle);
+        setDragStart({ x: clientX, y: clientY });
+    };
+
     const handleMouseDown = (e: React.MouseEvent, handle: keyof GoalQuad | 'drag') => {
         e.preventDefault();
         e.stopPropagation();
-        setActiveHandle(handle);
-        setDragStart({ x: e.clientX, y: e.clientY });
+        handleStart(e.clientX, e.clientY, handle);
     };
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
+    const handleTouchStart = (e: React.TouchEvent, handle: keyof GoalQuad | 'drag') => {
+        e.stopPropagation();
+        const touch = e.touches[0];
+        handleStart(touch.clientX, touch.clientY, handle);
+    };
+
+    const handleMove = useCallback((clientX: number, clientY: number) => {
         if (!activeHandle) return;
 
-        const dx = e.clientX - dragStart.x;
-        const dy = e.clientY - dragStart.y;
+        const dx = clientX - dragStart.x;
+        const dy = clientY - dragStart.y;
 
         if (activeHandle === 'drag') {
             setQuad(prev => ({
@@ -51,21 +61,35 @@ const QuadrilateralOverlay: React.FC<{
                 [activeHandle]: { x: prev[activeHandle].x + dx, y: prev[activeHandle].y + dy }
             }));
         }
-        setDragStart({ x: e.clientX, y: e.clientY });
+        setDragStart({ x: clientX, y: clientY });
     }, [activeHandle, dragStart, setQuad]);
 
-    const handleMouseUp = useCallback(() => {
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        handleMove(e.clientX, e.clientY);
+    }, [handleMove]);
+
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (e.touches.length > 0) {
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, [handleMove]);
+
+    const handleEnd = useCallback(() => {
         setActiveHandle(null);
     }, []);
 
     useEffect(() => {
         window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mouseup', handleEnd);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleEnd);
         };
-    }, [handleMouseMove, handleMouseUp]);
+    }, [handleMouseMove, handleTouchMove, handleEnd]);
 
     // Path for the polygon
     const points = `${quad.tl.x},${quad.tl.y} ${quad.tr.x},${quad.tr.y} ${quad.br.x},${quad.br.y} ${quad.bl.x},${quad.bl.y}`;
@@ -78,7 +102,7 @@ const QuadrilateralOverlay: React.FC<{
 
     return (
         <div className="absolute inset-0 pointer-events-none">
-            <svg className="w-full h-full overflow-visible pointer-events-auto">
+            <svg className="w-full h-full overflow-visible pointer-events-auto touch-none">
                 {/* Main Quadrilateral */}
                 <polygon
                     points={points}
@@ -87,6 +111,7 @@ const QuadrilateralOverlay: React.FC<{
                     strokeWidth="2"
                     className="cursor-move"
                     onMouseDown={(e) => handleMouseDown(e, 'drag')}
+                    onTouchStart={(e) => handleTouchStart(e, 'drag')}
                 />
 
                 {/* 2x2 Grid Lines */}
@@ -95,16 +120,22 @@ const QuadrilateralOverlay: React.FC<{
 
                 {/* Handles */}
                 {Object.entries(quad).map(([key, point]) => (
-                    <g key={key} transform={`translate(${point.x}, ${point.y})`} onMouseDown={(e) => handleMouseDown(e as any, key as keyof GoalQuad)}>
-                        <circle r="8" fill="rgb(255, 87, 34)" className="cursor-pointer shadow-lg" />
-                        <circle r="12" fill="transparent" className="cursor-pointer" />
-                        <text y="-12" textAnchor="middle" fill="white" fontSize="8" className="uppercase font-mono font-bold select-none">{key}</text>
+                    <g
+                        key={key}
+                        transform={`translate(${point.x}, ${point.y})`}
+                        onMouseDown={(e) => handleMouseDown(e as any, key as keyof GoalQuad)}
+                        onTouchStart={(e) => handleTouchStart(e as any, key as keyof GoalQuad)}
+                        className="touch-none"
+                    >
+                        <circle r="12" fill="rgb(255, 87, 34)" className="cursor-pointer shadow-lg sm:r-8" />
+                        <circle r="24" fill="transparent" className="cursor-pointer" />
+                        <text y="-18" textAnchor="middle" fill="white" fontSize="10" className="uppercase font-mono font-black select-none drop-shadow-md">{key}</text>
                     </g>
                 ))}
             </svg>
 
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-12 bg-brand text-black px-3 py-1 text-[8px] font-mono font-black uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.3)]">
-                STRETCH_GOAL_FRAME (PERSPECTIVE_LOCK)
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-8 sm:-translate-y-12 bg-brand text-black px-2 py-0.5 sm:px-3 sm:py-1 text-[6px] sm:text-[8px] font-mono font-black uppercase tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(255,87,34,0.3)]">
+                STRETCH_GOAL_FRAME
             </div>
         </div>
     );
@@ -179,10 +210,10 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
     const [overlay, setOverlay] = useState<GoalQuad>({
-        tl: { x: 140, y: 100 },
-        tr: { x: 340, y: 100 },
-        bl: { x: 140, y: 260 },
-        br: { x: 340, y: 260 }
+        tl: { x: 50, y: 50 },
+        tr: { x: 250, y: 50 },
+        bl: { x: 50, y: 200 },
+        br: { x: 250, y: 200 }
     });
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -682,45 +713,50 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
 
     if (sessionState === 'calibration') {
         return (
-            <div className="space-y-12 h-screen flex flex-col">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div className="inset-0 fixed bg-black z-50 flex flex-col p-4 sm:p-8 animate-in fade-in duration-300">
+                <div className="flex justify-between items-start mb-4 sm:mb-8">
                     <div>
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="h-px bg-brand w-12"></div>
-                            <p className="text-[10px] font-mono tracking-[0.3em] text-brand uppercase">Optical Target Lock</p>
+                        <div className="flex items-center gap-2 sm:gap-4 mb-1">
+                            <div className="h-px bg-brand w-8 sm:w-12"></div>
+                            <p className="text-[8px] sm:text-[10px] font-mono tracking-[0.2em] text-brand uppercase">Optical Lock</p>
                         </div>
-                        <h1 className="text-5xl font-display font-black tracking-tighter text-white uppercase italic">
-                            ALIGN <span className="text-brand">CAMERA</span>
+                        <h1 className="text-2xl sm:text-5xl font-display font-black tracking-tighter text-white uppercase italic">
+                            ALIGN <span className="text-brand">FRAME</span>
                         </h1>
                     </div>
-                    <button onClick={onReturnToDashboard} className="text-gray-600 hover:text-white text-[10px] font-mono uppercase tracking-widest">Cancel</button>
+                    <button onClick={onReturnToDashboard} className="text-gray-600 hover:text-white text-[8px] sm:text-[10px] font-mono uppercase tracking-widest border border-surface-border px-3 py-1">Cancel</button>
                 </div>
 
-                <div className="flex-grow flex flex-col items-center justify-center space-y-8 pb-12">
-                    <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
-                        <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
-                            <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${facingMode === 'user' ? 'scaleX(-1)' : ''} grayscale brightness-50 opacity-100`}></video>
+                <div className="flex-grow relative flex flex-col items-center justify-center">
+                    <div className="relative group p-0.5 cyber-card w-full max-w-2xl aspect-video shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                        <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center border border-surface-border">
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className={`w-full h-full object-contain ${facingMode === 'user' ? 'scaleX(-1)' : ''} grayscale brightness-50`}
+                            ></video>
                             <QuadrilateralOverlay quad={overlay} setQuad={setOverlay} />
 
-                            {/* Camera Toggle Button during calibration */}
-                            <div className="absolute top-4 right-4 z-10">
+                            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex gap-2">
                                 <button
                                     onClick={toggleCamera}
-                                    className="bg-black/40 hover:bg-black/80 backdrop-blur-sm border border-brand/30 p-2 text-brand transition-all flex items-center gap-2"
+                                    className="bg-black/60 hover:bg-brand/20 backdrop-blur-md border border-brand/30 p-2 text-brand transition-all flex items-center gap-2 rounded-sm"
                                 >
                                     <RefreshCcw className="w-3 h-3" />
-                                    <span className="text-[8px] font-mono uppercase tracking-widest">{facingMode === 'user' ? 'Front' : 'Rear'} Cam</span>
+                                    <span className="text-[8px] font-mono uppercase tracking-widest hidden sm:inline">{facingMode === 'user' ? 'Front' : 'Rear'} Cam</span>
                                 </button>
                             </div>
                         </div>
-                        <div className="absolute -bottom-8 left-0 right-0 text-center">
-                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Position the camera and align the grid with the goal.</p>
-                        </div>
                     </div>
 
-                    <button onClick={() => { setSessionState('running'); startDrill(); }} className="cyber-button px-20 py-4 text-xl">
-                        START DRILL
-                    </button>
+                    <div className="mt-4 sm:mt-8 w-full max-w-xs text-center">
+                        <p className="text-[8px] sm:text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-6">Drag corners to match the goal frame.</p>
+                        <button onClick={() => { setSessionState('running'); startDrill(); }} className="cyber-button w-full py-4 text-lg sm:text-2xl font-black italic">
+                            LOCK & START
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -803,7 +839,7 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
             <div className="flex-grow flex flex-col items-center justify-center space-y-8">
                 <div className="relative group p-1 cyber-card max-w-2xl w-full aspect-video">
                     <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
-                        <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover transition-all duration-1000 ${facingMode === 'user' ? 'scaleX(-1)' : ''} ${drillState === 'measuring' ? 'brightness-100' : 'brightness-50 grayscale'}`}></video>
+                        <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-contain transition-all duration-1000 ${facingMode === 'user' ? 'scaleX(-1)' : ''} ${drillState === 'measuring' ? 'brightness-100' : 'brightness-50 grayscale'}`}></video>
                         <canvas ref={canvasRef} className="hidden"></canvas>
 
                         {/* Camera Toggle Button while active */}
@@ -821,15 +857,15 @@ const ShootingDrill: React.FC<ShootingDrillProps> = ({ onReturnToDashboard, acti
                         <div className="absolute inset-0 pointer-events-none border border-brand/20"></div>
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             {isAnalyzing ? (
-                                <div className="bg-black/60 backdrop-blur-md px-12 py-8 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                                    <Loader2 className="w-8 h-8 text-brand animate-spin mb-4 shadow-[0_0_15px_rgba(255,87,34,0.5)]" />
-                                    <p className="text-xl font-display font-black text-white italic uppercase tracking-tighter shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                                <div className="bg-black/60 backdrop-blur-md px-6 py-4 sm:px-12 sm:py-8 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                    <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-brand animate-spin mb-4 shadow-[0_0_15px_rgba(255,87,34,0.5)]" />
+                                    <p className="text-sm sm:text-xl font-display font-black text-white italic uppercase tracking-tighter shadow-[0_0_20px_rgba(255,87,34,0.3)] text-center">
                                         AI ANALYZING SHOT...
                                     </p>
                                 </div>
                             ) : (
-                                <div className="bg-black/60 backdrop-blur-md px-12 py-6 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                                    <p className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-2 shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                                <div className="bg-black/60 backdrop-blur-md px-6 py-4 sm:px-12 sm:py-6 border border-brand/50 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                    <p className="text-xl sm:text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-2 shadow-[0_0_20px_rgba(255,87,34,0.3)] text-center">
                                         {getStatusMessage()}
                                     </p>
                                     {drillState === 'countdown' && (
