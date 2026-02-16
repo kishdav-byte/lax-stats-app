@@ -147,6 +147,11 @@ const App: React.FC = () => {
         return () => unsubscribe();
     }, []);
 
+    // Scroll to top when view changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentView]);
+
     // Separate effect for user-specific subscriptions
     useEffect(() => {
         if (currentUser) {

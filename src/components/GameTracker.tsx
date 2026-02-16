@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Game, StatType, Stat, Player, Team, Penalty, PenaltyType, User } from '../types';
-import { Trophy, ShieldAlert, Plus, Activity, ChevronRight, Zap, Trash2 } from 'lucide-react';
+import { Trophy, ShieldAlert, Plus, Activity, ChevronRight, Zap, Trash2, Pin } from 'lucide-react';
 import { Role } from '../types';
 
 interface GameTrackerProps {
@@ -367,7 +367,45 @@ const GameTracker: React.FC<GameTrackerProps> = ({
     const [isPenaltyModalOpen, setIsPenaltyModalOpen] = useState(false);
     const [selectedPlayerInfo, setSelectedPlayerInfo] = useState<{ player: Player; teamId: string } | null>(null);
     const [isLogStatDrawerOpen, setIsLogStatDrawerOpen] = useState(false);
+    const [pinnedPlayerIds, setPinnedPlayerIds] = useState<string[]>(() => {
+        const saved = localStorage.getItem('pinnedPlayerIds');
+        return saved ? JSON.parse(saved) : [];
+    });
     const audioCtxRef = useRef<AudioContext | null>(null);
+
+    // Save pinned players to localStorage
+    useEffect(() => {
+        localStorage.setItem('pinnedPlayerIds', JSON.stringify(pinnedPlayerIds));
+    }, [pinnedPlayerIds]);
+
+    const togglePinPlayer = useCallback((playerId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Don't select the player when pinning
+        setPinnedPlayerIds(prev =>
+            prev.includes(playerId)
+                ? prev.filter(id => id !== playerId)
+                : [...prev, playerId]
+        );
+    }, []);
+
+    const sortedHomeRoster = useMemo(() => {
+        return [...game.homeTeam.roster].sort((a, b) => {
+            const aPinned = pinnedPlayerIds.includes(a.id);
+            const bPinned = pinnedPlayerIds.includes(b.id);
+            if (aPinned && !bPinned) return -1;
+            if (!aPinned && bPinned) return 1;
+            return 0;
+        });
+    }, [game.homeTeam.roster, pinnedPlayerIds]);
+
+    const sortedAwayRoster = useMemo(() => {
+        return [...game.awayTeam.roster].sort((a, b) => {
+            const aPinned = pinnedPlayerIds.includes(a.id);
+            const bPinned = pinnedPlayerIds.includes(b.id);
+            if (aPinned && !bPinned) return -1;
+            if (!aPinned && bPinned) return 1;
+            return 0;
+        });
+    }, [game.awayTeam.roster, pinnedPlayerIds]);
 
     const playBuzzer = useCallback(() => {
         if (!audioCtxRef.current) {
@@ -785,24 +823,38 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                             ) : (
                                 <div className="space-y-12">
                                     {/* ROSTER SELECTION */}
-                                    {[game.homeTeam, game.awayTeam].map(team => (
+                                    {[
+                                        { team: game.homeTeam, roster: sortedHomeRoster },
+                                        { team: game.awayTeam, roster: sortedAwayRoster }
+                                    ].map(({ team, roster }) => (
                                         <div key={team.id} className="space-y-4">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-mono text-brand font-black uppercase tracking-widest">{team.name}</span>
                                                 <div className="h-px bg-white/10 flex-grow"></div>
                                             </div>
                                             <div className="stats-grid-mobile">
-                                                {team.roster.map(player => (
-                                                    <button
-                                                        key={player.id}
-                                                        onClick={() => setSelectedPlayerInfo({ player, teamId: team.id })}
-                                                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-left transition-all tap-target flex flex-col group active:border-brand"
-                                                    >
-                                                        <span className="text-brand font-mono text-xs font-black mb-1 group-active:text-white">#{player.jerseyNumber}</span>
-                                                        <span className="text-white font-display font-bold uppercase italic tracking-tight text-sm truncate">{player.name}</span>
-                                                        <span className="text-[8px] font-mono text-gray-600 uppercase mt-1">{player.position}</span>
-                                                    </button>
-                                                ))}
+                                                {roster.map(player => {
+                                                    const isPinned = pinnedPlayerIds.includes(player.id);
+                                                    return (
+                                                        <button
+                                                            key={player.id}
+                                                            onClick={() => setSelectedPlayerInfo({ player, teamId: team.id })}
+                                                            className={`bg-white/5 hover:bg-white/10 border ${isPinned ? 'border-brand/40 bg-brand/5' : 'border-white/10'} rounded-xl p-4 text-left transition-all tap-target flex flex-col group active:border-brand relative`}
+                                                        >
+                                                            <div className="flex justify-between items-start w-full">
+                                                                <span className="text-brand font-mono text-xs font-black mb-1 group-active:text-white">#{player.jerseyNumber}</span>
+                                                                <button
+                                                                    onClick={(e) => togglePinPlayer(player.id, e)}
+                                                                    className={`p-2 -mr-3 -mt-3 transition-all ${isPinned ? 'text-brand' : 'text-gray-600 hover:text-white'}`}
+                                                                >
+                                                                    <Pin className={`w-3.5 h-3.5 ${isPinned ? 'fill-brand' : ''}`} />
+                                                                </button>
+                                                            </div>
+                                                            <span className="text-white font-display font-bold uppercase italic tracking-tight text-sm truncate">{player.name}</span>
+                                                            <span className="text-[8px] font-mono text-gray-600 uppercase mt-1">{player.position}</span>
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     ))}
@@ -820,14 +872,24 @@ const GameTracker: React.FC<GameTrackerProps> = ({
                         <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter mb-4">ASSIST // <span className="text-brand">SELECT PLAYER</span></h2>
                         <p className="text-gray-500 uppercase tracking-widest mb-8 font-mono">IDENTIFY PRIMARY SOURCE FOR GOAL AT {formatTime(clock)} BY {assistModal.scoringPlayer.name.toUpperCase()}</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-96 pr-2 custom-scrollbar">
-                            {(assistModal.scoringTeamId === game.homeTeam.id ? game.homeTeam.roster : game.awayTeam.roster)
+                            {(assistModal.scoringTeamId === game.homeTeam.id ? sortedHomeRoster : sortedAwayRoster)
                                 .filter(p => p.id !== assistModal.scoringPlayer!.id)
-                                .map(p => (
-                                    <button key={p.id} onClick={() => { handleStatAdd(assistModal.scoringPlayer!, assistModal.scoringTeamId!, StatType.GOAL, p.id); setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setSelectedPlayerInfo(null); }} className="bg-surface-card border border-surface-border hover:border-brand p-4 text-left transition-all">
-                                        <div className="text-brand text-[10px] font-black pb-1">#{p.jerseyNumber}</div>
-                                        <div className="text-white uppercase italic font-bold tracking-tight">{p.name}</div>
-                                    </button>
-                                ))}
+                                .map(p => {
+                                    const isPinned = pinnedPlayerIds.includes(p.id);
+                                    return (
+                                        <button
+                                            key={p.id}
+                                            onClick={() => { handleStatAdd(assistModal.scoringPlayer!, assistModal.scoringTeamId!, StatType.GOAL, p.id); setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setSelectedPlayerInfo(null); }}
+                                            className={`border ${isPinned ? 'border-brand/40 bg-brand/5' : 'bg-surface-card border-surface-border'} hover:border-brand p-4 text-left transition-all relative`}
+                                        >
+                                            <div className="flex justify-between items-start w-full">
+                                                <div className="text-brand text-[10px] font-black pb-1">#{p.jerseyNumber}</div>
+                                                {isPinned && <Pin className="w-2.5 h-2.5 text-brand fill-brand" />}
+                                            </div>
+                                            <div className="text-white uppercase italic font-bold tracking-tight text-sm truncate">{p.name}</div>
+                                        </button>
+                                    );
+                                })}
                         </div>
                         <div className="mt-12 flex justify-between border-t border-surface-border pt-6">
                             <button onClick={() => { handleStatAdd(assistModal.scoringPlayer!, assistModal.scoringTeamId!, StatType.GOAL); setAssistModal({ show: false, scoringPlayer: null, scoringTeamId: null }); setSelectedPlayerInfo(null); }} className="text-gray-500 hover:text-white uppercase tracking-widest">UNASSISTED GOAL</button>
