@@ -207,6 +207,15 @@ const GameSetup: React.FC<{
                 <h1 className="text-6xl font-display font-black tracking-tighter text-white uppercase italic">
                     GAME <span className="text-brand">SETUP</span>
                 </h1>
+                <div className="mt-6 flex items-center gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
+                    <span className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">{game.homeTeam.name}</span>
+                    <div className="flex flex-col items-center">
+                        <div className="h-4 w-px bg-brand/20 mb-1"></div>
+                        <span className="text-[10px] font-mono text-brand font-black tracking-widest bg-brand/10 px-3 py-1 rounded-full border border-brand/20">VS</span>
+                        <div className="h-4 w-px bg-brand/20 mt-1"></div>
+                    </div>
+                    <span className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">{game.awayTeam.name}</span>
+                </div>
             </div>
 
             <div className="cyber-card p-1 max-w-4xl mx-auto">
