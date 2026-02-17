@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { Game, StatType, Team, TrainingSession, DrillType } from '../types';
+import { Game, StatType, Team, TrainingSession, DrillType, Player } from '../types';
 import { analyzePlayerPerformance, PlayerAnalysisData } from '../services/geminiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Activity, Shield, Cpu, Binary, Box } from 'lucide-react';
@@ -9,6 +9,7 @@ interface AnalyticsProps {
     games: Game[];
     trainingSessions?: TrainingSession[];
     onReturnToDashboard: () => void;
+    onViewPlayerProfile: (player: Player, team: Team) => void;
 }
 
 type SortKey = 'name' | 'teamName' | 'gamesPlayed' | 'foPercentage' | StatType;
@@ -104,7 +105,7 @@ const AnalysisModal: React.FC<{
 };
 
 
-const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = [], onReturnToDashboard }) => {
+const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = [], onReturnToDashboard, onViewPlayerProfile }) => {
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
     const [analyzingPlayer, setAnalyzingPlayer] = useState<AggregatedStats | null>(null);
 
@@ -213,9 +214,8 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
 
     const statColumns: { key: StatType, label: string }[] = [
         StatType.GOAL, StatType.ASSIST, StatType.SHOT, StatType.GROUND_BALL,
-        StatType.TURNOVER, StatType.CAUSED_TURNOVER, StatType.SAVE,
-        StatType.FACEOFF_WIN, StatType.FACEOFF_LOSS
-    ].map(key => ({ key, label: key === StatType.FACEOFF_WIN ? 'FOW' : (key === StatType.FACEOFF_LOSS ? 'FOL' : key.substring(0, 3).toUpperCase()) }));
+        StatType.TURNOVER, StatType.CAUSED_TURNOVER, StatType.SAVE
+    ].map(key => ({ key, label: key.substring(0, 3).toUpperCase() }));
 
 
     return (
@@ -328,9 +328,10 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                                 </div>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center cursor-pointer group/th" onClick={() => requestSort('foPercentage' as SortKey)}>
+                                        <th className="p-4 text-center cursor-pointer group/th bg-brand/5 border-l border-brand/20" onClick={() => requestSort('foPercentage' as SortKey)}>
                                             <div className="flex flex-col items-center gap-1">
-                                                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500 group-hover/th:text-brand transition-colors">FO%</span>
+                                                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-brand group-hover/th:text-white transition-colors">FO STATS</span>
+                                                <span className="text-[7px] font-mono text-gray-600 uppercase tracking-tighter">(W-L %)</span>
                                                 {sortConfig.key === 'foPercentage' && (
                                                     <span className="text-brand text-[8px] animate-pulse">{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
                                                 )}
@@ -342,40 +343,61 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                     </tr>
                                 </thead>
                                 <tbody className="bg-black">
-                                    {sortedPlayers.map(player => (
-                                        <tr key={player.playerId} className="border-b border-surface-border/50 hover:bg-brand/5 transition-colors group">
-                                            <td className="p-4 px-6">
-                                                <p className="font-display font-bold text-white uppercase italic tracking-tight">{player.name}</p>
-                                                <p className="text-[9px] font-mono text-brand uppercase tracking-widest mt-0.5">#{player.jerseyNumber}</p>
-                                            </td>
-                                            <td className="p-4 px-6">
-                                                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{player.teamName}</span>
-                                            </td>
-                                            <td className="p-4 px-6 text-center">
-                                                <span className="font-mono text-xs text-white bg-surface-card px-2 py-0.5 border border-surface-border">{player.gamesPlayed}</span>
-                                            </td>
-                                            {statColumns.map(({ key }) => (
-                                                <td key={key} className="p-4 text-center">
-                                                    <span className={`font-mono text-xs ${(player.stats[key] || 0) > 0 ? 'text-white' : 'text-gray-700'}`}>
-                                                        {player.stats[key] || 0}
-                                                    </span>
+                                    {sortedPlayers.map(player => {
+                                        const fow = player.stats[StatType.FACEOFF_WIN] || 0;
+                                        const fol = player.stats[StatType.FACEOFF_LOSS] || 0;
+                                        const foTotal = fow + fol;
+                                        const foPct = getFOPercentage(player);
+
+                                        return (
+                                            <tr key={player.playerId} className="border-b border-surface-border/50 hover:bg-brand/5 transition-colors group">
+                                                <td className="p-4 px-6 border-r border-surface-border/20">
+                                                    <div
+                                                        className="cursor-pointer group/name"
+                                                        onClick={() => {
+                                                            const team = teams.find(t => t.id === player.teamId);
+                                                            const p: Player = { id: player.playerId, name: player.name, jerseyNumber: player.jerseyNumber, position: player.position };
+                                                            if (team) onViewPlayerProfile(p, team);
+                                                        }}
+                                                    >
+                                                        <p className="font-display font-bold text-white uppercase italic tracking-tight group-hover/name:text-brand transition-colors">{player.name}</p>
+                                                        <p className="text-[9px] font-mono text-brand uppercase tracking-widest mt-0.5">#{player.jerseyNumber} <span className="text-gray-600 font-normal">// VIEW PROFILE</span></p>
+                                                    </div>
                                                 </td>
-                                            ))}
-                                            <td className="p-4 text-center">
-                                                <span className={`font-mono text-xs ${getFOPercentage(player) > 0 ? 'text-brand italic font-bold' : 'text-gray-700'}`}>
-                                                    {getFOPercentage(player) > 0 ? `${getFOPercentage(player).toFixed(1)}%` : '0%'}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 px-6 text-right">
-                                                <button
-                                                    onClick={() => setAnalyzingPlayer(player)}
-                                                    className="cyber-button-outline py-1 px-4 text-[9px] flex items-center gap-2 ml-auto group-hover:bg-brand group-hover:text-black transition-all duration-300"
-                                                >
-                                                    AI ANALYSIS <Activity className="w-3 h-3" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                <td className="p-4 px-6">
+                                                    <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{player.teamName}</span>
+                                                </td>
+                                                <td className="p-4 px-6 text-center">
+                                                    <span className="font-mono text-xs text-white bg-surface-card px-2 py-0.5 border border-surface-border">{player.gamesPlayed}</span>
+                                                </td>
+                                                {statColumns.map(({ key }) => (
+                                                    <td key={key} className="p-4 text-center">
+                                                        <span className={`font-mono text-xs ${(player.stats[key] || 0) > 0 ? 'text-white' : 'text-gray-700'}`}>
+                                                            {player.stats[key] || 0}
+                                                        </span>
+                                                    </td>
+                                                ))}
+                                                <td className="p-4 text-center bg-brand/5">
+                                                    {foTotal > 0 ? (
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="font-mono text-xs text-brand italic font-bold">{foPct.toFixed(1)}%</span>
+                                                            <span className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter">{fow}W - {fol}L</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="font-mono text-xs text-gray-800">---</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-4 px-6 text-right">
+                                                    <button
+                                                        onClick={() => setAnalyzingPlayer(player)}
+                                                        className="cyber-button-outline py-1 px-4 text-[9px] flex items-center gap-2 ml-auto group-hover:bg-brand group-hover:text-black transition-all duration-300"
+                                                    >
+                                                        AI ANALYSIS <Activity className="w-3 h-3" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

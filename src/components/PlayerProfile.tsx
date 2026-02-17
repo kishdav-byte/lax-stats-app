@@ -177,7 +177,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                             );
                         }) : (
                             <div className="cyber-card p-12 text-center opacity-50 grayscale">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No training sessions found</p>
+                                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">No game history found</p>
                             </div>
                         )}
                     </div>

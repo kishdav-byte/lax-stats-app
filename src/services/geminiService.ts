@@ -189,19 +189,59 @@ export const analyzeShotPlacement = async (base64Image: string): Promise<number 
 
 export const queryAIAssistant = async (question: string, context: { teams: Team[], games: Game[] }): Promise<string> => {
     const contextStr = `
-Teams Data:
-${context.teams.map(t => `- ${t.name} (ID: ${t.id}), Roster: ${t.roster.map(p => `${p.name} (#${p.jerseyNumber}, ${p.position})`).join(', ')}`).join('\n')}
+Teams and Player Stats:
+${context.teams.map(t => {
+        const teamPlayers = t.roster.map(p => {
+            // Find stats for this player across all finished games
+            const playerStats = context.games.reduce((acc, g) => {
+                if (g.status !== 'finished') return acc;
+                g.stats.forEach(s => {
+                    if (s.playerId === p.id) {
+                        acc[s.type] = (acc[s.type] || 0) + 1;
+                    }
+                    if (s.type === StatType.GOAL && s.assistingPlayerId === p.id) {
+                        acc[StatType.ASSIST] = (acc[StatType.ASSIST] || 0) + 1;
+                    }
+                });
+                return acc;
+            }, {} as { [key: string]: number });
 
-Games Data:
-${context.games.map(g => `- ${g.homeTeam.name} vs ${g.awayTeam.name} (Score: ${g.score.home}-${g.score.away}, Status: ${g.status}, Date: ${g.scheduledTime})`).join('\n')}
+            const fow = playerStats[StatType.FACEOFF_WIN] || 0;
+            const fol = playerStats[StatType.FACEOFF_LOSS] || 0;
+            const foPct = (fow + fol) > 0 ? ((fow / (fow + fol)) * 100).toFixed(1) + '%' : 'N/A';
+
+            return `${p.name} (#${p.jerseyNumber}, ${p.position}) Stats: G:${playerStats[StatType.GOAL] || 0}, A:${playerStats[StatType.ASSIST] || 0}, GB:${playerStats[StatType.GROUND_BALL] || 0}, FO:${fow}-${fol} (${foPct})`;
+        }).join('\n  ');
+        return `- ${t.name} (ID: ${t.id})\n  ${teamPlayers}`;
+    }).join('\n')}
+
+Games Data (Detailed Results):
+${context.games.map(g => {
+        const gameStats = g.stats.reduce((acc, s) => {
+            if (s.type === StatType.FACEOFF_WIN) {
+                acc.totalFO++;
+                if (s.teamId === g.homeTeam.id) acc.homeFO++;
+                else acc.awayFO++;
+            }
+            return acc;
+        }, { totalFO: 0, homeFO: 0, awayFO: 0 });
+
+        return `- ${g.homeTeam.name} vs ${g.awayTeam.name}
+    Score: ${g.score.home}-${g.score.away}
+    Status: ${g.status}
+    Date: ${g.scheduledTime}
+    Team FO Wins: ${g.homeTeam.name} ${gameStats.homeFO}, ${g.awayTeam.name} ${gameStats.awayFO}`;
+    }).join('\n')}
     `;
 
-    const prompt = `You are a Lacrosse Assistant for the LaxKeeper app. 
-You have access to the current team and game data. 
-Answer the user's question accurately based on this data. 
-Be concise, professional, and helpful. Use a "cyberpunk coach" persona - high-tech but grounded in the sport.
+    const prompt = `You are LaxBot, a high-performance Lacrosse AI Assistant for the LaxKeeper app. 
+You have access to the full team roster, player statistics (Goals, Assists, Ground Balls, and Face-Offs), and game history.
 
-Context:
+Answer the user's question accurately based on this data. 
+Be concise, professional, and use a "cyberpunk coach" persona - high-tech, slightly grit-focused, and deeply knowledgeable about the sport.
+If the user asks for a comparison, look at the stats. If they ask for a summary, synthesize the game scores.
+
+Context Data:
 ${contextStr}
 
 User Question: ${question}`;

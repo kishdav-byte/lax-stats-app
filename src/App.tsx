@@ -815,7 +815,13 @@ const App: React.FC = () => {
                         }} />
                 ) : null;
             case 'analytics':
-                return <Analytics teams={teams} games={games} trainingSessions={trainingSessions} onReturnToDashboard={() => setCurrentView('dashboard')} />;
+                return <Analytics
+                    teams={teams}
+                    games={games}
+                    trainingSessions={trainingSessions}
+                    onReturnToDashboard={() => setCurrentView('dashboard')}
+                    onViewPlayerProfile={handleViewPlayerProfile}
+                />;
             case 'playerProfile':
                 return viewingPlayer ? (
                     <PlayerProfile
