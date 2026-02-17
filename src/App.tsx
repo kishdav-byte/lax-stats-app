@@ -20,6 +20,7 @@ import GlobalSettings from './components/GlobalSettings';
 import GameReport from './components/GameReport';
 import Analytics from './components/Analytics';
 import PlayerProfile from './components/PlayerProfile';
+import AIAssistant from './components/AIAssistant';
 import * as storageService from './services/storageService';
 import * as apiKeyService from './services/apiKeyService';
 import * as authService from './services/authService';
@@ -909,6 +910,8 @@ const App: React.FC = () => {
                     />
                 }
                 return null;
+            case 'aiAssistant':
+                return <AIAssistant teams={teams} games={games} onReturnToDashboard={() => setCurrentView('dashboard')} />;
             case 'dashboard':
             default:
                 return (
@@ -938,6 +941,7 @@ const App: React.FC = () => {
     if (effectiveRole === Role.ADMIN) {
         allNavItems = [
             { view: 'dashboard', label: 'Dashboard' },
+            { view: 'aiAssistant', label: 'AI Assistant' },
             { view: 'teams', label: 'Teams' },
             { view: 'schedule', label: 'Schedule' },
             { view: 'analytics', label: 'Analytics' },
@@ -951,6 +955,7 @@ const App: React.FC = () => {
     } else if (effectiveRole === Role.COACH) {
         allNavItems = [
             { view: 'dashboard', label: 'Dashboard' },
+            { view: 'aiAssistant', label: 'AI Assistant' },
             { view: 'teams', label: 'Teams' },
             { view: 'schedule', label: 'Schedule' },
             { view: 'analytics', label: 'Analytics' },
@@ -960,6 +965,7 @@ const App: React.FC = () => {
     } else if (effectiveRole === Role.PLAYER) {
         allNavItems = [
             { view: 'playerDashboard', label: 'Dashboard' },
+            { view: 'aiAssistant', label: 'AI Assistant' },
             { view: 'trainingMenu', label: 'Training' },
             { view: 'feedback', label: 'Feedback' },
         ];

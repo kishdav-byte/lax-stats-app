@@ -53,11 +53,18 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
             }
         });
 
+        const foWins = totalStats[StatType.FACEOFF_WIN] || 0;
+        const foLosses = totalStats[StatType.FACEOFF_LOSS] || 0;
+        const foTotal = foWins + foLosses;
+        const foPercentage = foTotal > 0 ? (foWins / foTotal) * 100 : 0;
+
         return {
             totalStats,
             gamesPlayed: gamesPlayed.sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime()),
             gameStatsMap,
-            points: (totalStats[StatType.GOAL] || 0) + (totalStats[StatType.ASSIST] || 0)
+            points: (totalStats[StatType.GOAL] || 0) + (totalStats[StatType.ASSIST] || 0),
+            foPercentage,
+            foTotal
         };
     }, [player, team, games]);
 
@@ -105,6 +112,14 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                                 <p className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">{statType}</p>
                             </div>
                         ))}
+                        {playerStatsData.foTotal > 0 && (
+                            <div className="cyber-card p-4 text-center group border-brand/30 bg-brand/5 shadow-[0_0_15px_rgba(255,87,34,0.1)]">
+                                <p className="text-2xl font-display font-black text-brand mb-1 italic">
+                                    {(playerStatsData.totalStats[StatType.FACEOFF_WIN] || 0)} <span className="text-gray-600 text-xs">VS</span> {(playerStatsData.totalStats[StatType.FACEOFF_LOSS] || 0)}
+                                </p>
+                                <p className="text-[10px] font-display font-black text-brand uppercase tracking-widest">{playerStatsData.foPercentage.toFixed(1)}% FO WIN</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -136,10 +151,23 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ player, team, games, onCl
                                     <div className="flex gap-4 border-t border-surface-border pt-2">
                                         <div className="flex-1"><p className="text-xs font-mono font-bold text-white">{goals}</p><p className="text-[7px] font-mono text-gray-600 uppercase">Goals</p></div>
                                         <div className="flex-1"><p className="text-xs font-mono font-bold text-white">{assists}</p><p className="text-[7px] font-mono text-gray-600 uppercase">Assists</p></div>
+
+                                        {/* FO Breakdown in Game Log */}
+                                        {((stats[StatType.FACEOFF_WIN] || 0) + (stats[StatType.FACEOFF_LOSS] || 0)) > 0 && (
+                                            <div className="flex-1 border-l border-surface-border pl-2">
+                                                <p className="text-xs font-mono font-bold text-brand">
+                                                    {stats[StatType.FACEOFF_WIN] || 0}-{stats[StatType.FACEOFF_LOSS] || 0}
+                                                </p>
+                                                <p className="text-[7px] font-mono text-gray-600 uppercase">
+                                                    {((stats[StatType.FACEOFF_WIN] || 0) / ((stats[StatType.FACEOFF_WIN] || 0) + (stats[StatType.FACEOFF_LOSS] || 0)) * 100).toFixed(0)}% FO
+                                                </p>
+                                            </div>
+                                        )}
+
                                         <div className="flex-1 text-right">
                                             <p className="text-xs font-mono font-bold text-gray-400">
                                                 {Object.entries(stats)
-                                                    .filter(([key]) => key !== StatType.GOAL && key !== StatType.ASSIST && stats[key as StatType]! > 0)
+                                                    .filter(([key]) => key !== StatType.GOAL && key !== StatType.ASSIST && key !== StatType.FACEOFF_WIN && key !== StatType.FACEOFF_LOSS && stats[key as StatType]! > 0)
                                                     .length}
                                             </p>
                                             <p className="text-[7px] font-mono text-gray-600 uppercase">Other</p>

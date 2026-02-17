@@ -11,7 +11,7 @@ interface AnalyticsProps {
     onReturnToDashboard: () => void;
 }
 
-type SortKey = 'name' | 'teamName' | 'gamesPlayed' | StatType;
+type SortKey = 'name' | 'teamName' | 'gamesPlayed' | 'foPercentage' | StatType;
 type SortDirection = 'asc' | 'desc';
 
 interface AggregatedStats {
@@ -177,12 +177,28 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
         return Object.values(playerStatsMap);
     }, [teams, games]);
 
+    const getFOPercentage = (player: AggregatedStats) => {
+        const wins = player.stats[StatType.FACEOFF_WIN] || 0;
+        const losses = player.stats[StatType.FACEOFF_LOSS] || 0;
+        const total = wins + losses;
+        return total > 0 ? (wins / total) * 100 : 0;
+    };
+
     const sortedPlayers = useMemo(() => {
         let sortablePlayers = [...aggregatedStats];
         if (sortConfig.key) {
             sortablePlayers.sort((a, b) => {
-                const aVal = sortConfig.key in StatType ? (a.stats[sortConfig.key as StatType] || 0) : a[sortConfig.key as 'name' | 'teamName' | 'gamesPlayed'];
-                const bVal = sortConfig.key in StatType ? (b.stats[sortConfig.key as StatType] || 0) : b[sortConfig.key as 'name' | 'teamName' | 'gamesPlayed'];
+                let aVal: number | string;
+                let bVal: number | string;
+
+                if (sortConfig.key === 'foPercentage') {
+                    aVal = getFOPercentage(a);
+                    bVal = getFOPercentage(b);
+                } else {
+                    aVal = sortConfig.key in StatType ? (a.stats[sortConfig.key as StatType] || 0) : a[sortConfig.key as 'name' | 'teamName' | 'gamesPlayed'];
+                    bVal = sortConfig.key in StatType ? (b.stats[sortConfig.key as StatType] || 0) : b[sortConfig.key as 'name' | 'teamName' | 'gamesPlayed'];
+                }
+
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -197,8 +213,9 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
 
     const statColumns: { key: StatType, label: string }[] = [
         StatType.GOAL, StatType.ASSIST, StatType.SHOT, StatType.GROUND_BALL,
-        StatType.TURNOVER, StatType.CAUSED_TURNOVER, StatType.SAVE, StatType.FACEOFF_WIN
-    ].map(key => ({ key, label: key.substring(0, 3).toUpperCase() }));
+        StatType.TURNOVER, StatType.CAUSED_TURNOVER, StatType.SAVE,
+        StatType.FACEOFF_WIN, StatType.FACEOFF_LOSS
+    ].map(key => ({ key, label: key === StatType.FACEOFF_WIN ? 'FOW' : (key === StatType.FACEOFF_LOSS ? 'FOL' : key.substring(0, 3).toUpperCase()) }));
 
 
     return (
@@ -311,6 +328,14 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                                 </div>
                                             </th>
                                         ))}
+                                        <th className="p-4 text-center cursor-pointer group/th" onClick={() => requestSort('foPercentage' as SortKey)}>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500 group-hover/th:text-brand transition-colors">FO%</span>
+                                                {sortConfig.key === 'foPercentage' && (
+                                                    <span className="text-brand text-[8px] animate-pulse">{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                                                )}
+                                            </div>
+                                        </th>
                                         <th className="p-4 px-6 text-right">
                                             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">ACTIONS</span>
                                         </th>
@@ -336,6 +361,11 @@ const Analytics: React.FC<AnalyticsProps> = ({ teams, games, trainingSessions = 
                                                     </span>
                                                 </td>
                                             ))}
+                                            <td className="p-4 text-center">
+                                                <span className={`font-mono text-xs ${getFOPercentage(player) > 0 ? 'text-brand italic font-bold' : 'text-gray-700'}`}>
+                                                    {getFOPercentage(player) > 0 ? `${getFOPercentage(player).toFixed(1)}%` : '0%'}
+                                                </span>
+                                            </td>
                                             <td className="p-4 px-6 text-right">
                                                 <button
                                                     onClick={() => setAnalyzingPlayer(player)}

@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient';
 import { Team, Game, User, AccessRequest, DrillAssignment, Feedback, SoundEffects, TrainingSession } from '../types';
 
-export type View = 'dashboard' | 'game' | 'teams' | 'schedule' | 'analytics' | 'playerProfile' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'soundEffects' | 'feedback' | 'devSupport' | 'globalSettings' | 'parentDashboard' | 'playerDashboard' | 'gameReport';
+export type View = 'dashboard' | 'game' | 'teams' | 'schedule' | 'analytics' | 'playerProfile' | 'trainingMenu' | 'faceOffTrainer' | 'shootingDrill' | 'users' | 'soundEffects' | 'feedback' | 'devSupport' | 'globalSettings' | 'parentDashboard' | 'playerDashboard' | 'gameReport' | 'aiAssistant';
 
 export interface AppDatabase {
     teams: Team[];

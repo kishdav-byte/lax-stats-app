@@ -331,6 +331,30 @@ const LiveStatsSummary: React.FC<{
                             <div className="text-left text-3xl font-display italic font-black text-white">{awayTotals[key] || 0}</div>
                         </React.Fragment>
                     ))}
+
+                    {/* Face-off Percentage Row */}
+                    <React.Fragment>
+                        <div className="text-right text-3xl font-display italic font-black text-brand">
+                            {(() => {
+                                const wins = homeTotals[StatType.FACEOFF_WIN] || 0;
+                                const losses = homeTotals[StatType.FACEOFF_LOSS] || 0;
+                                const total = wins + losses;
+                                return total > 0 ? `${((wins / total) * 100).toFixed(0)}%` : '0%';
+                            })()}
+                        </div>
+                        <div className="text-center flex flex-col items-center justify-center">
+                            <div className="h-px bg-brand/30 w-full mb-1"></div>
+                            <span className="text-[8px] text-brand uppercase tracking-tighter font-bold">FO %</span>
+                        </div>
+                        <div className="text-left text-3xl font-display italic font-black text-brand">
+                            {(() => {
+                                const wins = awayTotals[StatType.FACEOFF_WIN] || 0;
+                                const losses = awayTotals[StatType.FACEOFF_LOSS] || 0;
+                                const total = wins + losses;
+                                return total > 0 ? `${((wins / total) * 100).toFixed(0)}%` : '0%';
+                            })()}
+                        </div>
+                    </React.Fragment>
                 </div>
             </div>
         </div>

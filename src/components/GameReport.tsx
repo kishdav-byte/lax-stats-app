@@ -50,6 +50,7 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
                             {STAT_DEFINITIONS.filter(s => s.key !== StatType.GOAL && s.key !== StatType.ASSIST).map(s => (
                                 <th key={s.key} className="p-4 text-center border-b border-surface-border">{s.label}</th>
                             ))}
+                            <th className="p-4 text-center border-b border-surface-border text-brand">FO%</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-border/30">
@@ -69,6 +70,19 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
                                     {STAT_DEFINITIONS.filter(s => s.key !== StatType.GOAL && s.key !== StatType.ASSIST).map(s => (
                                         <td key={s.key} className="p-4 text-center font-mono text-[10px] text-gray-500">{(stats[s.key] || 0)}</td>
                                     ))}
+                                    <td className="p-4 text-center">
+                                        {(() => {
+                                            const wins = stats[StatType.FACEOFF_WIN] || 0;
+                                            const losses = stats[StatType.FACEOFF_LOSS] || 0;
+                                            const total = wins + losses;
+                                            const pct = total > 0 ? (wins / total) * 100 : 0;
+                                            return total > 0 ? (
+                                                <span className="font-mono text-[10px] text-brand font-bold italic">{pct.toFixed(1)}%</span>
+                                            ) : (
+                                                <span className="font-mono text-[10px] text-gray-800">-</span>
+                                            );
+                                        })()}
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -82,6 +96,19 @@ const ReportStatsTable: React.FC<{ team: Team, playerStats: { [playerId: string]
                             {STAT_DEFINITIONS.filter(s => s.key !== StatType.GOAL && s.key !== StatType.ASSIST).map(s => (
                                 <td key={s.key} className="p-4 text-center font-mono text-gray-600">{teamTotals[s.key] || 0}</td>
                             ))}
+                            <td className="p-4 text-center">
+                                {(() => {
+                                    const wins = teamTotals[StatType.FACEOFF_WIN] || 0;
+                                    const losses = teamTotals[StatType.FACEOFF_LOSS] || 0;
+                                    const total = wins + losses;
+                                    const pct = total > 0 ? (wins / total) * 100 : 0;
+                                    return total > 0 ? (
+                                        <span className="text-brand font-black underline underline-offset-4">{pct.toFixed(1)}%</span>
+                                    ) : (
+                                        <span className="text-gray-800 font-mono">-</span>
+                                    );
+                                })()}
+                            </td>
                         </tr>
                     </tfoot>
                 </table>

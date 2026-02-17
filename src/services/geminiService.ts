@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
-import { Game, Player, StatType } from '../types';
+import { Game, Player, StatType, Team } from '../types';
 import { getApiKey } from './apiKeyService';
 
 export interface PlayerAnalysisData {
@@ -185,4 +185,26 @@ export const analyzeShotPlacement = async (base64Image: string): Promise<number 
     } catch (error) {
         return null;
     }
+};
+
+export const queryAIAssistant = async (question: string, context: { teams: Team[], games: Game[] }): Promise<string> => {
+    const contextStr = `
+Teams Data:
+${context.teams.map(t => `- ${t.name} (ID: ${t.id}), Roster: ${t.roster.map(p => `${p.name} (#${p.jerseyNumber}, ${p.position})`).join(', ')}`).join('\n')}
+
+Games Data:
+${context.games.map(g => `- ${g.homeTeam.name} vs ${g.awayTeam.name} (Score: ${g.score.home}-${g.score.away}, Status: ${g.status}, Date: ${g.scheduledTime})`).join('\n')}
+    `;
+
+    const prompt = `You are a Lacrosse Assistant for the LaxKeeper app. 
+You have access to the current team and game data. 
+Answer the user's question accurately based on this data. 
+Be concise, professional, and helpful. Use a "cyberpunk coach" persona - high-tech but grounded in the sport.
+
+Context:
+${contextStr}
+
+User Question: ${question}`;
+
+    return await callAI(prompt);
 };
